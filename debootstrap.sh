@@ -7,16 +7,17 @@ set -e
 ################################################################################
 
 # Generic
-: ${RELEASE:="xenial"}
-: ${KERNEL:="NORMAL"}
-: ${DESKTOP:="NO"}
-: ${NVIDIA:="NO"}
-: ${KEYBOARD:="US"}
+: ${RELEASE:="xenial"}  # [trusty|xenial|bionic]
+: ${LIVE:="YES"}        # [TRUE|FALSE]
+: ${KERNEL:="NORMAL"}   # [NORMAL|HWE]
+: ${DESKTOP:="NO"}      # [YES|NO]
+: ${NVIDIA:="NO"}       # [YES|NO]
+: ${KEYBOARD:="US"}     # [JP|US]
 
 # Disk
-: ${ROOTFS:="/rootfs"}
-: ${ROOT_DISK_TYPE:=""}
-: ${ROOT_DISK_NAME:=""}
+: ${ROOTFS:="/rootfs"}  # Root File System Mount Point
+: ${ROOT_DISK_TYPE:=""} # [HDD|SSD|NVME]
+: ${ROOT_DISK_NAME:=""} # List of /dev/disk/by-id/*
 
 # Mirror
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
@@ -62,12 +63,12 @@ set -e
 ################################################################################
 
 if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
-  echo "Unknown Environment ROOT_DISK_TYPE..."
+  echo "Unknown Environment ROOT_DISK_TYPE"
   exit 1
 fi
 
 if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
-  echo "Unknown Environment ROOT_DISK_NAME..."
+  echo "Unknown Environment ROOT_DISK_NAME"
   exit 1
 fi
 
@@ -150,85 +151,95 @@ fi
 # Cleanup
 ################################################################################
 
-# Get Disk ID
-ROOT_DISK_PATH="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}`"
+# Check Live Image Environment
+if [ "x${LIVE}" != "xYES" ]; then
+  # Get Disk ID
+  ROOT_DISK_PATH="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}`"
 
-# Unmount Swap Partition
-swapoff -a
+  # Unmount Swap Partition
+  swapoff -a
+
+  # Unmount Disk Drive
+  awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
+fi
 
 # Unmount Root Partition
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
-
-# Unmount Disk Drive
-awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
 
 ################################################################################
 # Disk
 ################################################################################
 
-# Check Disk Type
-if [ "x${ROOT_DISK_TYPE}" = "xSSD" ]; then
-  # Enter Key Message
-  echo 'SSD Secure Erase'
+# Check Live Image Environment
+if [ "x${LIVE}" != "xYES" ]; then
+  # Check Disk Type
+  if [ "x${ROOT_DISK_TYPE}" = "xSSD" ]; then
+    # Enter Key Message
+    echo 'SSD Secure Erase'
 
-  # Suspend-to-RAM (ACPI State S3)
-  rtcwake -m mem -s 10
+    # Suspend-to-RAM (ACPI State S3)
+    rtcwake -m mem -s 10
 
-  # Wait
-  sleep 10
+    # Wait
+    sleep 10
 
-  # Set Password
-  hdparm --user-master u --security-set-pass P@ssW0rd "${ROOT_DISK_PATH}"
+    # Set Password
+    hdparm --user-master u --security-set-pass P@ssW0rd "${ROOT_DISK_PATH}"
 
-  # Secure Erase
-  hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
+    # Secure Erase
+    hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
+  fi
+
+  # Wait Probe
+  sleep 1
+
+  # Clear Partition Table
+  sgdisk -Z "${ROOT_DISK_PATH}"
+
+  # Create GPT Partition Table
+  sgdisk -o "${ROOT_DISK_PATH}"
+
+  # Create EFI Partition
+  sgdisk -n 1::+512M -c 1:"Efi"  -t 1:ef00 "${ROOT_DISK_PATH}"
+
+  # Create Swap Partition
+  sgdisk -n 2::+16G  -c 2:"Swap" -t 2:8200 "${ROOT_DISK_PATH}"
+
+  # Create Root Partition
+  sgdisk -n 3::-1    -c 3:"Root" -t 3:8300 "${ROOT_DISK_PATH}"
+
+  # Wait Probe
+  sleep 1
+
+  # Get Real Path
+  BOOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part1`"
+  ROOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part3`"
+  SWAPPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part2`"
+
+  # Format EFI System Partition
+  mkfs.vfat -F 32 -n "EfiFs" "${BOOTPT}"
+
+  # Format Root File System Partition
+  mkfs.xfs -f -L "RootFs" "${ROOTPT}"
+
+  # Format Linux Swap Partition
+  mkswap -L "SwapFs" "${SWAPPT}"
+
+  # Mount Root File System Partition
+  mkdir -p "${ROOTFS}"
+  mount "${ROOTPT}" "${ROOTFS}"
+
+  # Mount EFI System Partition
+  mkdir -p "${ROOTFS}/boot/efi"
+  mount "${BOOTPT}" "${ROOTFS}/boot/efi"
+
+  # Mount Linux Swap Partition
+  swapon "${SWAPPT}"
+else
+  # Mount Root File System Partition
+  mkdir -p "${ROOTFS}"
+  mount -t tmpfs tmpfs "${ROOTFS}"
 fi
-
-# Wait Probe
-sleep 1
-
-# Clear Partition Table
-sgdisk -Z "${ROOT_DISK_PATH}"
-
-# Create GPT Partition Table
-sgdisk -o "${ROOT_DISK_PATH}"
-
-# Create EFI Partition
-sgdisk -n 1::+512M -c 1:"Efi"  -t 1:ef00 "${ROOT_DISK_PATH}"
-
-# Create Swap Partition
-sgdisk -n 2::+16G  -c 2:"Swap" -t 2:8200 "${ROOT_DISK_PATH}"
-
-# Create Root Partition
-sgdisk -n 3::-1    -c 3:"Root" -t 3:8300 "${ROOT_DISK_PATH}"
-
-# Wait Probe
-sleep 1
-
-# Get Real Path
-BOOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part1`"
-ROOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part3`"
-SWAPPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part2`"
-
-# Format EFI System Partition
-mkfs.vfat -F 32 -n "EfiFs" "${BOOTPT}"
-
-# Format Root File System Partition
-mkfs.xfs -f -L "RootFs" "${ROOTPT}"
-
-# Format Linux Swap Partition
-mkswap -L "SwapFs" "${SWAPPT}"
-
-# Mount Root File System Partition
-mkdir -p "${ROOTFS}"
-mount "${ROOTPT}" "${ROOTFS}"
-
-# Mount EFI System Partition
-mkdir -p "${ROOTFS}/boot/efi"
-mount "${BOOTPT}" "${ROOTFS}/boot/efi"
-
-# Mount Linux Swap Partition
-swapon "${SWAPPT}"
 
 ################################################################################
 # Bootstrap
@@ -267,8 +278,12 @@ mount -t tmpfs                      tmpfs    "${ROOTFS}/run"
 mount -t sysfs                      sysfs    "${ROOTFS}/sys"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
-mount --bind /sys/firmware/efi/efivars       "${ROOTFS}/sys/firmware/efi/efivars"
 chmod 1777 "${ROOTFS}/dev/shm"
+
+# Check UEFI Platform
+if [ -d "/sys/firmware/efi" ]; then
+  mount --bind /sys/firmware/efi/efivars "${ROOTFS}/sys/firmware/efi/efivars"
+fi
 
 ################################################################################
 # FileSystem
@@ -277,13 +292,16 @@ chmod 1777 "${ROOTFS}/dev/shm"
 # Symlink Mount Table
 ln -s /proc/self/mounts "${ROOTFS}/etc/mtab"
 
-# Create Mount Point
-echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
-echo "${ROOTPT}       /          xfs    defaults          0      1"      >> "${ROOTFS}/etc/fstab"
-echo "${BOOTPT}       /boot/efi  vfat   defaults          0      2"      >> "${ROOTFS}/etc/fstab"
-echo "${SWAPPT}       none       swap   defaults          0      0"      >> "${ROOTFS}/etc/fstab"
-echo "tmpfs           /var/tmp   tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
-echo "tmpfs           /tmp       tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
+# Check Live Image Environment
+if [ "x${LIVE}" != "xYES" ]; then
+  # Create Mount Point
+  echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
+  echo "${ROOTPT}       /          xfs    defaults          0      1"      >> "${ROOTFS}/etc/fstab"
+  echo "${BOOTPT}       /boot/efi  vfat   defaults          0      2"      >> "${ROOTFS}/etc/fstab"
+  echo "${SWAPPT}       none       swap   defaults          0      0"      >> "${ROOTFS}/etc/fstab"
+  echo "tmpfs           /var/tmp   tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
+  echo "tmpfs           /tmp       tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
+fi
 
 ################################################################################
 # Network
@@ -490,28 +508,32 @@ chroot "${ROOTFS}" apt-get -y install xfsprogs xfsdump acl attr
 # Boot
 ################################################################################
 
-if [ -d "/sys/firmware/efi" ]; then
-  # EFI Boot Manager
-  chroot "${ROOTFS}" apt-get -y install efibootmgr
+# Check Live Image Environment
+if [ "x${LIVE}" != "xYES" ]; then
+  # Check UEFI Platform
+  if [ -d "/sys/firmware/efi" ]; then
+    # EFI Boot Manager
+    chroot "${ROOTFS}" apt-get -y install efibootmgr
 
-  # Grub Boot Loader
-  chroot "${ROOTFS}" apt-get -y install grub-efi
+    # Grub Boot Loader
+    chroot "${ROOTFS}" apt-get -y install grub-efi
 
-  # Remove UEFI Entry
-  for i in `efibootmgr | grep -E 'Boot[0-9A-F]{4}' | sed -e 's/^Boot\([0-9A-Z]\{4\}\).*$/\1/;'`; do
-    efibootmgr -b $i -B
-  done
+    # Remove UEFI Entry
+    for i in `efibootmgr | grep -E 'Boot[0-9A-F]{4}' | sed -e 's/^Boot\([0-9A-Z]\{4\}\).*$/\1/;'`; do
+      efibootmgr -b $i -B
+    done
 
-  # Generate UEFI Boot Entry
-  chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
-  chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
-else
-  # Grub Boot Loader
-  chroot "${ROOTFS}" apt-get -y install grub-pc
+    # Generate UEFI Boot Entry
+    chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
+    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+  else
+    # Grub Boot Loader
+    chroot "${ROOTFS}" apt-get -y install grub-pc
 
-  # Generate UEFI Boot Entry
-  chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
-  chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+    # Generate UEFI Boot Entry
+    chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
+    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+  fi
 fi
 
 ################################################################################
@@ -651,17 +673,20 @@ chroot "${ROOTFS}" update-grub
 chroot "${ROOTFS}" apt-get -y autoremove --purge
 chroot "${ROOTFS}" apt-get -y clean
 
-# Disk Sync
-sync;sync;sync
+# Check Live Image Environment
+if [ "x${LIVE}" != "xYES" ]; then
+  # Disk Sync
+  sync;sync;sync
 
-# Check Disk Type
-if [ "x${ROOT_DISK_TYPE}" = "xSSD" -o "x${ROOT_DISK_TYPE}" = "xNVME" ]; then
-  # TRIM
-  fstrim -v "${ROOTFS}"
+  # Check Disk Type
+  if [ "x${ROOT_DISK_TYPE}" = "xSSD" -o "x${ROOT_DISK_TYPE}" = "xNVME" ]; then
+    # TRIM
+    fstrim -v "${ROOTFS}"
+  fi
 fi
 
 # Unmount RootFs
-awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount -fl
+awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
 
 # Complete Message
 echo 'Complete Setup!'
