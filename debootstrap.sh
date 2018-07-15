@@ -243,7 +243,7 @@ if [ "x${LIVE}" != "xYES" ]; then
 else
   # Mount Root File System Partition
   mkdir -p "${ROOTFS}"
-  mount -t tmpfs tmpfs "${ROOTFS}"
+  mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 fi
 
 ################################################################################
@@ -539,6 +539,109 @@ if [ "x${LIVE}" != "xYES" ]; then
     chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
     chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
   fi
+else
+  # EFI Boot Manager
+  chroot "${ROOTFS}" apt-get -y install efibootmgr
+
+  # Grub Boot Loader
+  chroot "${ROOTFS}" apt-get -y install grub-pc-bin grub-efi-ia32-bin grub-efi-amd64-bin
+
+  # Kernel Frame Buffer
+  chroot "${ROOTFS}" apt-get -y install v86d
+
+  # LiveBoot Script
+  echo '#!/bin/sh'                                                        >  "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo 'mountroot() {'                                                    >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  if [[ -z ${NETBOOT} ]]; then'                                   >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '    return 0;'                                                    >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  fi'                                                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  # environment'                                                  >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  local liveroot image lower upper work newroot opts'             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  liveroot="/run/liveroot"'                                       >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  image="${liveroot}/image"'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  lower="${liveroot}/lower"'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  upper="${liveroot}/upper"'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  work="${liveroot}/work"'                                        >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  newroot="${rootmnt}"'                                           >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  opts="lowerdir=${lower},upperdir=${upper},workdir=${work}"'     >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  # network configuration'                                        >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  configure_networking'                                           >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  # mount tmpfs'                                                  >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mkdir -p ${liveroot}'                                           >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mount -t tmpfs -o mode=0755 tmpfs ${liveroot}'                  >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  if [[ ! $? -eq 0 ]]; then'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '    panic "Unable to mount tmpfs..."'                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  fi'                                                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  # download squashfs image'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mkdir -p ${image}'                                              >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  chmod 0755 ${image}'                                            >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  wget ${NETBOOT} -O ${image}/root.squashfs'                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  if [[ ! $? -eq 0 ]]; then'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '    panic "Unable to download SquashFS image from ${NETBOOT}..."' >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  fi'                                                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  # mount squashfs'                                               >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  modprobe loop'                                                  >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  modprobe squashfs'                                              >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mkdir -p ${lower}'                                              >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  chmod 0755 ${lower}'                                            >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  losetup /dev/loop0 "${image}/root.squashfs"'                    >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mount -t squashfs -o ro /dev/loop0 "${lower}"'                  >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  if [[ ! $? -eq 0 ]]; then'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '    panic "Unable to mount SquashFS image..."'                    >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  fi'                                                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo ''                                                                 >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  # mount overlay filesystem'                                     >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  modprobe overlay'                                               >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mkdir -p ${work}'                                               >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mkdir -p ${upper}'                                              >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  chmod 0755 ${work}'                                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  chmod 0755 ${upper}'                                            >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  mount -t overlay -o ${opts} overlay ${newroot}/'                >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  if [[ ! $? -eq 0 ]]; then'                                      >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '    panic "Unable to mount Overlay filesystem..."'                >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '  fi'                                                             >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  echo '}'                                                                >> "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+
+# LiveBoot Hook
+  echo '#!/bin/sh'                                   >  "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo ''                                            >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'set -e'                                      >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo ''                                            >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'if [ "$1" = prereqs ]; then'                 >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo '  exit 0'                                    >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'fi'                                          >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo ''                                            >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo '. /usr/share/initramfs-tools/hook-functions' >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo ''                                            >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'manual_add_modules loop'                     >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'manual_add_modules overlay'                  >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'manual_add_modules squashfs'                 >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+  echo 'manual_add_modules uvesafb'                  >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+
+  # Set Permission
+  chmod 0755 "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
+  chmod 0755 "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
+
+  # Set Boot Type
+  echo ''              >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
+  echo '# Boot Type'   >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
+  echo ''              >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
+  echo 'BOOT=liveroot' >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
+
+  # Kernel Module Option
+  echo 'options uvesafb mode_option=1280x1024-32 scroll=ywrap' > "${ROOTFS}/etc/modprobe.d/uvesafb.conf"
+
+  # Splash Frame Buffer
+  echo 'FRAMEBUFFER=y' > "${ROOTFS}/etc/initramfs-tools/conf.d/splash"
+
+  # Update Initramfs
+  chroot "${ROOTFS}" update-initramfs -u
 fi
 
 ################################################################################
@@ -662,6 +765,10 @@ fi
 # Remove Original Resolve
 rm "${ROOTFS}/etc/resolvconf/resolv.conf.d/original"
 
+# Cleanup Packages
+chroot "${ROOTFS}" apt-get -y autoremove --purge
+chroot "${ROOTFS}" apt-get -y clean
+
 # Check Arch Linux
 if [ -f "/etc/arch-release" ]; then
   # Remove ArchISO Kernel Module
@@ -671,15 +778,11 @@ fi
 # Update Initramfs
 chroot "${ROOTFS}" update-initramfs -u
 
-# Update Grub
-chroot "${ROOTFS}" update-grub
-
-# Cleanup Packages
-chroot "${ROOTFS}" apt-get -y autoremove --purge
-chroot "${ROOTFS}" apt-get -y clean
-
 # Check Live Image Environment
 if [ "x${LIVE}" != "xYES" ]; then
+  # Update Grub
+  chroot "${ROOTFS}" update-grub
+
   # Disk Sync
   sync;sync;sync
 
@@ -688,6 +791,35 @@ if [ "x${LIVE}" != "xYES" ]; then
     # TRIM
     fstrim -v "${ROOTFS}"
   fi
+
+  # Unmount RootFs
+  awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
+else
+  # Disable Boot Cache
+  chroot "${ROOTFS}" systemctl disable ureadahead.service
+
+  # Clean Cache Repository
+  find "${ROOTFS}/var/lib/apt/lists" -type f | xargs rm
+  touch "${ROOTFS}/var/lib/apt/lists/lock"
+  chmod 0640 "${ROOTFS}/var/lib/apt/lists/lock"
+
+  # Clean Log
+  find "${ROOTFS}/var/log" -type f | xargs rm
+  touch "${ROOTFS}/var/log/lastlog"
+  chmod 0644 "${ROOTFS}/var/log/lastlog"
+
+  # Unmount RootFs
+  awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
+
+  # Create SquashFS Image
+  mksquashfs "${ROOTFS}" "root.squashfs"
+
+  # Copy Kernel and Initramfs
+  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./vmlinuz" \;
+  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./initrd.img" \;
+  chmod 0644 "./vmlinuz"
+  chmod 0644 "./initrd.img"
+  chmod 0644 "./root.squashfs"
 fi
 
 # Unmount RootFs
