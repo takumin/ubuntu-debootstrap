@@ -842,9 +842,18 @@ else
   # Copy Kernel and Initramfs
   find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./vmlinuz" \;
   find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./initrd.img" \;
+
+  # Permission Files
   chmod 0644 "./vmlinuz"
   chmod 0644 "./initrd.img"
   chmod 0644 "./root.squashfs"
+
+  # Owner/Group Files
+  if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
+    chown "${SUDO_UID}:${SUDO_GID}" "./vmlinuz"
+    chown "${SUDO_UID}:${SUDO_GID}" "./initrd.img"
+    chown "${SUDO_UID}:${SUDO_GID}" "./root.squashfs"
+  fi
 fi
 
 # Unmount RootFs
