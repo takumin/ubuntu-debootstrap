@@ -1,0 +1,4 @@
+.envrc
+vmlinuz
+initrd.img
+root.squashfs
