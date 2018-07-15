@@ -688,5 +688,8 @@ fi
 # Unmount RootFs
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
 
+# Delete Working Directory
+rmdir "${ROOTFS}"
+
 # Complete Message
 echo 'Complete Setup!'
