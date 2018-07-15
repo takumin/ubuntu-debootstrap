@@ -637,10 +637,18 @@ fi
 # Remove Original Resolve
 rm "${ROOTFS}/etc/resolvconf/resolv.conf.d/original"
 
-# Remove ArchISO Kernel Module
-chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
+# Check Arch Linux
+if [ -f "/etc/arch-release" ]; then
+  # Remove ArchISO Kernel Module
+  chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
+fi
+
+# Update Initramfs
 chroot "${ROOTFS}" update-initramfs -u
+
+# Update Grub
 chroot "${ROOTFS}" update-grub
+
 # Cleanup Packages
 chroot "${ROOTFS}" apt-get -y autoremove --purge
 chroot "${ROOTFS}" apt-get -y clean
