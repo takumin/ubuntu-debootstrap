@@ -191,6 +191,11 @@ if [ "x${LIVE}" != "xYES" ]; then
 
   # Unmount Disk Drive
   awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
+else
+  # Delete Kernel/Initramfs/RootFs Image
+  rm "./vmlinuz"
+  rm "./initrd.img"
+  rm "./root.squashfs"
 fi
 
 # Unmount Root Partition
