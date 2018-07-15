@@ -6,17 +6,15 @@ set -e
 # Default Variables
 ################################################################################
 
-# Configure
-: ${KERNEL:="HWE"}
-: ${DESKTOP:="YES"}
-: ${NVIDIA:="YES"}
-: ${KEYBOARD:="US"}
-
 # Generic
 : ${RELEASE:="xenial"}
-: ${ROOTFS:="/rootfs"}
+: ${KERNEL:="NORMAL"}
+: ${DESKTOP:="NO"}
+: ${NVIDIA:="NO"}
+: ${KEYBOARD:="US"}
 
 # Disk
+: ${ROOTFS:="/rootfs"}
 : ${ROOT_DISK_TYPE:=""}
 : ${ROOT_DISK_NAME:=""}
 
