@@ -59,6 +59,14 @@ set -e
 : ${NVIDIA_DRIVER_PACKAGE:="nvidia-396"}
 
 ################################################################################
+# Load Environment
+################################################################################
+
+if [ -n "$1" -a -r "$1" ]; then
+  . "$1"
+fi
+
+################################################################################
 # Check Environment
 ################################################################################
 
@@ -193,9 +201,9 @@ if [ "x${LIVE}" != "xYES" ]; then
   awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
 else
   # Delete Kernel/Initramfs/RootFs Image
-  rm "./vmlinuz"
-  rm "./initrd.img"
-  rm "./root.squashfs"
+  [ -f "./vmlinuz" ]       && rm "./vmlinuz"
+  [ -f "./initrd.img" ]    && rm "./initrd.img"
+  [ -f "./root.squashfs" ] && rm "./root.squashfs"
 fi
 
 # Unmount Root Partition
