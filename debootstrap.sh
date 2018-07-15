@@ -62,14 +62,19 @@ set -e
 # Check Environment
 ################################################################################
 
-if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
-  echo "Unknown Environment ROOT_DISK_TYPE"
-  exit 1
-fi
+# Check Live Image Environment
+if [ "x${LIVE}" != "xYES" ]; then
+  # Check Root Disk Type
+  if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
+    echo "Unknown Environment ROOT_DISK_TYPE"
+    exit 1
+  fi
 
-if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
-  echo "Unknown Environment ROOT_DISK_NAME"
-  exit 1
+  # Check Root Disk Name
+  if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
+    echo "Unknown Environment ROOT_DISK_NAME"
+    exit 1
+  fi
 fi
 
 ################################################################################
