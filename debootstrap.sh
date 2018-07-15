@@ -7,7 +7,6 @@ set -e
 ################################################################################
 
 # Configure
-: ${PLATFORM:="UEFI"}
 : ${KERNEL:="HWE"}
 : ${DESKTOP:="YES"}
 : ${NVIDIA:="YES"}
@@ -97,54 +96,57 @@ if [ "x${HTTPS_PROXY}" != "x" ]; then
 fi
 
 ################################################################################
-# Arch Linux Live Image Require
+# Live Linux Image Require
 ################################################################################
 
-# Set Password for Root User
-echo root:root | chpasswd
+# Check Arch Linux
+if [ -f "/etc/arch-release" ]; then
+  # Set Password for Root User
+  echo root:root | chpasswd
 
-# Start SSH Service
-systemctl start sshd.service
+  # Start SSH Service
+  systemctl start sshd.service
 
-# Resolv Configuration
-echo '# DNS Server'     >  "/etc/resolv.conf"
-if [ "x${DOMAIN}" != "x" ]; then
-  echo "domain ${DOMAIN}" >> "/etc/resolv.conf"
+  # Resolv Configuration
+  echo '# DNS Server'     >  "/etc/resolv.conf"
+  if [ "x${DOMAIN}" != "x" ]; then
+    echo "domain ${DOMAIN}" >> "/etc/resolv.conf"
+  fi
+  if [ "x${DNS_SEARCH}" != "x" ]; then
+    echo "search ${DNS_SEARCH}" >> "/etc/resolv.conf"
+  fi
+  if [ "x${DNS_SERVER}" != "x" ]; then
+    for i in ${DNS_SERVER}; do
+      echo "nameserver ${i}" >> "/etc/resolv.conf"
+    done
+  fi
+
+  # Disable Beep
+  set bell-style none
+  echo 'set bell-style none' > ${HOME}/.inputrc
+  echo 'set belloff=all' > ${HOME}/.vimrc
+
+  # PacMan Mirror
+  echo "Server = http://ftp.jaist.ac.jp/pub/Linux/ArchLinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+
+  # Kill GnuPG Agent
+  killall gpg-agent
+
+  # PacMan Keyring Clear
+  rm -fr /etc/pacman.d/gnupg/*
+
+  # PacMan Keyring Initialize
+  pacman-key --init
+
+  # PacMan Keyring Refresh
+  pacman-key --populate archlinux
+
+  # PacMan Repository Update
+  pacman -Syy --noconfirm
+
+  # Debootstrap Package
+  pacman -S --noconfirm debootstrap ubuntu-keyring
 fi
-if [ "x${DNS_SEARCH}" != "x" ]; then
-  echo "search ${DNS_SEARCH}" >> "/etc/resolv.conf"
-fi
-if [ "x${DNS_SERVER}" != "x" ]; then
-  for i in ${DNS_SERVER}; do
-    echo "nameserver ${i}" >> "/etc/resolv.conf"
-  done
-fi
-
-# Disable Beep
-set bell-style none
-echo 'set bell-style none' > ${HOME}/.inputrc
-echo 'set belloff=all' > ${HOME}/.vimrc
-
-# PacMan Mirror
-echo "Server = http://ftp.jaist.ac.jp/pub/Linux/ArchLinux/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
-
-# Kill GnuPG Agent
-killall gpg-agent
-
-# PacMan Keyring Clear
-rm -fr /etc/pacman.d/gnupg/*
-
-# PacMan Keyring Initialize
-pacman-key --init
-
-# PacMan Keyring Refresh
-pacman-key --populate archlinux
-
-# PacMan Repository Update
-pacman -Syy --noconfirm
-
-# Debootstrap Package
-pacman -S --noconfirm debootstrap ubuntu-keyring
 
 ################################################################################
 # Cleanup
@@ -490,29 +492,29 @@ chroot "${ROOTFS}" apt-get -y install xfsprogs xfsdump acl attr
 # Boot
 ################################################################################
 
-case "x${PLATFORM}" in
-  "xUEFI" )
-    # EFI Boot Manager
-    chroot "${ROOTFS}" apt-get -y install efibootmgr
+if [ -d "/sys/firmware/efi" ]; then
+  # EFI Boot Manager
+  chroot "${ROOTFS}" apt-get -y install efibootmgr
 
-    # Grub Boot Loader
-    chroot "${ROOTFS}" apt-get -y install grub-efi
+  # Grub Boot Loader
+  chroot "${ROOTFS}" apt-get -y install grub-efi
 
-    # Remove UEFI Entry
-    for i in `efibootmgr | grep -E 'Boot[0-9A-F]{4}' | sed -e 's/^Boot\([0-9A-Z]\{4\}\).*$/\1/;'`; do
-      efibootmgr -b $i -B
-    done
+  # Remove UEFI Entry
+  for i in `efibootmgr | grep -E 'Boot[0-9A-F]{4}' | sed -e 's/^Boot\([0-9A-Z]\{4\}\).*$/\1/;'`; do
+    efibootmgr -b $i -B
+  done
 
-    # Generate UEFI Boot Entry
-    chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
-    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
-    ;;
-  * )
-    echo "Unknown Platform..."
-    echo "Require BIOS/UEFI"
-    exit 1
-    ;;
-esac
+  # Generate UEFI Boot Entry
+  chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
+  chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+else
+  # Grub Boot Loader
+  chroot "${ROOTFS}" apt-get -y install grub-pc
+
+  # Generate UEFI Boot Entry
+  chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
+  chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+fi
 
 ################################################################################
 # Network
