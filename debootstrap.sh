@@ -288,6 +288,9 @@ fi
 # Bootstrap
 ################################################################################
 
+# Host Name
+export HOSTNAME="${SITENAME}"
+
 # Install Base System
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
   env http_proxy="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}" debootstrap "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
