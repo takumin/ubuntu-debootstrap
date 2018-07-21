@@ -660,7 +660,6 @@ else
   echo 'manual_add_modules loop'                     >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
   echo 'manual_add_modules overlay'                  >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
   echo 'manual_add_modules squashfs'                 >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
-  echo 'manual_add_modules uvesafb'                  >> "${ROOTFS}/usr/share/initramfs-tools/hooks/liveroot"
 
   # Set Permission
   chmod 0755 "${ROOTFS}/usr/share/initramfs-tools/scripts/liveroot"
@@ -671,15 +670,6 @@ else
   echo '# Boot Type'   >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
   echo ''              >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
   echo 'BOOT=liveroot' >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
-
-  # Kernel Module Option
-  echo 'options uvesafb mode_option=1280x1024-32 scroll=ywrap' > "${ROOTFS}/etc/modprobe.d/uvesafb.conf"
-
-  # Splash Frame Buffer
-  echo 'FRAMEBUFFER=y' > "${ROOTFS}/etc/initramfs-tools/conf.d/splash"
-
-  # Update Initramfs
-  chroot "${ROOTFS}" update-initramfs -u
 fi
 
 ################################################################################
@@ -807,14 +797,18 @@ rm "${ROOTFS}/etc/resolvconf/resolv.conf.d/original"
 chroot "${ROOTFS}" apt-get -y autoremove --purge
 chroot "${ROOTFS}" apt-get -y clean
 
-# Check Arch Linux
-if [ -f "/etc/arch-release" ]; then
-  # Remove ArchISO Kernel Module
+# Get Linux Kernel Version
+_CURRENT_LINUX_VERSION="`uname -r`"
+_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" sh -c \"dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'\"`"
+
+# Check Linux Kernel Version
+if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
+  # Remove Current Kernel Version Module
   chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
 fi
 
 # Update Initramfs
-chroot "${ROOTFS}" update-initramfs -u
+chroot "${ROOTFS}" update-initramfs -u -k all
 
 # Check Live Image Environment
 if [ "x${LIVE}" != "xYES" ]; then
