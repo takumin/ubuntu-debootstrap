@@ -521,7 +521,7 @@ chroot "${ROOTFS}" apt-get -y dist-upgrade
 # Install Kernel
 if [ "x${KERNEL}" = "xHWE" ]; then
   # HWE Version
-  chroot "${ROOTFS}" apt-get -y install linux-generic-hwe-16.04-edge
+  chroot "${ROOTFS}" apt-get -y install linux-generic-hwe-16.04
 else
   # GA Version
   chroot "${ROOTFS}" apt-get -y install linux-generic
