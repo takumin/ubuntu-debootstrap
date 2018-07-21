@@ -730,9 +730,10 @@ fi
 # Network
 ################################################################################
 
-# NetworkManager
+# Install NetworkManager
 chroot "${ROOTFS}" apt-get -y --no-install-recommends install network-manager
 
+# Check Device IP Address
 if [ "x${ADDRESS}" != "xauto" ]; then
   # Variables
   _DNS_SERVER="`echo ${DNS_SERVER} | sed -e 's/ /;/g'`"
@@ -764,7 +765,7 @@ fi
 # Ntp
 ################################################################################
 
-# NTP Time Server
+# Install NTP Server
 chroot "${ROOTFS}" apt-get -y install ntp
 
 # Disable Default Server List
@@ -786,7 +787,7 @@ fi
 # OpenSSH
 ################################################################################
 
-# OpenSSH
+# Install OpenSSH Server
 chroot "${ROOTFS}" apt-get -y install ssh
 
 # Configure OpenSSH Server
@@ -794,9 +795,17 @@ echo ''          >> "${ROOTFS}/etc/ssh/sshd_config"
 echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 
 ################################################################################
+# Cloud-Init
+################################################################################
+
+# Install Cloud-Init
+chroot "${ROOTFS}" apt-get -y install cloud-init
+
+################################################################################
 # Desktop
 ################################################################################
 
+# Check Desktop Environment
 if [ "x${DESKTOP}" = "xYES" ]; then
   # HWE Kernel
   if [ "x${KERNEL}" = "xHWE" ]; then
@@ -831,12 +840,17 @@ if [ "x${DESKTOP}" = "xYES" ]; then
     # Install Driver
     chroot "${ROOTFS}" apt-get -y install ${NVIDIA_DRIVER_PACKAGE}
 
-    # DRM Kernel Mode Setting
+    # Load Boot Time DRM Kernel Mode Setting
     echo "nvidia"         >> "${ROOTFS}/etc/initramfs-tools/modules"
     echo "nvidia_modeset" >> "${ROOTFS}/etc/initramfs-tools/modules"
     echo "nvidia_uvm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
     echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
-    sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"$@GRUB_CMDLINE_LINUX_DEFAULT="nvidia-drm.modeset=1 \1"@' "${ROOTFS}/etc/default/grub"
+
+    # Check Live Image Environment
+    if [ "x${LIVE}" != "xYES" ]; then
+      # Enable Kernel Mode Setting
+      sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"$@GRUB_CMDLINE_LINUX_DEFAULT="nvidia-drm.modeset=1 \1"@' "${ROOTFS}/etc/default/grub"
+    fi
   fi
 fi
 
