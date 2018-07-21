@@ -799,7 +799,7 @@ chroot "${ROOTFS}" apt-get -y clean
 
 # Get Linux Kernel Version
 _CURRENT_LINUX_VERSION="`uname -r`"
-_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" sh -c \"dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'\"`"
+_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
 
 # Check Linux Kernel Version
 if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
