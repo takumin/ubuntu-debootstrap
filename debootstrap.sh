@@ -799,7 +799,7 @@ echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 ################################################################################
 
 # Install Cloud-Init
-chroot "${ROOTFS}" apt-get -y install cloud-init
+#chroot "${ROOTFS}" apt-get -y install cloud-init
 
 ################################################################################
 # Desktop
