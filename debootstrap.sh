@@ -482,8 +482,8 @@ deb ${MIRROR_UBUNTU_PARTNER} ${RELEASE} partner
 __EOF__
 
 # Japanese Team Repository
-chroot "${ROOTFS}" apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 3B593C7BE6DB6A89FB7CBFFD058A05E90C4ECFEC
-chroot "${ROOTFS}" apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 59676CBCF5DFD8C1CEFE375B68B5F60DCDC1D865
+chroot "${ROOTFS}" sh -c 'wget -qO- https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg | apt-key add -'
+chroot "${ROOTFS}" sh -c 'wget -qO- https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg | apt-key add -'
 cat > "${ROOTFS}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
 # Japanese Team Repository
 deb ${MIRROR_UBUNTU_JA} ${RELEASE} main
