@@ -825,7 +825,7 @@ if [ "x${DESKTOP}" = "xYES" ]; then
   # NVIDIA Driver
   if [ "x${NVIDIA}" = "xYES" ]; then
     # NVIDIA Apt Public Key
-    chroot "${ROOTFS}" apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys AE09FE4BBD223A84B2CCFCE3F60F4B3D7FA2AF80
+    chroot "${ROOTFS}" sh -c 'wget -qO- https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub | apt-key add -'
 
     # NVIDIA CUDA Repository
     echo '# NVIDIA CUDA Repository'    >  "${ROOTFS}/etc/apt/sources.list.d/nvidia-cuda.list"
