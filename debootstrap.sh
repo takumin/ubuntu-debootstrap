@@ -482,8 +482,10 @@ deb ${MIRROR_UBUNTU_PARTNER} ${RELEASE} partner
 __EOF__
 
 # Japanese Team Repository
-chroot "${ROOTFS}" sh -c 'wget -qO- https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg | apt-key add -'
-chroot "${ROOTFS}" sh -c 'wget -qO- https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg | apt-key add -'
+wget -qO "${ROOTFS}/tmp/ubuntu-ja-archive-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg
+wget -qO "${ROOTFS}/tmp/ubuntu-jp-ppa-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg
+chroot "${ROOTFS}" apt-key add /tmp/ubuntu-ja-archive-keyring.gpg
+chroot "${ROOTFS}" apt-key add /tmp/ubuntu-jp-ppa-keyring.gpg
 cat > "${ROOTFS}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
 # Japanese Team Repository
 deb ${MIRROR_UBUNTU_JA} ${RELEASE} main
