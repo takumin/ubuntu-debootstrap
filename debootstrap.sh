@@ -55,9 +55,6 @@ set -e
 : ${USER_FULL:="Ubuntu User"}
 : ${USER_KEYS:=""}
 
-# NVIDIA
-: ${NVIDIA_DRIVER_PACKAGE:="nvidia-396"}
-
 ################################################################################
 # Load Environment
 ################################################################################
@@ -840,7 +837,7 @@ if [ "x${DESKTOP}" = "xYES" ]; then
     chroot "${ROOTFS}" apt-get -y dist-upgrade
 
     # Install Driver
-    chroot "${ROOTFS}" apt-get -y install ${NVIDIA_DRIVER_PACKAGE}
+    chroot "${ROOTFS}" apt-get -y install cuda-drivers
 
     # Load Boot Time DRM Kernel Mode Setting
     echo "nvidia"         >> "${ROOTFS}/etc/initramfs-tools/modules"
