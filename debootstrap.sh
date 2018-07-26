@@ -967,5 +967,5 @@ rmdir "${ROOTFS}"
 # Complete Message
 echo 'Complete Setup!'
 
-# Reboot
-reboot
+# Shutdown
+shutdown -h now
