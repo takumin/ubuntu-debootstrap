@@ -115,8 +115,28 @@ fi
 
 # Check Ubuntu
 if [ "x${DISTRIB_ID}" = "xUbuntu" ]; then
-  # Update Repository
-  apt-get -y update
+  # Check Default Live Ubuntu
+  if [ `grep -qs "deb cdrom" /etc/apt/sources.list` ]; then
+    # Set Password for Live User
+    echo ubuntu:ubuntu | chpasswd
+
+    # Official Repository
+    echo "# Official Repository"                                                        >  "${ROOTFS}/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}          main restricted universe multiverse" >> "${ROOTFS}/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-updates  main restricted universe multiverse" >> "${ROOTFS}/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-security main restricted universe multiverse" >> "${ROOTFS}/etc/apt/sources.list"
+
+    # Update Repository
+    apt-get -y update
+
+    # Install SSH Server
+    apt-get -y install ssh
+
+    # Start SSH Service
+    systemctl start ssh.service
+
+    exit
+  fi
 
   # Install Require Packages
   dpkg -l | awk '{print $2}' | grep -qs '^sed$'             || apt-get -y --no-install-recommends install sed
@@ -131,6 +151,7 @@ if [ "x${DISTRIB_ID}" = "xUbuntu" ]; then
   dpkg -l | awk '{print $2}' | grep -qs '^dosfstools$'      || apt-get -y --no-install-recommends install dosfstools
   dpkg -l | awk '{print $2}' | grep -qs '^xfsprogs$'        || apt-get -y --no-install-recommends install xfsprogs
   dpkg -l | awk '{print $2}' | grep -qs '^debootstrap$'     || apt-get -y --no-install-recommends install debootstrap
+  dpkg -l | awk '{print $2}' | grep -qs '^squashfs-tools$'  || apt-get -y --no-install-recommends install squashfs-tools
 fi
 
 # Check Arch Linux
@@ -938,3 +959,6 @@ rmdir "${ROOTFS}"
 
 # Complete Message
 echo 'Complete Setup!'
+
+# Reboot
+reboot
