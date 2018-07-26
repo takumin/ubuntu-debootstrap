@@ -142,7 +142,7 @@ if [ "x${DISTRIB_ID}" = "xUbuntu" ]; then
     echo ""
     echo "Continue for Please Input Key"
     echo ""
-    read 1
+    read i
   fi
 
   # Install Require Packages
