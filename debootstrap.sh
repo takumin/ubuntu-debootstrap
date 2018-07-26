@@ -115,16 +115,16 @@ fi
 
 # Check Ubuntu
 if [ "x${DISTRIB_ID}" = "xUbuntu" ]; then
-  # Check Default Live Ubuntu
-  if [ `grep -qs "deb cdrom" /etc/apt/sources.list` ]; then
+  # Check Default Live Ubuntu Result
+  if grep -qs 'boot=casper' /proc/cmdline > /dev/null 2>&1; then
     # Set Password for Live User
     echo ubuntu:ubuntu | chpasswd
 
     # Official Repository
-    echo "# Official Repository"                                                        >  "${ROOTFS}/etc/apt/sources.list"
-    echo "deb ${MIRROR_UBUNTU} ${RELEASE}          main restricted universe multiverse" >> "${ROOTFS}/etc/apt/sources.list"
-    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-updates  main restricted universe multiverse" >> "${ROOTFS}/etc/apt/sources.list"
-    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-security main restricted universe multiverse" >> "${ROOTFS}/etc/apt/sources.list"
+    echo "# Official Repository"                                                        >  "/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}          main restricted universe multiverse" >> "/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-updates  main restricted universe multiverse" >> "/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-security main restricted universe multiverse" >> "/etc/apt/sources.list"
 
     # Update Repository
     apt-get -y update
@@ -135,7 +135,14 @@ if [ "x${DISTRIB_ID}" = "xUbuntu" ]; then
     # Start SSH Service
     systemctl start ssh.service
 
-    exit
+    # Ip Address
+    ip address
+
+    # Wait Prompt
+    echo ""
+    echo "Continue for Please Input Key"
+    echo ""
+    read 1
   fi
 
   # Install Require Packages
