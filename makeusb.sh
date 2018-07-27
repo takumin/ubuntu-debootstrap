@@ -37,6 +37,9 @@ USB_PATH="`realpath /dev/disk/by-id/${USB_NAME}`"
 # Unmount Disk Drive
 awk '{print $1}' /proc/mounts | grep -s "${USB_PATH}" | sort -r | xargs --no-run-if-empty umount
 
+# Unmount Working Directory
+awk '{print $2}' /proc/mounts | grep -s "${ESP_DIR}" | sort -r | xargs --no-run-if-empty umount
+
 # Create Working Directory
 if [ ! -d "${ESP_DIR}" ]; then
   mkdir -p ${ESP_DIR}
@@ -143,7 +146,10 @@ __EOF__
 ################################################################################
 
 # Unmount Working Directory
-mount | grep -qs ${ESP_DIR} && umount ${ESP_DIR} && rmdir ${ESP_DIR}
+awk '{print $2}' /proc/mounts | grep -s "${ESP_DIR}" | sort -r | xargs --no-run-if-empty umount
+
+# Cleanup Working Directory
+rmdir ${ESP_DIR}
 
 # Disk Sync
 sync;sync;sync
