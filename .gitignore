@@ -3,4 +3,5 @@ vmlinuz
 initrd.img
 root.squashfs
 !debootstrap.sh
+!makeusb.sh
 *.sh
