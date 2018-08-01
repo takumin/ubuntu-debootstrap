@@ -274,25 +274,28 @@ if [ "x${LIVE}" != "xYES" ]; then
   # Create GPT Partition Table
   sgdisk -o "${ROOT_DISK_PATH}"
 
+  # Create BIOS Partition
+  sgdisk -n 1:0:2047 -c 1:"Bios" -t 1:ef02 "${ROOT_DISK_PATH}"
+
   # Create EFI Partition
-  sgdisk -n 1::+512M -c 1:"Efi"  -t 1:ef00 "${ROOT_DISK_PATH}"
+  sgdisk -n 2::+512M -c 2:"Efi"  -t 2:ef00 "${ROOT_DISK_PATH}"
 
   # Create Swap Partition
-  sgdisk -n 2::+16G  -c 2:"Swap" -t 2:8200 "${ROOT_DISK_PATH}"
+  sgdisk -n 3::+16G  -c 3:"Swap" -t 3:8200 "${ROOT_DISK_PATH}"
 
   # Create Root Partition
-  sgdisk -n 3::-1    -c 3:"Root" -t 3:8300 "${ROOT_DISK_PATH}"
+  sgdisk -n 4::-1    -c 4:"Root" -t 4:8300 "${ROOT_DISK_PATH}"
 
   # Wait Probe
   sleep 1
 
   # Get Real Path
-  BOOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part1`"
-  ROOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part3`"
-  SWAPPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part2`"
+  UEFIPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part2`"
+  ROOTPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part4`"
+  SWAPPT="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}-part3`"
 
   # Format EFI System Partition
-  mkfs.vfat -F 32 -n "EfiFs" "${BOOTPT}"
+  mkfs.vfat -F 32 -n "EfiFs" "${UEFIPT}"
 
   # Format Root File System Partition
   mkfs.xfs -f -L "RootFs" "${ROOTPT}"
@@ -306,7 +309,7 @@ if [ "x${LIVE}" != "xYES" ]; then
 
   # Mount EFI System Partition
   mkdir -p "${ROOTFS}/boot/efi"
-  mount "${BOOTPT}" "${ROOTFS}/boot/efi"
+  mount "${UEFIPT}" "${ROOTFS}/boot/efi"
 
   # Mount Linux Swap Partition
   swapon "${SWAPPT}"
@@ -375,7 +378,7 @@ if [ "x${LIVE}" != "xYES" ]; then
   # Create Mount Point
   echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
   echo "${ROOTPT}       /          xfs    defaults          0      1"      >> "${ROOTFS}/etc/fstab"
-  echo "${BOOTPT}       /boot/efi  vfat   defaults          0      2"      >> "${ROOTFS}/etc/fstab"
+  echo "${UEFIPT}       /boot/efi  vfat   defaults          0      2"      >> "${ROOTFS}/etc/fstab"
   echo "${SWAPPT}       none       swap   defaults          0      0"      >> "${ROOTFS}/etc/fstab"
   echo "tmpfs           /var/tmp   tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
   echo "tmpfs           /tmp       tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
