@@ -13,6 +13,8 @@ set -e
 : ${DESKTOP:="NO"}      # [YES|NO]
 : ${NVIDIA:="NO"}       # [YES|NO]
 : ${KEYBOARD:="US"}     # [JP|US]
+: ${SHUTDOWN:="NO"}     # [YES|NO]
+: ${REBOOT:="NO"}       # [YES|NO]
 
 # Disk
 : ${ROOTFS:="/rootfs"}  # Root File System Mount Point
@@ -972,5 +974,14 @@ rmdir "${ROOTFS}"
 # Complete Message
 echo 'Complete Setup!'
 
-# Shutdown
-shutdown -h now
+# Check Reboot Flag
+if [ "${REBOOT}" = "YES" ]; then
+  # Reboot
+  shutdown -r now
+fi
+
+# Check Shutdown Flag
+if [ "${SHUTDOWN}" = "YES" ]; then
+  # Shutdown
+  shutdown -h now
+fi
