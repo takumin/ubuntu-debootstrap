@@ -275,16 +275,16 @@ if [ "x${LIVE}" != "xYES" ]; then
   sgdisk -o "${ROOT_DISK_PATH}"
 
   # Create BIOS Partition
-  sgdisk -n 1:0:2047 -c 1:"Bios" -t 1:ef02 "${ROOT_DISK_PATH}"
+  sgdisk -a 1 -n 1::2047  -c 1:"Bios" -t 1:ef02 "${ROOT_DISK_PATH}"
 
   # Create EFI Partition
-  sgdisk -n 2::+512M -c 2:"Efi"  -t 2:ef00 "${ROOT_DISK_PATH}"
+  sgdisk      -n 2::+512M -c 2:"Efi"  -t 2:ef00 "${ROOT_DISK_PATH}"
 
   # Create Swap Partition
-  sgdisk -n 3::+16G  -c 3:"Swap" -t 3:8200 "${ROOT_DISK_PATH}"
+  sgdisk      -n 3::+16G  -c 3:"Swap" -t 3:8200 "${ROOT_DISK_PATH}"
 
   # Create Root Partition
-  sgdisk -n 4::-1    -c 4:"Root" -t 4:8300 "${ROOT_DISK_PATH}"
+  sgdisk      -n 4::-1    -c 4:"Root" -t 4:8300 "${ROOT_DISK_PATH}"
 
   # Wait Probe
   sleep 1
