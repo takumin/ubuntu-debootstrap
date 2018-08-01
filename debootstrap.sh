@@ -245,11 +245,13 @@ if [ "x${LIVE}" != "xYES" ]; then
     # Enter Key Message
     echo 'SSD Secure Erase'
 
-    # Suspend-to-RAM (ACPI State S3)
-    rtcwake -m mem -s 10
-
-    # Wait
-    sleep 10
+    # Check SSD Frozen
+    if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null; then
+      # Suspend-to-RAM (ACPI State S3)
+      rtcwake -m mem -s 10
+      # Wait
+      sleep 10
+    fi
 
     # Set Password
     hdparm --user-master u --security-set-pass P@ssW0rd "${ROOT_DISK_PATH}"
