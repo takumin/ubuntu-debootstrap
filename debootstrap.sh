@@ -246,7 +246,7 @@ if [ "x${LIVE}" != "xYES" ]; then
     echo 'SSD Secure Erase'
 
     # Check SSD Frozen
-    if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null; then
+    if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null 2>&1; then
       # Suspend-to-RAM (ACPI State S3)
       rtcwake -m mem -s 10
       # Wait
