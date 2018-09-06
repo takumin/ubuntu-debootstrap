@@ -9,7 +9,7 @@ set -e
 # Generic
 : ${RELEASE:="xenial"}  # [trusty|xenial|bionic]
 : ${TYPE:="LIVE"}       # [LIVE|DEPLOY]
-: ${KERNEL:="NORMAL"}   # [NORMAL|HWE]
+: ${HWE:="YES"}         # [YES|NO]
 : ${DESKTOP:="NO"}      # [YES|NO]
 : ${NVIDIA:="NO"}       # [YES|NO]
 : ${KEYBOARD:="US"}     # [JP|US]
@@ -72,17 +72,24 @@ fi
 # Check Environment
 ################################################################################
 
-# Check Live Image Environment
+# Release Codename
+if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bionic' ]; then
+  echo "RELEASE: trusty or xenial or bionic"
+  exit 1
+fi
+
+# Live Image Environment
 if [ "${TYPE}" = 'DEPLOY' ]; then
-  # Check Root Disk Type
+  # Root Disk Type
   if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
-    echo "Unknown Environment ROOT_DISK_TYPE"
+    echo "ROOT_DISK_TYPE: HDD or SSD or NVME"
     exit 1
   fi
 
-  # Check Root Disk Name
+  # Root Disk Name
   if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
-    echo "Unknown Environment ROOT_DISK_NAME"
+    echo "ROOT_DISK_NAME: Please select by"
+    find /dev/disk/by-id | sort
     exit 1
   fi
 fi
@@ -572,10 +579,10 @@ chroot "${ROOTFS}" apt-get -y dist-upgrade
 ################################################################################
 
 # Install Kernel
-if [ "${RELEASE}" = 'trusty' -a "${KERNEL}" = 'HWE' ]; then
+if [ "${RELEASE}" = 'trusty' -a "${HWE}" = 'YES' ]; then
   # HWE Version
   chroot "${ROOTFS}" apt-get -y install linux-generic-lts-xenial
-elif [ "${RELEASE}" = 'xenial' -a "${KERNEL}" = 'HWE' ]; then
+elif [ "${RELEASE}" = 'xenial' -a "${HEW}" = 'YES' ]; then
   # HWE Version
   chroot "${ROOTFS}" apt-get -y install linux-generic-hwe-16.04
 else
@@ -861,13 +868,13 @@ echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 # Check Desktop Environment
 if [ "x${DESKTOP}" = "xYES" ]; then
   # HWE Kernel
-  if [ "${RELEASE}" = 'trusty' -a "${KERNEL}" = 'HWE' ]; then
+  if [ "${RELEASE}" = 'trusty' -a "${HWE}" = 'YES' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-lts-xenial \
                                           xserver-xorg-core-lts-xenial \
                                           xserver-xorg-input-all-lts-xenial \
                                           xserver-xorg-video-all-lts-xenial \
                                           libwayland-egl1-mesa-lts-xenial
-  elif [ "${RELEASE}" = 'xenial' -a "${KERNEL}" = 'HWE' ]; then
+  elif [ "${RELEASE}" = 'xenial' -a "${HWE}" = 'YES' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
   fi
 
