@@ -8,8 +8,8 @@ set -e
 
 # Generic
 : ${RELEASE:="xenial"}  # [trusty|xenial|bionic]
+: ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
 : ${TYPE:="LIVE"}       # [LIVE|DEPLOY]
-: ${HWE:="YES"}         # [YES|NO]
 : ${DESKTOP:="NO"}      # [YES|NO]
 : ${NVIDIA:="NO"}       # [YES|NO]
 : ${KEYBOARD:="US"}     # [JP|US]
@@ -241,9 +241,9 @@ if [ "${TYPE}" = 'DEPLOY' ]; then
   awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
 else
   # Delete Kernel/Initramfs/RootFs Image
-  [ -f "./release/${RELEASE}/vmlinuz" ]       && rm "./release/${RELEASE}/vmlinuz"
-  [ -f "./release/${RELEASE}/initrd.img" ]    && rm "./release/${RELEASE}/initrd.img"
-  [ -f "./release/${RELEASE}/root.squashfs" ] && rm "./release/${RELEASE}/root.squashfs"
+  [ -f "./release/${RELEASE}/${KERNEL}/vmlinuz" ]       && rm "./release/${RELEASE}/${KERNEL}/vmlinuz"
+  [ -f "./release/${RELEASE}/${KERNEL}/initrd.img" ]    && rm "./release/${RELEASE}/${KERNEL}/initrd.img"
+  [ -f "./release/${RELEASE}/${KERNEL}/root.squashfs" ] && rm "./release/${RELEASE}/${KERNEL}/root.squashfs"
 fi
 
 # Unmount Root Partition
@@ -578,17 +578,28 @@ chroot "${ROOTFS}" apt-get -y dist-upgrade
 # Kernel
 ################################################################################
 
+# Select Kernel
+case "${RELEASE}-${KERNEL}" in
+  "trusty-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
+  "xenial-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
+  "bionic-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
+  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-generic" ;;
+  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
+  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
+  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
+  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic" ;;
+  * )
+    echo "Unknown Release Codename & Kernel Type..."
+    exit 1
+    ;;
+esac
+
 # Install Kernel
-if [ "${RELEASE}" = 'trusty' -a "${HWE}" = 'YES' ]; then
-  # HWE Version
-  chroot "${ROOTFS}" apt-get -y install linux-generic-lts-xenial
-elif [ "${RELEASE}" = 'xenial' -a "${HEW}" = 'YES' ]; then
-  # HWE Version
-  chroot "${ROOTFS}" apt-get -y install linux-generic-hwe-16.04
-else
-  # GA Version
-  chroot "${ROOTFS}" apt-get -y install linux-generic
-fi
+chroot "${ROOTFS}" apt-get -y install "${KERNEL_PACKAGE}"
 
 ################################################################################
 # Require
@@ -867,14 +878,14 @@ echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 
 # Check Desktop Environment
 if [ "x${DESKTOP}" = "xYES" ]; then
-  # HWE Kernel
-  if [ "${RELEASE}" = 'trusty' -a "${HWE}" = 'YES' ]; then
+  # HWE Version Xorg
+  if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-lts-xenial \
                                           xserver-xorg-core-lts-xenial \
                                           xserver-xorg-input-all-lts-xenial \
                                           xserver-xorg-video-all-lts-xenial \
                                           libwayland-egl1-mesa-lts-xenial
-  elif [ "${RELEASE}" = 'xenial' -a "${HWE}" = 'YES' ]; then
+  elif [ "${RELEASE}-${KERNEL}" = 'xenial-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'xenial-signed-generic-hwe' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
   fi
 
@@ -980,22 +991,22 @@ else
   awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
   # Create SquashFS Image
-  mksquashfs "${ROOTFS}" "./release/${RELEASE}/root.squashfs"
+  mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/root.squashfs"
 
   # Copy Kernel and Initramfs
-  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/vmlinuz" \;
-  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/initrd.img" \;
+  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/vmlinuz" \;
+  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/initrd.img" \;
 
   # Permission Files
-  chmod 0644 "./release/${RELEASE}/vmlinuz"
-  chmod 0644 "./release/${RELEASE}/initrd.img"
-  chmod 0644 "./release/${RELEASE}/root.squashfs"
+  chmod 0644 "./release/${RELEASE}/${KERNEL}/vmlinuz"
+  chmod 0644 "./release/${RELEASE}/${KERNEL}/initrd.img"
+  chmod 0644 "./release/${RELEASE}/${KERNEL}/root.squashfs"
 
   # Owner/Group Files
   if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/vmlinuz"
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/initrd.img"
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/root.squashfs"
+    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/vmlinuz"
+    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/initrd.img"
+    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/root.squashfs"
   fi
 fi
 
