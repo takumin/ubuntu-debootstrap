@@ -1010,9 +1010,7 @@ if [ "${TYPE}" = 'deploy' ]; then
 
   # Owner/Group Files
   if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/vmlinuz"
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/initrd.img"
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/root.squashfs"
+    chown -R "${SUDO_UID}:${SUDO_GID}" "./release"
   fi
 elif [ "${TYPE}" = 'deploy' ]; then
   # Update Grub
