@@ -78,6 +78,11 @@ if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bi
   exit 1
 fi
 
+if [ "${KERNEL}" != 'generic' -a "${KERNEL}" != 'generic-hwe' -a "${KERNEL}" != 'signed-generic' -a "${KERNEL}" != 'signed-generic-hwe' ]; then
+  echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
+  exit 1
+fi
+
 # Live Image Environment
 if [ "${TYPE}" = 'DEPLOY' ]; then
   # Root Disk Type
