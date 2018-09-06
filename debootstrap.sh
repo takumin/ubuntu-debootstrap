@@ -326,11 +326,17 @@ fi
 # Host Name
 export HOSTNAME="${SITENAME}"
 
+# Debootstrap Components
+COMPONENTS="--components=main,restricted,universe,multiverse"
+
+# Debootstrap Include Packages
+INCLUDES="--include=gnupg"
+
 # Install Base System
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
-  env http_proxy="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}" debootstrap "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+  env http_proxy="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}" debootstrap "${COMPONENTS}" "${INCLUDES}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
 else
-  debootstrap "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+  debootstrap "${COMPONENTS}" "${INCLUDES}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
 fi
 
 # Require Environment
@@ -454,13 +460,17 @@ chroot "${ROOTFS}" adduser "${USER_NAME}" cdrom
 chroot "${ROOTFS}" adduser "${USER_NAME}" dialout
 chroot "${ROOTFS}" adduser "${USER_NAME}" dip
 chroot "${ROOTFS}" adduser "${USER_NAME}" lpadmin
-chroot "${ROOTFS}" adduser "${USER_NAME}" netdev
 chroot "${ROOTFS}" adduser "${USER_NAME}" plugdev
 chroot "${ROOTFS}" adduser "${USER_NAME}" sambashare
 chroot "${ROOTFS}" adduser "${USER_NAME}" staff
 chroot "${ROOTFS}" adduser "${USER_NAME}" sudo
 chroot "${ROOTFS}" adduser "${USER_NAME}" users
 chroot "${ROOTFS}" adduser "${USER_NAME}" video
+
+# Trusty/Xenial Only
+if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+  chroot "${ROOTFS}" adduser "${USER_NAME}" netdev
+fi
 
 # Change Password
 chroot ${ROOTFS} sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
@@ -559,7 +569,10 @@ chroot "${ROOTFS}" apt-get -y dist-upgrade
 ################################################################################
 
 # Install Kernel
-if [ "x${KERNEL}" = "xHWE" ]; then
+if [ "${RELEASE}" = 'trusty' -a "${KERNEL}" = 'HWE' ]; then
+  # HWE Version
+  chroot "${ROOTFS}" apt-get -y install linux-generic-lts-xenial
+elif [ "${RELEASE}" = 'xenial' -a "${KERNEL}" = 'HWE' ]; then
   # HWE Version
   chroot "${ROOTFS}" apt-get -y install linux-generic-hwe-16.04
 else
@@ -845,7 +858,13 @@ echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 # Check Desktop Environment
 if [ "x${DESKTOP}" = "xYES" ]; then
   # HWE Kernel
-  if [ "x${KERNEL}" = "xHWE" ]; then
+  if [ "${RELEASE}" = 'trusty' -a "${KERNEL}" = 'HWE' ]; then
+    chroot "${ROOTFS}" apt-get -y install xserver-xorg-lts-xenial \
+                                          xserver-xorg-core-lts-xenial \
+                                          xserver-xorg-input-all-lts-xenial \
+                                          xserver-xorg-video-all-lts-xenial \
+                                          libwayland-egl1-mesa-lts-xenial
+  elif [ "${RELEASE}" = 'xenial' -a "${KERNEL}" = 'HWE' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
   fi
 
