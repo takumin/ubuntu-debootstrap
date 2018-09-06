@@ -1,7 +1,5 @@
 .envrc
-vmlinuz
-initrd.img
-root.squashfs
-!debootstrap.sh
-!makeusb.sh
-*.sh
+config/*
+config/!.gitkeep
+release/*
+release/!.gitkeep
