@@ -8,7 +8,7 @@ set -e
 
 # Generic
 : ${RELEASE:="xenial"}  # [trusty|xenial|bionic]
-: ${LIVE:="YES"}        # [TRUE|FALSE]
+: ${TYPE:="LIVE"}       # [LIVE|DEPLOY]
 : ${KERNEL:="NORMAL"}   # [NORMAL|HWE]
 : ${DESKTOP:="NO"}      # [YES|NO]
 : ${NVIDIA:="NO"}       # [YES|NO]
@@ -63,6 +63,9 @@ set -e
 
 if [ -n "$1" -a -r "$1" ]; then
   . "$1"
+else
+  echo 'Configuration file required as argument'
+  exit 1
 fi
 
 ################################################################################
@@ -70,7 +73,7 @@ fi
 ################################################################################
 
 # Check Live Image Environment
-if [ "x${LIVE}" != "xYES" ]; then
+if [ "${TYPE}" == 'DEPLOY' ]; then
   # Check Root Disk Type
   if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
     echo "Unknown Environment ROOT_DISK_TYPE"
@@ -220,7 +223,7 @@ fi
 ################################################################################
 
 # Check Live Image Environment
-if [ "x${LIVE}" != "xYES" ]; then
+if [ "${TYPE}" == 'DEPLOY' ]; then
   # Get Disk ID
   ROOT_DISK_PATH="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}`"
 
@@ -244,7 +247,7 @@ awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-i
 ################################################################################
 
 # Check Live Image Environment
-if [ "x${LIVE}" != "xYES" ]; then
+if [ "${TYPE}" == 'DEPLOY' ]; then
   # Check Disk Type
   if [ "x${ROOT_DISK_TYPE}" = "xSSD" ]; then
     # Enter Key Message
@@ -380,7 +383,7 @@ fi
 ln -s /proc/self/mounts "${ROOTFS}/etc/mtab"
 
 # Check Live Image Environment
-if [ "x${LIVE}" != "xYES" ]; then
+if [ "${TYPE}" == 'DEPLOY' ]; then
   # Create Mount Point
   echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
   echo "${ROOTPT}       /          xfs    defaults          0      1"      >> "${ROOTFS}/etc/fstab"
@@ -605,7 +608,7 @@ chroot "${ROOTFS}" apt-get -y install xfsprogs xfsdump acl attr
 ################################################################################
 
 # Check Live Image Environment
-if [ "x${LIVE}" != "xYES" ]; then
+if [ "${TYPE}" == 'DEPLOY' ]; then
   # Check UEFI Platform
   if [ -d "/sys/firmware/efi" ]; then
     # EFI Boot Manager
@@ -903,7 +906,7 @@ if [ "x${DESKTOP}" = "xYES" ]; then
     echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
 
     # Check Live Image Environment
-    if [ "x${LIVE}" != "xYES" ]; then
+    if [ "${TYPE}" == 'DEPLOY' ]; then
       # Enable Kernel Mode Setting
       sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"$@GRUB_CMDLINE_LINUX_DEFAULT="nvidia-drm.modeset=1 \1"@' "${ROOTFS}/etc/default/grub"
     fi
@@ -937,7 +940,7 @@ fi
 chroot "${ROOTFS}" update-initramfs -u -k all
 
 # Check Live Image Environment
-if [ "x${LIVE}" != "xYES" ]; then
+if [ "${TYPE}" == 'DEPLOY' ]; then
   # Update Grub
   chroot "${ROOTFS}" update-grub
 
