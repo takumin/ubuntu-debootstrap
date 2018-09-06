@@ -234,9 +234,9 @@ if [ "${TYPE}" = 'DEPLOY' ]; then
   awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
 else
   # Delete Kernel/Initramfs/RootFs Image
-  [ -f "./release/vmlinuz" ]       && rm "./release/vmlinuz"
-  [ -f "./release/initrd.img" ]    && rm "./release/initrd.img"
-  [ -f "./release/root.squashfs" ] && rm "./release/root.squashfs"
+  [ -f "./release/${RELEASE}/vmlinuz" ]       && rm "./release/${RELEASE}/vmlinuz"
+  [ -f "./release/${RELEASE}/initrd.img" ]    && rm "./release/${RELEASE}/initrd.img"
+  [ -f "./release/${RELEASE}/root.squashfs" ] && rm "./release/${RELEASE}/root.squashfs"
 fi
 
 # Unmount Root Partition
@@ -973,22 +973,22 @@ else
   awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
   # Create SquashFS Image
-  mksquashfs "${ROOTFS}" "./release/root.squashfs"
+  mksquashfs "${ROOTFS}" "./release/${RELEASE}/root.squashfs"
 
   # Copy Kernel and Initramfs
-  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/vmlinuz" \;
-  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/initrd.img" \;
+  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/vmlinuz" \;
+  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/initrd.img" \;
 
   # Permission Files
-  chmod 0644 "./release/vmlinuz"
-  chmod 0644 "./release/initrd.img"
-  chmod 0644 "./release/root.squashfs"
+  chmod 0644 "./release/${RELEASE}/vmlinuz"
+  chmod 0644 "./release/${RELEASE}/initrd.img"
+  chmod 0644 "./release/${RELEASE}/root.squashfs"
 
   # Owner/Group Files
   if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/vmlinuz"
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/initrd.img"
-    chown "${SUDO_UID}:${SUDO_GID}" "./release/root.squashfs"
+    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/vmlinuz"
+    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/initrd.img"
+    chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/root.squashfs"
   fi
 fi
 
