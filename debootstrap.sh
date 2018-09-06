@@ -883,6 +883,11 @@ chroot "${ROOTFS}" apt-get -y install ssh
 echo ''          >> "${ROOTFS}/etc/ssh/sshd_config"
 echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 
+# Remove SSH Host Keys for Live Environment
+if [ "${TYPE}" = 'live' ]; then
+  find "${ROOTFS}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
+fi
+
 ################################################################################
 # Cloud-Init
 ################################################################################
