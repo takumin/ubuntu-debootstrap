@@ -154,6 +154,15 @@ if [ "x${DISTRIB_ID}" = "xUbuntu" ]; then
     echo "deb ${MIRROR_UBUNTU} ${RELEASE}-security main restricted universe multiverse" >> "/etc/apt/sources.list"
   fi
 
+  # Check Drone CI
+  if [ "${CI}" = 'drone' ]; then
+    # Official Repository
+    echo "# Official Repository"                                                        >  "/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}          main restricted universe multiverse" >> "/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-updates  main restricted universe multiverse" >> "/etc/apt/sources.list"
+    echo "deb ${MIRROR_UBUNTU} ${RELEASE}-security main restricted universe multiverse" >> "/etc/apt/sources.list"
+  fi
+
   # Update Repository
   apt-get -y update
 
