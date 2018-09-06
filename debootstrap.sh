@@ -7,10 +7,10 @@ set -e
 ################################################################################
 
 # Generic
+: ${TYPE:="live"}       # [live|deploy]
+: ${MODE:="server"}     # [server|desktop]
 : ${RELEASE:="xenial"}  # [trusty|xenial|bionic]
 : ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
-: ${TYPE:="LIVE"}       # [LIVE|DEPLOY]
-: ${DESKTOP:="NO"}      # [YES|NO]
 : ${NVIDIA:="NO"}       # [YES|NO]
 : ${KEYBOARD:="US"}     # [JP|US]
 : ${SHUTDOWN:="NO"}     # [YES|NO]
@@ -72,19 +72,32 @@ fi
 # Check Environment
 ################################################################################
 
-# Release Codename
+# Type
+if [ "${TYPE}" != 'live' -a "${RELEASE}" != 'deploy' ]; then
+  echo "TYPE: live or deploy"
+  exit 1
+fi
+
+# Mode
+if [ "${MODE}" != 'server' -a "${MODE}" != 'desktop' ]; then
+  echo "MODE: server or desktop"
+  exit 1
+fi
+
+# Release
 if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bionic' ]; then
   echo "RELEASE: trusty or xenial or bionic"
   exit 1
 fi
 
+# Kernel
 if [ "${KERNEL}" != 'generic' -a "${KERNEL}" != 'generic-hwe' -a "${KERNEL}" != 'signed-generic' -a "${KERNEL}" != 'signed-generic-hwe' ]; then
   echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
   exit 1
 fi
 
 # Live Image Environment
-if [ "${TYPE}" = 'DEPLOY' ]; then
+if [ "${TYPE}" = 'deploy' ]; then
   # Root Disk Type
   if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
     echo "ROOT_DISK_TYPE: HDD or SSD or NVME"
@@ -234,8 +247,13 @@ fi
 # Cleanup
 ################################################################################
 
-# Check Live Image Environment
-if [ "${TYPE}" = 'DEPLOY' ]; then
+# Check Image Environment
+if [ "${TYPE}" = 'live' ]; then
+  # Delete Kernel/Initramfs/RootFs Image
+  [ -f "./release/${RELEASE}/${KERNEL}/vmlinuz" ]       && rm "./release/${RELEASE}/${KERNEL}/vmlinuz"
+  [ -f "./release/${RELEASE}/${KERNEL}/initrd.img" ]    && rm "./release/${RELEASE}/${KERNEL}/initrd.img"
+  [ -f "./release/${RELEASE}/${KERNEL}/root.squashfs" ] && rm "./release/${RELEASE}/${KERNEL}/root.squashfs"
+elif [ "${TYPE}" = 'deploy' ]; then
   # Get Disk ID
   ROOT_DISK_PATH="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}`"
 
@@ -244,11 +262,6 @@ if [ "${TYPE}" = 'DEPLOY' ]; then
 
   # Unmount Disk Drive
   awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
-else
-  # Delete Kernel/Initramfs/RootFs Image
-  [ -f "./release/${RELEASE}/${KERNEL}/vmlinuz" ]       && rm "./release/${RELEASE}/${KERNEL}/vmlinuz"
-  [ -f "./release/${RELEASE}/${KERNEL}/initrd.img" ]    && rm "./release/${RELEASE}/${KERNEL}/initrd.img"
-  [ -f "./release/${RELEASE}/${KERNEL}/root.squashfs" ] && rm "./release/${RELEASE}/${KERNEL}/root.squashfs"
 fi
 
 # Unmount Root Partition
@@ -259,7 +272,11 @@ awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-i
 ################################################################################
 
 # Check Live Image Environment
-if [ "${TYPE}" = 'DEPLOY' ]; then
+if [ "${TYPE}" = 'live' ]; then
+  # Mount Root File System Partition
+  mkdir -p "${ROOTFS}"
+  mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
+elif [ "${TYPE}" = 'deploy' ]; then
   # Check Disk Type
   if [ "x${ROOT_DISK_TYPE}" = "xSSD" ]; then
     # Enter Key Message
@@ -328,10 +345,6 @@ if [ "${TYPE}" = 'DEPLOY' ]; then
 
   # Mount Linux Swap Partition
   swapon "${SWAPPT}"
-else
-  # Mount Root File System Partition
-  mkdir -p "${ROOTFS}"
-  mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 fi
 
 ################################################################################
@@ -395,7 +408,7 @@ fi
 ln -s /proc/self/mounts "${ROOTFS}/etc/mtab"
 
 # Check Live Image Environment
-if [ "${TYPE}" = 'DEPLOY' ]; then
+if [ "${TYPE}" = 'deploy' ]; then
   # Create Mount Point
   echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
   echo "${ROOTPT}       /          xfs    defaults          0      1"      >> "${ROOTFS}/etc/fstab"
@@ -631,32 +644,7 @@ chroot "${ROOTFS}" apt-get -y install xfsprogs xfsdump acl attr
 ################################################################################
 
 # Check Live Image Environment
-if [ "${TYPE}" = 'DEPLOY' ]; then
-  # Check UEFI Platform
-  if [ -d "/sys/firmware/efi" ]; then
-    # EFI Boot Manager
-    chroot "${ROOTFS}" apt-get -y install efibootmgr
-
-    # Grub Boot Loader
-    chroot "${ROOTFS}" apt-get -y install grub-efi
-
-    # Remove UEFI Entry
-    for i in `efibootmgr | grep -E 'Boot[0-9A-F]{4}' | sed -e 's/^Boot\([0-9A-Z]\{4\}\).*$/\1/;'`; do
-      efibootmgr -b $i -B
-    done
-
-    # Generate UEFI Boot Entry
-    chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
-    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
-  else
-    # Grub Boot Loader
-    chroot "${ROOTFS}" apt-get -y install grub-pc
-
-    # Generate UEFI Boot Entry
-    chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
-    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
-  fi
-else
+if [ "${TYPE}" = 'live' ]; then
   # EFI Boot Manager
   chroot "${ROOTFS}" apt-get -y install efibootmgr
 
@@ -751,7 +739,7 @@ else
   echo 'BOOT=liveroot' >> "${ROOTFS}/etc/initramfs-tools/initramfs.conf"
 
   # Check Desktop Environment
-  if [ "x${DESKTOP}" != "xYES" ]; then
+  if [ "${MODE}" = 'server' ]; then
     # Auto Login
     mkdir -p "${ROOTFS}/etc/systemd/system/getty@tty1.service.d"
     echo "[Service]"                                                         >  "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
@@ -799,6 +787,31 @@ else
 
     # Set Permission
     chmod 0755 "${ROOTFS}/root/.startup.sh"
+  fi
+elif [ "${TYPE}" = 'deploy' ]; then
+  # Check UEFI Platform
+  if [ -d "/sys/firmware/efi" ]; then
+    # EFI Boot Manager
+    chroot "${ROOTFS}" apt-get -y install efibootmgr
+
+    # Grub Boot Loader
+    chroot "${ROOTFS}" apt-get -y install grub-efi
+
+    # Remove UEFI Entry
+    for i in `efibootmgr | grep -E 'Boot[0-9A-F]{4}' | sed -e 's/^Boot\([0-9A-Z]\{4\}\).*$/\1/;'`; do
+      efibootmgr -b $i -B
+    done
+
+    # Generate UEFI Boot Entry
+    chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
+    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+  else
+    # Grub Boot Loader
+    chroot "${ROOTFS}" apt-get -y install grub-pc
+
+    # Generate UEFI Boot Entry
+    chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
+    chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
   fi
 fi
 
@@ -882,7 +895,7 @@ echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 ################################################################################
 
 # Check Desktop Environment
-if [ "x${DESKTOP}" = "xYES" ]; then
+if [ "${MODE}" = 'desktop' ]; then
   # HWE Version Xorg
   if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-lts-xenial \
@@ -929,7 +942,7 @@ if [ "x${DESKTOP}" = "xYES" ]; then
     echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
 
     # Check Live Image Environment
-    if [ "${TYPE}" = 'DEPLOY' ]; then
+    if [ "${TYPE}" = 'deploy' ]; then
       # Enable Kernel Mode Setting
       sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"$@GRUB_CMDLINE_LINUX_DEFAULT="nvidia-drm.modeset=1 \1"@' "${ROOTFS}/etc/default/grub"
     fi
@@ -963,22 +976,7 @@ fi
 chroot "${ROOTFS}" update-initramfs -u -k all
 
 # Check Live Image Environment
-if [ "${TYPE}" = 'DEPLOY' ]; then
-  # Update Grub
-  chroot "${ROOTFS}" update-grub
-
-  # Disk Sync
-  sync;sync;sync
-
-  # Check Disk Type
-  if [ "x${ROOT_DISK_TYPE}" = "xSSD" -o "x${ROOT_DISK_TYPE}" = "xNVME" ]; then
-    # TRIM
-    fstrim -v "${ROOTFS}"
-  fi
-
-  # Unmount RootFs
-  awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
-else
+if [ "${TYPE}" = 'deploy' ]; then
   # Disable Boot Cache
   chroot "${ROOTFS}" systemctl disable ureadahead.service
 
@@ -1016,6 +1014,21 @@ else
     chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/initrd.img"
     chown "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${KERNEL}/root.squashfs"
   fi
+elif [ "${TYPE}" = 'deploy' ]; then
+  # Update Grub
+  chroot "${ROOTFS}" update-grub
+
+  # Disk Sync
+  sync;sync;sync
+
+  # Check Disk Type
+  if [ "x${ROOT_DISK_TYPE}" = "xSSD" -o "x${ROOT_DISK_TYPE}" = "xNVME" ]; then
+    # TRIM
+    fstrim -v "${ROOTFS}"
+  fi
+
+  # Unmount RootFs
+  awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
 fi
 
 # Unmount RootFs
