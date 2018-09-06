@@ -234,9 +234,9 @@ if [ "${TYPE}" = 'DEPLOY' ]; then
   awk '{print $1}' /proc/mounts | grep -s "${ROOT_DISK_PATH}" | sort -r | xargs --no-run-if-empty umount
 else
   # Delete Kernel/Initramfs/RootFs Image
-  [ -f "./vmlinuz" ]       && rm "./vmlinuz"
-  [ -f "./initrd.img" ]    && rm "./initrd.img"
-  [ -f "./root.squashfs" ] && rm "./root.squashfs"
+  [ -f "./release/vmlinuz" ]       && rm "./release/vmlinuz"
+  [ -f "./release/initrd.img" ]    && rm "./release/initrd.img"
+  [ -f "./release/root.squashfs" ] && rm "./release/root.squashfs"
 fi
 
 # Unmount Root Partition
