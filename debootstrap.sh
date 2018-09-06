@@ -976,7 +976,7 @@ fi
 chroot "${ROOTFS}" update-initramfs -u -k all
 
 # Check Live Image Environment
-if [ "${TYPE}" = 'deploy' ]; then
+if [ "${TYPE}" = 'live' ]; then
   # Disable Boot Cache
   chroot "${ROOTFS}" systemctl disable ureadahead.service
 
