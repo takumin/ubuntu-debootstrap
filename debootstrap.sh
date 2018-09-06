@@ -990,6 +990,9 @@ else
   # Unmount RootFs
   awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
+  # Create Release Directory
+  [ ! -d "./release/${RELEASE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${KERNEL}"
+
   # Create SquashFS Image
   mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/root.squashfs"
 
