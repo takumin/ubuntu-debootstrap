@@ -914,8 +914,10 @@ fi
 # Cleanup
 ################################################################################
 
-# Remove Original Resolve
-rm "${ROOTFS}/etc/resolvconf/resolv.conf.d/original"
+if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+  # Remove Original Resolve
+  rm "${ROOTFS}/etc/resolvconf/resolv.conf.d/original"
+fi
 
 # Cleanup Packages
 chroot "${ROOTFS}" apt-get -y autoremove --purge
