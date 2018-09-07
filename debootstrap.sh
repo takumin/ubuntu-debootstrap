@@ -825,57 +825,63 @@ fi
 # Network
 ################################################################################
 
-# Install NetworkManager
-chroot "${ROOTFS}" apt-get -y --no-install-recommends install network-manager
+# Trusty/Xenial Only
+if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+  # Install NetworkManager
+  chroot "${ROOTFS}" apt-get -y --no-install-recommends install network-manager
 
-# Check Device IP Address
-if [ "x${ADDRESS}" != "xauto" ]; then
-  # Variables
-  _DNS_SERVER="`echo ${DNS_SERVER} | sed -e 's/ /;/g'`"
-  _DNS_SEARCH="`echo ${DNS_SEARCH} | sed -e 's/ /;/g'`"
+  # Check Device IP Address
+  if [ "x${ADDRESS}" != "xauto" ]; then
+    # Variables
+    _DNS_SERVER="`echo ${DNS_SERVER} | sed -e 's/ /;/g'`"
+    _DNS_SEARCH="`echo ${DNS_SEARCH} | sed -e 's/ /;/g'`"
 
-  # Configure
-  echo "[connection]"                   >  "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "id=Wired"                       >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "type=ethernet"                  >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo ""                               >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "[ipv4]"                         >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "method=manual"                  >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "address1=${ADDRESS},${GATEWAY}" >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "dns=${_DNS_SERVER};"            >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "dns-search=${_DNS_SEARCH};"     >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo ""                               >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "[ipv6]"                         >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "method=ignore"                  >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
-  echo "addr-gen-mode=stable-privacy"   >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    # Configure
+    echo "[connection]"                   >  "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "id=Wired"                       >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "type=ethernet"                  >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo ""                               >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "[ipv4]"                         >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "method=manual"                  >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "address1=${ADDRESS},${GATEWAY}" >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "dns=${_DNS_SERVER};"            >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "dns-search=${_DNS_SEARCH};"     >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo ""                               >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "[ipv6]"                         >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "method=ignore"                  >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    echo "addr-gen-mode=stable-privacy"   >> "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
 
-  # Change Owner
-  chown root:root "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    # Change Owner
+    chown root:root "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
 
-  # Change Permission
-  chmod 0600 "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+    # Change Permission
+    chmod 0600 "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+  fi
 fi
 
 ################################################################################
 # Ntp
 ################################################################################
 
-# Install NTP Server
-chroot "${ROOTFS}" apt-get -y install ntp
+# Trusty/Xenial Only
+if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+  # Install NTP Server
+  chroot "${ROOTFS}" apt-get -y install ntp
 
-# Disable Default Server List
-sed -i -e 's@^\(server.*\)@#\1@' "${ROOTFS}/etc/ntp.conf"
-sed -i -e 's@^\(pool.*\)@#\1@' "${ROOTFS}/etc/ntp.conf"
+  # Disable Default Server List
+  sed -i -e 's@^\(server.*\)@#\1@' "${ROOTFS}/etc/ntp.conf"
+  sed -i -e 's@^\(pool.*\)@#\1@' "${ROOTFS}/etc/ntp.conf"
 
-# Configure NTP Server List
-if [ "x${NTP_SERVER}" != "x" -o "x${NTP_POOL}" != "x" ]; then
-  echo '' >> "${ROOTFS}/etc/ntp.conf"
-  for i in ${NTP_SERVER}; do
-    echo "server ${i} iburst" >> "${ROOTFS}/etc/ntp.conf"
-  done
-  for i in ${NTP_POOL}; do
-    echo "pool ${i} iburst" >> "${ROOTFS}/etc/ntp.conf"
-  done
+  # Configure NTP Server List
+  if [ "x${NTP_SERVER}" != "x" -o "x${NTP_POOL}" != "x" ]; then
+    echo '' >> "${ROOTFS}/etc/ntp.conf"
+    for i in ${NTP_SERVER}; do
+      echo "server ${i} iburst" >> "${ROOTFS}/etc/ntp.conf"
+    done
+    for i in ${NTP_POOL}; do
+      echo "pool ${i} iburst" >> "${ROOTFS}/etc/ntp.conf"
+    done
+  fi
 fi
 
 ################################################################################
