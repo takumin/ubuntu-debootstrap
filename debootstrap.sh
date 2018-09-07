@@ -70,7 +70,7 @@ fi
 ################################################################################
 
 # Type
-if [ "${TYPE}" != 'live' -a "${RELEASE}" != 'deploy' ]; then
+if [ "${TYPE}" != 'live' -a "${TYPE}" != 'deploy' ]; then
   echo "TYPE: live or deploy"
   exit 1
 fi
