@@ -908,6 +908,16 @@ fi
 #chroot "${ROOTFS}" apt-get -y install cloud-init
 
 ################################################################################
+# Server
+################################################################################
+
+# Check Server Environment
+if [ "${MODE}" = 'server' ]; then
+  # Standard Packages
+  chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
+fi
+
+################################################################################
 # Desktop
 ################################################################################
 
@@ -924,7 +934,7 @@ if [ "${MODE}" = 'desktop' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
   fi
 
-  # Desktop
+  # Standard Packages
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
   # Input Method
