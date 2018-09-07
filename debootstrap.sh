@@ -63,9 +63,6 @@ set -e
 
 if [ -n "$1" -a -r "$1" ]; then
   . "$1"
-else
-  echo 'Configuration file required as argument'
-  exit 1
 fi
 
 ################################################################################
