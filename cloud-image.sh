@@ -186,9 +186,6 @@ if [ "${PROFILE}" = 'server' ]; then
 
   # Check Install Boot Loader
   if [ ! -e "${ROOTFS}/boot/grub/grub.cfg" ]; then
-    # Purge EC2 Grub Boot Loader
-    chroot "${ROOTFS}" apt-get -y purge grub-legacy-ec2
-
     # Cleanup Boot Directory
     rm -fr "${ROOTFS}/boot/grub"
   fi
