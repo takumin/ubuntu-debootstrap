@@ -63,12 +63,12 @@ export DEBIAN_PRIORITY="critical"
 export DEBCONF_NONINTERACTIVE_SEEN="true"
 
 # Cleanup Files
-find "${ROOTFS}/dev"       -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/proc"      -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/run"       -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/sys"       -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/tmp"       -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/var/tmp"   -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${ROOTFS}/dev"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${ROOTFS}/proc"    -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${ROOTFS}/run"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${ROOTFS}/sys"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${ROOTFS}/tmp"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${ROOTFS}/var/tmp" -mindepth 1 | xargs --no-run-if-empty rm -fr
 
 # Require Mount
 mount -t devtmpfs                   devtmpfs "${ROOTFS}/dev"
