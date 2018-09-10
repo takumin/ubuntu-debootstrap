@@ -15,9 +15,9 @@ fi
 ################################################################################
 
 # Generic
-: ${TYPE:="server"}     # [minimal|standard|server|desktop]
-: ${RELEASE:="bionic"}  # [trusty|xenial|bionic]
-: ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
+: ${RELEASE:="bionic"}      # [trusty|xenial|bionic]
+: ${KERNEL:="generic"}      # [generic|generic-hwe|signed-generic|signed-generic-hwe]
+: ${PROFILE:="server"}      # [minimal|standard|server|desktop]
 
 # Cloud
 : ${DATASOURCES:="NoCloud"} # Cloud-Init Datasources
@@ -36,12 +36,6 @@ fi
 # Check Environment
 ################################################################################
 
-# Type
-if [ "${TYPE}" != 'minimal' -a "${TYPE}" != 'standard' -a "${TYPE}" != 'server' -a "${TYPE}" != 'desktop' ]; then
-  echo "TYPE: minimal or standard or server or desktop"
-  exit 1
-fi
-
 # Release
 if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bionic' ]; then
   echo "RELEASE: trusty or xenial or bionic"
@@ -54,17 +48,23 @@ if [ "${KERNEL}" != 'generic' -a "${KERNEL}" != 'generic-hwe' -a "${KERNEL}" != 
   exit 1
 fi
 
+# Profile
+if [ "${PROFILE}" != 'minimal' -a "${PROFILE}" != 'standard' -a "${PROFILE}" != 'server' -a "${PROFILE}" != 'desktop' ]; then
+  echo "PROFILE: minimal or standard or server or desktop"
+  exit 1
+fi
+
 ################################################################################
 # Cleanup
 ################################################################################
 
 # Check Release Directory
-if [ -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ]; then
+if [ -d "./release/${RELEASE}/${KERNEL}/${PROFILE}" ]; then
   # Cleanup Release Directory
-  find "./release/${RELEASE}/${TYPE}/${KERNEL}" -type f | xargs rm -f
+  find "./release/${RELEASE}/${KERNEL}/${PROFILE}" -type f | xargs rm -f
 else
   # Create Release Directory
-  mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
+  mkdir -p "./release/${RELEASE}/${KERNEL}/${PROFILE}"
 fi
 
 # Unmount Root Partition
@@ -170,7 +170,7 @@ chroot "${ROOTFS}" apt-get -y install ubuntu-minimal
 ################################################################################
 
 # Check Environment Variable
-if [ "${TYPE}" = 'standard' -o "${TYPE}" = 'server' -o "${TYPE}" = 'desktop' ]; then
+if [ "${PROFILE}" = 'standard' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'desktop' ]; then
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-standard
 fi
@@ -180,7 +180,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${TYPE}" = 'server' ]; then
+if [ "${PROFILE}" = 'server' ]; then
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
 
@@ -199,7 +199,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${TYPE}" = 'desktop' ]; then
+if [ "${PROFILE}" = 'desktop' ]; then
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 fi
@@ -242,7 +242,7 @@ chmod 0644 "${ROOTFS}/var/log/lastlog"
 ################################################################################
 
 # Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "./release/${RELEASE}/${TYPE}/${KERNEL}/packages.manifest"
+chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "./release/${RELEASE}/${KERNEL}/${PROFILE}/packages.manifest"
 
 ################################################################################
 # Archive
@@ -252,10 +252,10 @@ chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "./relea
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
 # Create SquashFS Image
-mksquashfs "${ROOTFS}" "./release/${RELEASE}/${TYPE}/${KERNEL}/rootfs.squashfs" -comp xz
+mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.squashfs" -comp xz
 
 # Create TarBall Image
-tar -I pixz -p --acls --xattrs --one-file-system -cf "./release/${RELEASE}/${TYPE}/${KERNEL}/rootfs.tar.xz" -C "${ROOTFS}" .
+tar -I pixz -p --acls --xattrs --one-file-system -cf "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.tar.xz" -C "${ROOTFS}" .
 
 # Require Mount
 mount -t devtmpfs                   devtmpfs "${ROOTFS}/dev"
@@ -302,7 +302,7 @@ esac
 chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
 
 # Copy Kernel
-find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/kernel.img" \;
+find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${PROFILE}/kernel.img" \;
 
 ################################################################################
 # Initramfs
@@ -322,7 +322,7 @@ fi
 chroot "${ROOTFS}" update-initramfs -u -k all
 
 # Copy Initrd
-find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/initrd.img" \;
+find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${PROFILE}/initrd.img" \;
 
 ################################################################################
 # Permission
