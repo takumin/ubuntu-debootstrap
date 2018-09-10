@@ -214,10 +214,62 @@ fi
 ################################################################################
 
 # Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-init
+chroot "${ROOTFS}" apt-get -y install cloud-init cloud-initramfs-rooturl
 
 # Clear Default Config
-echo "" > "${ROOTFS}/etc/cloud/cloud.cfg"
+cat << __EOF__ > "${ROOTFS}/etc/cloud/cloud.cfg"
+cloud_init_modules:
+ - migrator
+ - seed_random
+ - bootcmd
+ - write-files
+ - growpart
+ - resizefs
+ - disk_setup
+ - mounts
+ - set_hostname
+ - update_hostname
+ - update_etc_hosts
+ - ca-certs
+ - rsyslog
+ - users-groups
+ - ssh
+cloud_config_modules:
+ - emit_upstart
+ - snap
+ - ssh-import-id
+ - locale
+ - set-passwords
+ - grub-dpkg
+ - apt-pipelining
+ - apt-configure
+ - ubuntu-advantage
+ - ntp
+ - timezone
+ - disable-ec2-metadata
+ - runcmd
+ - byobu
+cloud_final_modules:
+ - package-update-upgrade-install
+ - fan
+ - landscape
+ - lxd
+ - puppet
+ - chef
+ - mcollective
+ - salt-minion
+ - rightscale_userdata
+ - scripts-vendor
+ - scripts-per-once
+ - scripts-per-boot
+ - scripts-per-instance
+ - scripts-user
+ - ssh-authkey-fingerprints
+ - keys-to-console
+ - phone-home
+ - final-message
+ - power-state-change
+__EOF__
 
 # Select Datasources
 sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/etc/cloud/cloud.cfg.d/90_dpkg.cfg"
