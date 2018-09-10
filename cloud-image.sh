@@ -58,8 +58,14 @@ fi
 # Cleanup
 ################################################################################
 
-# Create Release Directory
-[ ! -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
+# Check Release Directory
+if [ -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ]; then
+  # Cleanup Release Directory
+  rm -fr "./release/${RELEASE}/${TYPE}/${KERNEL}/*"
+else
+  # Create Release Directory
+  mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
+fi
 
 # Unmount Root Partition
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
