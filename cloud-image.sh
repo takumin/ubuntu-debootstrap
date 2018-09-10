@@ -32,6 +32,13 @@ fi
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
 : ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64"}
 
+# Proxy
+: ${NO_PROXY:=""}
+: ${APT_PROXY:=""}
+: ${FTP_PROXY:=""}
+: ${HTTP_PROXY:=""}
+: ${HTTPS_PROXY:=""}
+
 ################################################################################
 # Check Environment
 ################################################################################
@@ -85,11 +92,18 @@ mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 # Debootstrap Use Variant
 VARIANT="--variant=minbase"
 
+# Debootstrap Components
+COMPONENTS="--components=main,restricted,universe,multiverse"
+
 # Debootstrap Include Packages
 INCLUDE="--include=gnupg"
 
 # Install Base System
-debootstrap "${VARIANT}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
+  env http_proxy="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}" debootstrap "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+else
+  debootstrap "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+fi
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
