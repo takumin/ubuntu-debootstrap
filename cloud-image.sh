@@ -15,7 +15,7 @@ fi
 ################################################################################
 
 # Generic
-: ${TYPE:="server"}     # [server|desktop]
+: ${TYPE:="server"}     # [minimal|standard|server|desktop]
 : ${RELEASE:="bionic"}  # [trusty|xenial|bionic]
 : ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
 
@@ -37,8 +37,8 @@ fi
 ################################################################################
 
 # Type
-if [ "${TYPE}" != 'server' -a "${TYPE}" != 'desktop' ]; then
-  echo "TYPE: server or desktop"
+if [ "${TYPE}" != 'minimal' -a "${TYPE}" != 'standard' -a "${TYPE}" != 'server' -a "${TYPE}" != 'desktop' ]; then
+  echo "TYPE: minimal or standard or server or desktop"
   exit 1
 fi
 
@@ -159,27 +159,21 @@ chroot "${ROOTFS}" apt-get -y update
 chroot "${ROOTFS}" apt-get -y dist-upgrade
 
 ################################################################################
-# Standard
+# Minimal
 ################################################################################
 
 # Minimal Package
 chroot "${ROOTFS}" apt-get -y install ubuntu-minimal
 
-# Standard Package
-chroot "${ROOTFS}" apt-get -y install ubuntu-standard
-
 ################################################################################
-# Cloud
+# Standard
 ################################################################################
 
-# Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-init
-
-# Clear Default Config
-echo "" > "${ROOTFS}/etc/cloud/cloud.cfg"
-
-# Select Datasources
-sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/etc/cloud/cloud.cfg.d/90_dpkg.cfg"
+# Check Environment Variable
+if [ "${TYPE}" = 'standard' -o "${TYPE}" = 'server' -o "${TYPE}" = 'desktop' ]; then
+  # Install Package
+  chroot "${ROOTFS}" apt-get -y install ubuntu-standard
+fi
 
 ################################################################################
 # Server
@@ -187,7 +181,7 @@ sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/et
 
 # Check Environment Variable
 if [ "${TYPE}" = 'server' ]; then
-  # Server Package
+  # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
 
   # Check Install Boot Loader
@@ -206,9 +200,22 @@ fi
 
 # Check Environment Variable
 if [ "${TYPE}" = 'desktop' ]; then
-  # Server Package
+  # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 fi
+
+################################################################################
+# Cloud
+################################################################################
+
+# Require Package
+chroot "${ROOTFS}" apt-get -y install cloud-init
+
+# Clear Default Config
+echo "" > "${ROOTFS}/etc/cloud/cloud.cfg"
+
+# Select Datasources
+sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/etc/cloud/cloud.cfg.d/90_dpkg.cfg"
 
 ################################################################################
 # Cleanup
