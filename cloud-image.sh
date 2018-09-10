@@ -3,11 +3,20 @@
 set -e
 
 ################################################################################
+# Load Environment
+################################################################################
+
+if [ -n "$1" -a -r "$1" ]; then
+  . "$1"
+fi
+
+################################################################################
 # Default Variables
 ################################################################################
 
 # Generic
-: ${MODE:="server"}     # [server|desktop]
+: ${MODE:="rootfs"}     # [rootfs|kernel|initrd]
+: ${TYPE:="server"}     # [server|desktop]
 : ${RELEASE:="bionic"}  # [trusty|xenial|bionic]
 : ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
 
@@ -23,6 +32,34 @@ set -e
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
 : ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64"}
+
+################################################################################
+# Check Environment
+################################################################################
+
+# Mode
+if [ "${MODE}" != 'rootfs' -a "${MODE}" != 'kernel' -a "${MODE}" != 'initrd' ]; then
+  echo "MODE: rootfs or kernel or initrd"
+  exit 1
+fi
+
+# Type
+if [ "${TYPE}" != 'server' -a "${TYPE}" != 'desktop' ]; then
+  echo "TYPE: server or desktop"
+  exit 1
+fi
+
+# Release
+if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bionic' ]; then
+  echo "RELEASE: trusty or xenial or bionic"
+  exit 1
+fi
+
+# Kernel
+if [ "${KERNEL}" != 'generic' -a "${KERNEL}" != 'generic-hwe' -a "${KERNEL}" != 'signed-generic' -a "${KERNEL}" != 'signed-generic-hwe' ]; then
+  echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
+  exit 1
+fi
 
 ################################################################################
 # Cleanup
@@ -47,10 +84,10 @@ mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 FLAVOUR="--flavour=minimal"
 
 # Debootstrap Include Packages
-INCLUDES="--include=gnupg"
+INCLUDE="--include=gnupg"
 
 # Install Base System
-cdebootstrap-static "${FLAVOUR}" "${INCLUDES}" "Ubuntu/${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+cdebootstrap-static "${FLAVOUR}" "${INCLUDE}" "Ubuntu/${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -134,17 +171,50 @@ chroot "${ROOTFS}" apt-get -y install ubuntu-standard
 ################################################################################
 
 # Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-init cloud-initramfs-rooturl cloud-initramfs-updateroot
+chroot "${ROOTFS}" apt-get -y install cloud-init
+
+# Clear Default Config
+echo "" > "${ROOTFS}/etc/cloud/cloud.cfg"
 
 # Select Datasources
 sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/etc/cloud/cloud.cfg.d/90_dpkg.cfg"
+
+################################################################################
+# Kernel
+################################################################################
+
+# Check Environment Variable
+if [ "${MODE}" = 'kernel' -o "${MODE}" = 'initrd' ]; then
+  # Select Kernel
+  case "${RELEASE}-${KERNEL}" in
+    "trusty-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
+    "xenial-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
+    "bionic-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
+    "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-generic-lts-xenial" ;;
+    "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-generic-hwe-16.04" ;;
+    "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-generic" ;;
+    "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
+    "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
+    "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
+    "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic-lts-xenial" ;;
+    "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic-hwe-16.04" ;;
+    "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic" ;;
+    * )
+      echo "Unknown Release Codename & Kernel Type..."
+      exit 1
+      ;;
+  esac
+
+  # Install Kernel
+  chroot "${ROOTFS}" apt-get -y install "${KERNEL_PACKAGE}"
+fi
 
 ################################################################################
 # Server
 ################################################################################
 
 # Check Environment Variable
-if [ "${MODE}" = 'server' ]; then
+if [ "${MODE}" = 'initrd' -o "${MODE}" = 'rootfs' -a "${TYPE}" = 'server' ]; then
   # Server Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
 
@@ -163,9 +233,29 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${MODE}" = 'desktop' ]; then
+if [ "${MODE}" = 'initrd' -o "${MODE}" = 'rootfs' -a "${TYPE}" = 'desktop' ]; then
   # Server Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
+fi
+
+################################################################################
+# Initramfs
+################################################################################
+
+# Check Environment Variable
+if [ "${MODE}" = 'initrd' ]; then
+  # Get Linux Kernel Version
+  _CURRENT_LINUX_VERSION="`uname -r`"
+  _CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
+
+  # Check Linux Kernel Version
+  if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
+    # Remove Current Kernel Version Module
+    chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
+  fi
+
+  # Update Initramfs
+  chroot "${ROOTFS}" update-initramfs -u -k all
 fi
 
 ################################################################################
@@ -189,29 +279,49 @@ touch "${ROOTFS}/var/log/lastlog"
 chmod 0644 "${ROOTFS}/var/log/lastlog"
 
 ################################################################################
-# Infomation
-################################################################################
-
-# Create Release Directory
-[ ! -d "./release/${RELEASE}/${MODE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${MODE}/${KERNEL}"
-
-# Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2}' > "./release/${RELEASE}/${MODE}/${KERNEL}/packages.manifests"
-
-################################################################################
 # Release
 ################################################################################
 
 # Unmount RootFs
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
-# Create SquashFS Image
-mksquashfs "${ROOTFS}" "./release/${RELEASE}/${MODE}/${KERNEL}/root.squashfs" -comp xz
+# Create Release Directory
+[ ! -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
+
+# Packages List
+chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2}' > "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.manifest"
+
+case "${MODE}" in
+  "rootfs" )
+    # Create SquashFS Image
+    mksquashfs "${ROOTFS}" "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.squashfs" -comp xz
+    ;;
+  "kernel" )
+    # Copy Kernel
+    find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.img" \;
+    ;;
+  "initrd" )
+    # Copy Initrd
+    find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.img" \;
+    ;;
+  * )
+    echo "Unknown Generate Mode..."
+    exit 1
+    ;;
+esac
+
+################################################################################
+# Permission
+################################################################################
 
 # Permission Files
-find "./release/${RELEASE}/${MODE}/${KERNEL}" -type f | xargs chmod 0644
+find "./release/${RELEASE}/${TYPE}/${KERNEL}" -type f | xargs chmod 0644
+
+################################################################################
+# Permission
+################################################################################
 
 # Owner/Group Files
 if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
-  chown -R "${SUDO_UID}:${SUDO_GID}" "./release"
+  chown -R "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${TYPE}/${KERNEL}"
 fi
