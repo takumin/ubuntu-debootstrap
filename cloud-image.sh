@@ -61,7 +61,7 @@ fi
 # Check Release Directory
 if [ -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ]; then
   # Cleanup Release Directory
-  find "./release/${RELEASE}/${TYPE}/${KERNEL}/*" -type f | xargs rm -f
+  find "./release/${RELEASE}/${TYPE}/${KERNEL}" -type f | xargs rm -f
 else
   # Create Release Directory
   mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
@@ -235,7 +235,7 @@ chmod 0644 "${ROOTFS}/var/log/lastlog"
 ################################################################################
 
 # Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2}' > "./release/${RELEASE}/${TYPE}/${KERNEL}/packages.manifest"
+chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "./release/${RELEASE}/${TYPE}/${KERNEL}/packages.manifest"
 
 ################################################################################
 # Archive
