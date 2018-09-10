@@ -82,14 +82,14 @@ mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 # Debootstrap
 ################################################################################
 
-# Flavour
-FLAVOUR="--flavour=minimal"
+# Debootstrap Use Variant
+VARIANT="--variant=minbase"
 
 # Debootstrap Include Packages
 INCLUDE="--include=gnupg"
 
 # Install Base System
-cdebootstrap-static "${FLAVOUR}" "${INCLUDE}" "Ubuntu/${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+debootstrap "${VARIANT}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
