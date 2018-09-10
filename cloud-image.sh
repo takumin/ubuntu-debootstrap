@@ -183,12 +183,6 @@ fi
 if [ "${PROFILE}" = 'server' ]; then
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
-
-  # Check Install Boot Loader
-  if [ ! -e "${ROOTFS}/boot/grub/grub.cfg" ]; then
-    # Cleanup Boot Directory
-    rm -fr "${ROOTFS}/boot/grub"
-  fi
 fi
 
 ################################################################################
@@ -249,10 +243,10 @@ chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "./relea
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
 # Create SquashFS Image
-mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.squashfs" -comp xz
+mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.squashfs" -e 'boot/grub' -comp xz
 
 # Create TarBall Image
-tar -I pixz -p --acls --xattrs --one-file-system -cf "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.tar.xz" -C "${ROOTFS}" .
+tar -I pixz -p --acls --xattrs --one-file-system -cf "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.tar.xz" -C "${ROOTFS}" --exclude './boot/grub' .
 
 # Require Mount
 mount -t devtmpfs                   devtmpfs "${ROOTFS}/dev"
