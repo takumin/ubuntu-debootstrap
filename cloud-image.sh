@@ -61,7 +61,7 @@ fi
 # Check Release Directory
 if [ -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ]; then
   # Cleanup Release Directory
-  rm -fr "./release/${RELEASE}/${TYPE}/${KERNEL}/*"
+  find "./release/${RELEASE}/${TYPE}/${KERNEL}/*" -type f | xargs rm -f
 else
   # Create Release Directory
   mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
@@ -221,12 +221,12 @@ chroot "${ROOTFS}" apt-get -y autoremove --purge
 chroot "${ROOTFS}" apt-get -y clean
 
 # Repository List
-find "${ROOTFS}/var/lib/apt/lists" -type f | xargs rm
+find "${ROOTFS}/var/lib/apt/lists" -type f | xargs rm -f
 touch "${ROOTFS}/var/lib/apt/lists/lock"
 chmod 0640 "${ROOTFS}/var/lib/apt/lists/lock"
 
 # Log
-find "${ROOTFS}/var/log" -type f | xargs rm
+find "${ROOTFS}/var/log" -type f | xargs rm -f
 touch "${ROOTFS}/var/log/lastlog"
 chmod 0644 "${ROOTFS}/var/log/lastlog"
 
