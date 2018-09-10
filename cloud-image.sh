@@ -15,7 +15,6 @@ fi
 ################################################################################
 
 # Generic
-: ${MODE:="rootfs"}     # [rootfs|kernel|initrd]
 : ${TYPE:="server"}     # [server|desktop]
 : ${RELEASE:="bionic"}  # [trusty|xenial|bionic]
 : ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
@@ -36,12 +35,6 @@ fi
 ################################################################################
 # Check Environment
 ################################################################################
-
-# Mode
-if [ "${MODE}" != 'rootfs' -a "${MODE}" != 'kernel' -a "${MODE}" != 'initrd' ]; then
-  echo "MODE: rootfs or kernel or initrd"
-  exit 1
-fi
 
 # Type
 if [ "${TYPE}" != 'server' -a "${TYPE}" != 'desktop' ]; then
@@ -64,6 +57,9 @@ fi
 ################################################################################
 # Cleanup
 ################################################################################
+
+# Create Release Directory
+[ ! -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
 
 # Unmount Root Partition
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
@@ -180,41 +176,11 @@ echo "" > "${ROOTFS}/etc/cloud/cloud.cfg"
 sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/etc/cloud/cloud.cfg.d/90_dpkg.cfg"
 
 ################################################################################
-# Kernel
-################################################################################
-
-# Check Environment Variable
-if [ "${MODE}" = 'kernel' -o "${MODE}" = 'initrd' ]; then
-  # Select Kernel
-  case "${RELEASE}-${KERNEL}" in
-    "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-    "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-    "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-    "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-    "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-    "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
-    "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-    "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-    "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-    "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-    "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-    "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-    * )
-      echo "Unknown Release Codename & Kernel Type..."
-      exit 1
-      ;;
-  esac
-
-  # Install Kernel
-  chroot "${ROOTFS}" apt-get -y install "${KERNEL_PACKAGE}"
-fi
-
-################################################################################
 # Server
 ################################################################################
 
 # Check Environment Variable
-if [ "${MODE}" = 'rootfs' -a "${TYPE}" = 'server' ]; then
+if [ "${TYPE}" = 'server' ]; then
   # Server Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
 
@@ -233,29 +199,9 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${MODE}" = 'rootfs' -a "${TYPE}" = 'desktop' ]; then
+if [ "${TYPE}" = 'desktop' ]; then
   # Server Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
-fi
-
-################################################################################
-# Initramfs
-################################################################################
-
-# Check Environment Variable
-if [ "${MODE}" = 'initrd' ]; then
-  # Get Linux Kernel Version
-  _CURRENT_LINUX_VERSION="`uname -r`"
-  _CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
-
-  # Check Linux Kernel Version
-  if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
-    # Remove Current Kernel Version Module
-    chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
-  fi
-
-  # Update Initramfs
-  chroot "${ROOTFS}" update-initramfs -u -k all
 fi
 
 ################################################################################
@@ -279,36 +225,91 @@ touch "${ROOTFS}/var/log/lastlog"
 chmod 0644 "${ROOTFS}/var/log/lastlog"
 
 ################################################################################
-# Release
+# Infomation
+################################################################################
+
+# Packages List
+chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2}' > "./release/${RELEASE}/${TYPE}/${KERNEL}/packages.manifest"
+
+################################################################################
+# Archive
 ################################################################################
 
 # Unmount RootFs
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
-# Create Release Directory
-[ ! -d "./release/${RELEASE}/${TYPE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${TYPE}/${KERNEL}"
+# Create SquashFS Image
+mksquashfs "${ROOTFS}" "./release/${RELEASE}/${TYPE}/${KERNEL}/rootfs.squashfs" -comp xz
 
-# Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2}' > "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.manifest"
+# Create TarBall Image
+tar -I pixz -p --acls --xattrs --one-file-system -cf "./release/${RELEASE}/${TYPE}/${KERNEL}/rootfs.tar.xz" -C "${ROOTFS}" .
 
-case "${MODE}" in
-  "rootfs" )
-    # Create SquashFS Image
-    mksquashfs "${ROOTFS}" "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.squashfs" -comp xz
-    ;;
-  "kernel" )
-    # Copy Kernel
-    find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.img" \;
-    ;;
-  "initrd" )
-    # Copy Initrd
-    find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/${MODE}.img" \;
-    ;;
+# Require Mount
+mount -t devtmpfs                   devtmpfs "${ROOTFS}/dev"
+mount -t devpts   -o gid=5,mode=620 devpts   "${ROOTFS}/dev/pts"
+mount -t proc                       proc     "${ROOTFS}/proc"
+mount -t tmpfs    -o mode=755       tmpfs    "${ROOTFS}/run"
+mount -t sysfs                      sysfs    "${ROOTFS}/sys"
+mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
+mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
+chmod 1777 "${ROOTFS}/dev/shm"
+
+################################################################################
+# Repository
+################################################################################
+
+# Update Repository
+chroot "${ROOTFS}" apt-get -y update
+
+################################################################################
+# Kernel
+################################################################################
+
+# Select Kernel
+case "${RELEASE}-${KERNEL}" in
+  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
   * )
-    echo "Unknown Generate Mode..."
+    echo "Unknown Release Codename & Kernel Type..."
     exit 1
     ;;
 esac
+
+# Install Kernel
+chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
+
+# Copy Kernel
+find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/kernel.img" \;
+
+################################################################################
+# Initramfs
+################################################################################
+
+# Get Linux Kernel Version
+_CURRENT_LINUX_VERSION="`uname -r`"
+_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
+
+# Check Linux Kernel Version
+if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
+  # Remove Current Kernel Version Module
+  chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
+fi
+
+# Update Initramfs
+chroot "${ROOTFS}" update-initramfs -u -k all
+
+# Copy Initrd
+find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${TYPE}/${KERNEL}/initrd.img" \;
 
 ################################################################################
 # Permission
@@ -318,7 +319,7 @@ esac
 find "./release" -type f | xargs chmod 0644
 
 ################################################################################
-# Permission
+# Owner/Group
 ################################################################################
 
 # Owner/Group Files
