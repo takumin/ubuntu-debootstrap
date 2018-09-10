@@ -187,18 +187,18 @@ sed -i -E "s/^(datasource_list:) .*/\\1 [ ${DATASOURCES}, None ]/" "${ROOTFS}/et
 if [ "${MODE}" = 'kernel' -o "${MODE}" = 'initrd' ]; then
   # Select Kernel
   case "${RELEASE}-${KERNEL}" in
-    "trusty-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
-    "xenial-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
-    "bionic-generic"            ) KERNEL_PACKAGE="linux-generic" ;;
-    "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-generic-lts-xenial" ;;
-    "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-generic-hwe-16.04" ;;
-    "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-generic" ;;
-    "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
-    "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
-    "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-generic" ;;
-    "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic-lts-xenial" ;;
-    "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic-hwe-16.04" ;;
-    "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-generic" ;;
+    "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+    "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+    "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+    "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
+    "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
+    "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
+    "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+    "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+    "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+    "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
+    "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
+    "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
     * )
       echo "Unknown Release Codename & Kernel Type..."
       exit 1
@@ -214,7 +214,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${MODE}" = 'initrd' -o "${MODE}" = 'rootfs' -a "${TYPE}" = 'server' ]; then
+if [ "${MODE}" = 'rootfs' -a "${TYPE}" = 'server' ]; then
   # Server Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
 
@@ -233,7 +233,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${MODE}" = 'initrd' -o "${MODE}" = 'rootfs' -a "${TYPE}" = 'desktop' ]; then
+if [ "${MODE}" = 'rootfs' -a "${TYPE}" = 'desktop' ]; then
   # Server Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 fi
@@ -315,7 +315,7 @@ esac
 ################################################################################
 
 # Permission Files
-find "./release/${RELEASE}/${TYPE}/${KERNEL}" -type f | xargs chmod 0644
+find "./release" -type f | xargs chmod 0644
 
 ################################################################################
 # Permission
@@ -323,5 +323,5 @@ find "./release/${RELEASE}/${TYPE}/${KERNEL}" -type f | xargs chmod 0644
 
 # Owner/Group Files
 if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
-  chown -R "${SUDO_UID}:${SUDO_GID}" "./release/${RELEASE}/${TYPE}/${KERNEL}"
+  chown -R "${SUDO_UID}:${SUDO_GID}" "./release"
 fi
