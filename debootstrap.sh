@@ -895,9 +895,27 @@ chroot "${ROOTFS}" apt-get -y install ssh
 echo ''          >> "${ROOTFS}/etc/ssh/sshd_config"
 echo 'UseDNS=no' >> "${ROOTFS}/etc/ssh/sshd_config"
 
-# Remove SSH Host Keys for Live Environment
+# Check Live Environment
 if [ "${TYPE}" = 'live' ]; then
+  # Remove Temporary SSH Host Keys
   find "${ROOTFS}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
+
+  # Generate SSH Host Keys for System Boot
+  echo '[Unit]'                                                                        >  "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'Description=Generate SSH Host Keys During Boot'                                >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'Before=ssh.service'                                                            >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'After=local-fs.target'                                                         >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo ''                                                                              >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo '[Service]'                                                                     >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'Type=simple'                                                                   >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'RemainAfterExit=yes'                                                           >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'ExecStart=/usr/sbin/dpkg-reconfigure --frontend noninteractive openssh-server' >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo ''                                                                              >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo '[Install]'                                                                     >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'WantedBy=multi-user.target'                                                    >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+
+  # Enabled Systemd Service
+  chroot "${ROOTFS}" systemctl enable ssh-host-keys.service
 fi
 
 ################################################################################
