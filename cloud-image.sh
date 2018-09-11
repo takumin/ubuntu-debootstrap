@@ -324,6 +324,9 @@ mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
 chmod 1777 "${ROOTFS}/dev/shm"
 
+# Remove Resolv.conf
+rm "${ROOTFS}/etc/resolv.conf"
+
 # Copy Host Resolv.conf
 cp /etc/resolv.conf "${ROOTFS}/etc/resolv.conf"
 
