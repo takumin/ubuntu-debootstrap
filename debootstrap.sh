@@ -256,9 +256,9 @@ fi
 # Check Image Environment
 if [ "${TYPE}" = 'live' ]; then
   # Delete Kernel/Initramfs/RootFs Image
-  [ -f "./release/${RELEASE}/${MODE}/${KERNEL}/vmlinuz" ]       && rm "./release/${RELEASE}/${MODE}/${KERNEL}/vmlinuz"
-  [ -f "./release/${RELEASE}/${MODE}/${KERNEL}/initrd.img" ]    && rm "./release/${RELEASE}/${MODE}/${KERNEL}/initrd.img"
-  [ -f "./release/${RELEASE}/${MODE}/${KERNEL}/root.squashfs" ] && rm "./release/${RELEASE}/${MODE}/${KERNEL}/root.squashfs"
+  [ -f "./release/${RELEASE}/${KERNEL}/${MODE}/vmlinuz" ]       && rm "./release/${RELEASE}/${KERNEL}/${MODE}/vmlinuz"
+  [ -f "./release/${RELEASE}/${KERNEL}/${MODE}/initrd.img" ]    && rm "./release/${RELEASE}/${KERNEL}/${MODE}/initrd.img"
+  [ -f "./release/${RELEASE}/${KERNEL}/${MODE}/root.squashfs" ] && rm "./release/${RELEASE}/${KERNEL}/${MODE}/root.squashfs"
 elif [ "${TYPE}" = 'deploy' ]; then
   # Get Disk ID
   ROOT_DISK_PATH="`realpath /dev/disk/by-id/${ROOT_DISK_NAME}`"
@@ -1021,19 +1021,19 @@ if [ "${TYPE}" = 'live' ]; then
   awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
   # Create Release Directory
-  [ ! -d "./release/${RELEASE}/${MODE}/${KERNEL}" ] && mkdir -p "./release/${RELEASE}/${MODE}/${KERNEL}"
+  [ ! -d "./release/${RELEASE}/${KERNEL}/${MODE}" ] && mkdir -p "./release/${RELEASE}/${KERNEL}/${MODE}"
 
   # Create SquashFS Image
-  mksquashfs "${ROOTFS}" "./release/${RELEASE}/${MODE}/${KERNEL}/root.squashfs"
+  mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/${MODE}/root.squashfs"
 
   # Copy Kernel and Initramfs
-  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${MODE}/${KERNEL}/vmlinuz" \;
-  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${MODE}/${KERNEL}/initrd.img" \;
+  find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${MODE}/vmlinuz" \;
+  find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${MODE}/initrd.img" \;
 
   # Permission Files
-  chmod 0644 "./release/${RELEASE}/${MODE}/${KERNEL}/vmlinuz"
-  chmod 0644 "./release/${RELEASE}/${MODE}/${KERNEL}/initrd.img"
-  chmod 0644 "./release/${RELEASE}/${MODE}/${KERNEL}/root.squashfs"
+  chmod 0644 "./release/${RELEASE}/${KERNEL}/${MODE}/vmlinuz"
+  chmod 0644 "./release/${RELEASE}/${KERNEL}/${MODE}/initrd.img"
+  chmod 0644 "./release/${RELEASE}/${KERNEL}/${MODE}/root.squashfs"
 
   # Owner/Group Files
   if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
