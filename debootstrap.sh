@@ -907,7 +907,7 @@ if [ "${TYPE}" = 'live' ]; then
   echo 'After=local-fs.target'                                                         >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
   echo ''                                                                              >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
   echo '[Service]'                                                                     >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
-  echo 'Type=simple'                                                                   >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
+  echo 'Type=oneshot'                                                                  >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
   echo 'RemainAfterExit=yes'                                                           >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
   echo 'ExecStart=/usr/sbin/dpkg-reconfigure --frontend noninteractive openssh-server' >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
   echo ''                                                                              >> "${ROOTFS}/etc/systemd/system/ssh-host-keys.service"
