@@ -34,6 +34,7 @@ set -e
 : ${FTP_PROXY:=""}
 : ${HTTP_PROXY:=""}
 : ${HTTPS_PROXY:=""}
+: ${APT_NO_PROXY:=""}
 
 # DNS
 : ${DNS_SERVER:="8.8.8.8 8.8.4.4"}
@@ -585,6 +586,11 @@ if [ "x${FTP_PROXY}" != "x" -o "x${HTTP_PROXY}" != "x" -o "x${HTTPS_PROXY}" != "
   fi
   if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
     echo "Acquire::http::proxy::${APT_PROXY_HOST} \"http://${APT_PROXY_HOST}:${APT_PROXY_PORT}\";" >> "${ROOTFS}/etc/apt/apt.conf"
+  fi
+  if [ "x${APT_NO_PROXY}" != "x" ]; then
+    echo "Acquire::ftp::proxy::${APT_NO_PROXY} \"DIRECT\";"                                        >> "${ROOTFS}/etc/apt/apt.conf"
+    echo "Acquire::http::proxy::${APT_NO_PROXY} \"DIRECT\";"                                       >> "${ROOTFS}/etc/apt/apt.conf"
+    echo "Acquire::https::proxy::${APT_NO_PROXY} \"DIRECT\";"                                      >> "${ROOTFS}/etc/apt/apt.conf"
   fi
 fi
 
