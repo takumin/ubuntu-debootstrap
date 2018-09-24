@@ -574,7 +574,7 @@ deb ${MIRROR_UBUNTU_JA_NONFREE} ${RELEASE} multiverse
 __EOF__
 
 # Proxy Configuration
-if [ "x${FTP_PROXY}" != "x" -o "x${HTTP_PROXY}" != "x" -o "x${HTTPS_PROXY}" != "x" -o \( "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" \) ]; then
+if [ "x${FTP_PROXY}" != "x" -o "x${HTTP_PROXY}" != "x" -o "x${HTTPS_PROXY}" != "x" -o \( "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" \) -o "x${APT_NO_PROXY}" != "x" ]; then
   echo "// Apt Proxy"                                                                              >  "${ROOTFS}/etc/apt/apt.conf"
   if [ "x${FTP_PROXY}" != "x" ]; then
     echo "Acquire::ftp::proxy \"${FTP_PROXY}\";"                                                   >> "${ROOTFS}/etc/apt/apt.conf"
