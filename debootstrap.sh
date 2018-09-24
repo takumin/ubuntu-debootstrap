@@ -1018,6 +1018,12 @@ fi
 if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
   # Remove Original Resolve
   rm "${ROOTFS}/etc/resolvconf/resolv.conf.d/original"
+
+  # Remove Original Resolve
+  rm "${ROOTFS}/etc/resolv.conf"
+
+  # Create Resolve Symbolic Link
+  ln -s "../run/resolvconf/resolv.conf" "${ROOTFS}/etc/resolv.conf"
 fi
 
 # Cleanup Packages
