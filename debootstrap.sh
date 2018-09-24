@@ -254,7 +254,7 @@ fi
 # Cleanup
 ################################################################################
 
-# Check Image Environment
+# Check Live Image Environment
 if [ "${TYPE}" = 'live' ]; then
   # Delete Kernel/Initramfs/RootFs Image
   [ -f "./release/${RELEASE}/${KERNEL}/${MODE}/vmlinuz" ]       && rm "./release/${RELEASE}/${KERNEL}/${MODE}/vmlinuz"
@@ -414,7 +414,7 @@ fi
 # Symlink Mount Table
 ln -s /proc/self/mounts "${ROOTFS}/etc/mtab"
 
-# Check Live Image Environment
+# Check Deploy Image Environment
 if [ "${TYPE}" = 'deploy' ]; then
   # Create Mount Point
   echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
@@ -439,21 +439,31 @@ else
   echo "127.0.1.1	${SITENAME}" >> "${ROOTFS}/etc/hosts"
 fi
 
-# Configure Resolve
-rm "${ROOTFS}/etc/resolv.conf"
-cp "/etc/resolv.conf" "${ROOTFS}/etc/resolv.conf"
-# echo '# DNS Server'     >  "${ROOTFS}/etc/resolv.conf"
-# if [ "x${DOMAIN}" != "x" ]; then
-#   echo "domain ${DOMAIN}" >> "${ROOTFS}/etc/resolv.conf"
-# fi
-# if [ "x${DNS_SEARCH}" != "x" ]; then
-#   echo "search ${DNS_SEARCH}" >> "${ROOTFS}/etc/resolv.conf"
-# fi
-# if [ "x${DNS_SERVER}" != "x" ]; then
-#   for i in ${DNS_SERVER}; do
-#     echo "nameserver ${i}" >> "${ROOTFS}/etc/resolv.conf"
-#   done
-# fi
+# Check Live Image Environment
+if [ "${TYPE}" = 'live' ]; then
+  # Remove Symbolic Link
+  rm "${ROOTFS}/etc/resolv.conf"
+
+  # Configure Resolve
+  echo '# DNS Server'     >  "${ROOTFS}/etc/resolv.conf"
+  if [ "x${DOMAIN}" != "x" ]; then
+    echo "domain ${DOMAIN}" >> "${ROOTFS}/etc/resolv.conf"
+  fi
+  if [ "x${DNS_SEARCH}" != "x" ]; then
+    echo "search ${DNS_SEARCH}" >> "${ROOTFS}/etc/resolv.conf"
+  fi
+  if [ "x${DNS_SERVER}" != "x" ]; then
+    for i in ${DNS_SERVER}; do
+      echo "nameserver ${i}" >> "${ROOTFS}/etc/resolv.conf"
+    done
+  fi
+elif [ "${TYPE}" = 'deploy' ]; then
+  # Remove Symbolic Link
+  rm "${ROOTFS}/etc/resolv.conf"
+
+  # Copy Host Resolve
+  cp "/etc/resolv.conf" "${ROOTFS}/etc/resolv.conf"
+fi
 
 ################################################################################
 # Localize
