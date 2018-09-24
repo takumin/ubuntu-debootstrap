@@ -441,18 +441,19 @@ fi
 
 # Configure Resolve
 rm "${ROOTFS}/etc/resolv.conf"
-echo '# DNS Server'     >  "${ROOTFS}/etc/resolv.conf"
-if [ "x${DOMAIN}" != "x" ]; then
-  echo "domain ${DOMAIN}" >> "${ROOTFS}/etc/resolv.conf"
-fi
-if [ "x${DNS_SEARCH}" != "x" ]; then
-  echo "search ${DNS_SEARCH}" >> "${ROOTFS}/etc/resolv.conf"
-fi
-if [ "x${DNS_SERVER}" != "x" ]; then
-  for i in ${DNS_SERVER}; do
-    echo "nameserver ${i}" >> "${ROOTFS}/etc/resolv.conf"
-  done
-fi
+cp "/etc/resolv.conf" "${ROOTFS}/etc/resolv.conf"
+# echo '# DNS Server'     >  "${ROOTFS}/etc/resolv.conf"
+# if [ "x${DOMAIN}" != "x" ]; then
+#   echo "domain ${DOMAIN}" >> "${ROOTFS}/etc/resolv.conf"
+# fi
+# if [ "x${DNS_SEARCH}" != "x" ]; then
+#   echo "search ${DNS_SEARCH}" >> "${ROOTFS}/etc/resolv.conf"
+# fi
+# if [ "x${DNS_SERVER}" != "x" ]; then
+#   for i in ${DNS_SERVER}; do
+#     echo "nameserver ${i}" >> "${ROOTFS}/etc/resolv.conf"
+#   done
+# fi
 
 ################################################################################
 # Localize
