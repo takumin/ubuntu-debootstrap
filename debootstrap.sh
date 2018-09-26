@@ -7,19 +7,21 @@ set -e
 ################################################################################
 
 # Generic
-: ${TYPE:="live"}       # [live|deploy]
-: ${MODE:="server"}     # [server|desktop]
-: ${RELEASE:="xenial"}  # [trusty|xenial|bionic]
-: ${KERNEL:="generic"}  # [generic|generic-hwe|signed-generic|signed-generic-hwe]
-: ${NVIDIA:="NO"}       # [YES|NO]
-: ${KEYBOARD:="US"}     # [JP|US]
-: ${SHUTDOWN:="NO"}     # [YES|NO]
-: ${REBOOT:="NO"}       # [YES|NO]
+: ${TYPE:="live"}           # [live|deploy]
+: ${MODE:="server"}         # [server|desktop]
+: ${RELEASE:="xenial"}      # [trusty|xenial|bionic]
+: ${KERNEL:="generic"}      # [generic|generic-hwe|signed-generic|signed-generic-hwe]
+: ${NVIDIA:="NO"}           # [YES|NO]
+: ${KEYBOARD:="US"}         # [JP|US]
+: ${SHUTDOWN:="NO"}         # [YES|NO]
+: ${REBOOT:="NO"}           # [YES|NO]
 
-# Disk
-: ${ROOTFS:="/rootfs"}  # Root File System Mount Point
-: ${ROOT_DISK_TYPE:=""} # [HDD|SSD|NVME]
-: ${ROOT_DISK_NAME:=""} # List of /dev/disk/by-id/*
+                            # Disk
+: ${ROOTFS:="/rootfs"}      # Root File System Mount Point
+: ${ROOT_DISK_TYPE:=""}     # [HDD|SSD|NVME]
+: ${ROOT_DISK_NAME:=""}     # List of /dev/disk/by-id/*
+: ${ROOT_PART_SIZE:="-1"}   #
+: ${SWAP_PART_SIZE:="+16G"} #
 
 # Mirror
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
@@ -314,16 +316,16 @@ elif [ "${TYPE}" = 'deploy' ]; then
   sgdisk -o "${ROOT_DISK_PATH}"
 
   # Create BIOS Partition
-  sgdisk -a 1 -n 1::2047  -c 1:"Bios" -t 1:ef02 "${ROOT_DISK_PATH}"
+  sgdisk -a 1 -n 1::2047                -c 1:"Bios" -t 1:ef02 "${ROOT_DISK_PATH}"
 
   # Create EFI Partition
-  sgdisk      -n 2::+512M -c 2:"Efi"  -t 2:ef00 "${ROOT_DISK_PATH}"
+  sgdisk      -n 2::+512M               -c 2:"Efi"  -t 2:ef00 "${ROOT_DISK_PATH}"
 
   # Create Swap Partition
-  sgdisk      -n 3::+16G  -c 3:"Swap" -t 3:8200 "${ROOT_DISK_PATH}"
+  sgdisk      -n 3::"${SWAP_PART_SIZE}" -c 3:"Swap" -t 3:8200 "${ROOT_DISK_PATH}"
 
   # Create Root Partition
-  sgdisk      -n 4::-1    -c 4:"Root" -t 4:8300 "${ROOT_DISK_PATH}"
+  sgdisk      -n 4::"${ROOT_PART_SIZE}" -c 4:"Root" -t 4:8300 "${ROOT_DISK_PATH}"
 
   # Wait Probe
   sleep 1
