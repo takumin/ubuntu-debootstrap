@@ -16,7 +16,7 @@ set -e
 : ${SHUTDOWN:="NO"}         # [YES|NO]
 : ${REBOOT:="NO"}           # [YES|NO]
 
-                            # Disk
+# Disk
 : ${ROOTFS:="/rootfs"}      # Root File System Mount Point
 : ${ROOT_DISK_TYPE:=""}     # [HDD|SSD|NVME]
 : ${ROOT_DISK_NAME:=""}     # List of /dev/disk/by-id/*
