@@ -214,7 +214,7 @@ fi
 ################################################################################
 
 # Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-init cloud-initramfs-rooturl
+chroot "${ROOTFS}" apt-get -y install cloud-init cloud-initramfs-rooturl cloud-initramfs-updateroot overlayroot
 
 # Clear Default Config
 cat << __EOF__ > "${ROOTFS}/etc/cloud/cloud.cfg"
