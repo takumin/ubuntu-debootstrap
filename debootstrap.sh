@@ -419,12 +419,12 @@ ln -s /proc/self/mounts "${ROOTFS}/etc/mtab"
 # Check Deploy Image Environment
 if [ "${TYPE}" = 'deploy' ]; then
   # Create Mount Point
-  echo '# <file system> <dir>      <type> <options>         <dump> <pass>' >  "${ROOTFS}/etc/fstab"
-  echo "${ROOTPT}       /          xfs    defaults          0      1"      >> "${ROOTFS}/etc/fstab"
-  echo "${UEFIPT}       /boot/efi  vfat   defaults          0      2"      >> "${ROOTFS}/etc/fstab"
-  echo "${SWAPPT}       none       swap   defaults          0      0"      >> "${ROOTFS}/etc/fstab"
-  echo "tmpfs           /var/tmp   tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
-  echo "tmpfs           /tmp       tmpfs  defaults          0      0"      >> "${ROOTFS}/etc/fstab"
+  echo '# <file system> <dir>      <type> <options>          <dump> <pass>' >  "${ROOTFS}/etc/fstab"
+  echo "${ROOTPT}       /          xfs    defaults           0      1"      >> "${ROOTFS}/etc/fstab"
+  echo "${UEFIPT}       /boot/efi  vfat   defaults           0      2"      >> "${ROOTFS}/etc/fstab"
+  echo "${SWAPPT}       none       swap   defaults           0      0"      >> "${ROOTFS}/etc/fstab"
+  echo "tmpfs           /var/tmp   tmpfs  defaults,size=100% 0      0"      >> "${ROOTFS}/etc/fstab"
+  echo "tmpfs           /tmp       tmpfs  defaults,size=100% 0      0"      >> "${ROOTFS}/etc/fstab"
 fi
 
 ################################################################################
