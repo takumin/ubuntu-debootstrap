@@ -1017,12 +1017,8 @@ fi
 # Addon
 ################################################################################
 
-if [ -r "deploy_addon.sh" ]; then
-  . "deploy_addon.sh"
-fi
-
 if [ "$(type deploy_addon)" = 'deploy_addon is a shell function' ]; then
-  deploy_addon "${TYPE}" "${MODE}" "${RELEASE}" "${KERNEL}" "${NVIDIA}"
+  deploy_addon
 fi
 
 ################################################################################
