@@ -51,7 +51,7 @@ set -e
 : ${GATEWAY:=""}
 
 # FQDN
-: ${SITENAME:="ubuntu"}
+: ${SITENAME:="localhost"}
 : ${DOMAIN:=""}
 
 # User
