@@ -952,6 +952,9 @@ fi
 if [ "${MODE}" = 'server' ]; then
   # Standard Packages
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
+
+  # Text Console
+  sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"$@GRUB_CMDLINE_LINUX_DEFAULT="quiet"@' "${ROOTFS}/etc/default/grub"
 fi
 
 ################################################################################
