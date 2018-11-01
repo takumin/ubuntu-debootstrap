@@ -850,7 +850,7 @@ if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
   chroot "${ROOTFS}" apt-get -y --no-install-recommends install network-manager
 
   # Check Device IP Address
-  if [ "x${ADDRESS}" != "xauto" ]; then
+  if [ "${ADDRESS}" != 'auto' ]; then
     # Variables
     _DNS_SERVER="`echo ${DNS_SERVER} | sed -e 's/ /;/g'`"
     _DNS_SEARCH="`echo ${DNS_SEARCH} | sed -e 's/ /;/g'`"
