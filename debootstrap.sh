@@ -898,6 +898,12 @@ elif [ "${RELEASE}" = 'bionic' ]; then
     echo "      nameservers:"                  >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
     echo "        addresses: [${_DNS_SERVER}]" >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
     echo "        search: [${_DNS_SEARCH}]"    >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+
+    # Change Owner
+    chown root:root "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+
+    # Change Permission
+    chmod 0644 "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
   fi
 fi
 
