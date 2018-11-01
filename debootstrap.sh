@@ -47,6 +47,7 @@ set -e
 : ${NTP_POOL:=""}
 
 # Address
+: ${DEVICE:=""}
 : ${ADDRESS:="auto"}
 : ${GATEWAY:=""}
 
@@ -844,7 +845,7 @@ fi
 # Network
 ################################################################################
 
-# Trusty/Xenial Only
+# Trusty/Xenial
 if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
   # Install NetworkManager
   chroot "${ROOTFS}" apt-get -y --no-install-recommends install network-manager
@@ -875,6 +876,28 @@ if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
 
     # Change Permission
     chmod 0600 "${ROOTFS}/etc/NetworkManager/system-connections/Wired"
+  fi
+# Bionic
+elif [ "${RELEASE}" = 'bionic' ]; then
+  # Check Device IP Address
+  if [ -n "${DEVICE}" -a "${ADDRESS}" != 'auto' -a -n "${GATEWAY}" ]; then
+    # Variables
+    _DNS_SERVER="`echo ${DNS_SERVER} | sed -e 's/ /, /g'`"
+    _DNS_SEARCH="`echo ${DNS_SEARCH} | sed -e 's/ /, /g'`"
+
+    # Configure
+    echo "network:"                            >  "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "  version: 2"                        >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "  renderer: networkd"                >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "  ethernets:"                        >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "    ${DEVICE}:"                      >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "      dhcp4: no"                     >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "      dhcp6: no"                     >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "      addresses: [${ADDRESS}]"       >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "      gateway4: ${GATEWAY}"          >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "      nameservers:"                  >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "        addresses: [${_DNS_SERVER}]" >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
+    echo "        search: [${_DNS_SEARCH}]"    >> "${ROOTFS}/etc/netplan/50-cloud-init.yaml"
   fi
 fi
 
