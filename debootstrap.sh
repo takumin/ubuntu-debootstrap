@@ -436,10 +436,8 @@ fi
 echo "${SITENAME}" > "${ROOTFS}/etc/hostname"
 
 # Resolve Hostname
-if [ "x${DOMAIN}" != "x" ]; then
+if [ "${SITENAME}" != 'localhost' -a -n "${DOMAIN}" ]; then
   echo "127.0.1.1	${SITENAME}.${DOMAIN} ${SITENAME}" >> "${ROOTFS}/etc/hosts"
-else
-  echo "127.0.1.1	${SITENAME}" >> "${ROOTFS}/etc/hosts"
 fi
 
 # Check Live Image Environment
