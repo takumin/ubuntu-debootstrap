@@ -59,6 +59,12 @@ if [ "${PROFILE}" != 'minimal' -a "${PROFILE}" != 'standard' -a "${PROFILE}" != 
   exit 1
 fi
 
+# NVIDIA
+if [ "${NVIDIA}" != 'YES' -a "${NVIDIA}" != 'NO' ]; then
+  echo "NVIDIA: YES or NO"
+  exit 1
+fi
+
 ################################################################################
 # Cleanup
 ################################################################################
@@ -177,6 +183,13 @@ chroot "${ROOTFS}" apt-get -y dist-upgrade
 
 # Minimal Package
 chroot "${ROOTFS}" apt-get -y install ubuntu-minimal
+
+################################################################################
+# Overlay
+################################################################################
+
+# Require Package
+chroot "${ROOTFS}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
 
 ################################################################################
 # Standard
@@ -326,14 +339,7 @@ chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}
 find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${PROFILE}/kernel.img" \;
 
 ################################################################################
-# Overlay
-################################################################################
-
-# Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
-
-################################################################################
-# NVIDIA
+# Initramfs
 ################################################################################
 
 # Check Environment Variable
@@ -344,10 +350,6 @@ if [ "${NVIDIA}" = 'YES' ]; then
   echo "nvidia_uvm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
   echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
 fi
-
-################################################################################
-# Initramfs
-################################################################################
 
 # Get Linux Kernel Version
 _CURRENT_LINUX_VERSION="`uname -r`"
