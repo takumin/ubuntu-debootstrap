@@ -18,6 +18,7 @@ fi
 : ${RELEASE:="bionic"}      # [trusty|xenial|bionic]
 : ${KERNEL:="generic"}      # [generic|generic-hwe|signed-generic|signed-generic-hwe]
 : ${PROFILE:="server"}      # [minimal|standard|server|desktop]
+: ${NVIDIA:="NO"}           # [YES|NO]
 
 # Disk
 : ${ROOTFS:="/run/rootfs"}  # Root File System Mount Point
@@ -27,6 +28,7 @@ fi
 : ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
+: ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64"}
 
 # Proxy
 : ${NO_PROXY:=""}
@@ -207,6 +209,30 @@ if [ "${PROFILE}" = 'desktop' ]; then
 fi
 
 ################################################################################
+# NVIDIA
+################################################################################
+
+# Check Environment Variable
+if [ "${NVIDIA}" = 'YES' ]; then
+  # NVIDIA Apt Public Key
+  wget -qO "${ROOTFS}/tmp/nvidia-keyring.gpg" https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
+  chroot "${ROOTFS}" apt-key add /tmp/nvidia-keyring.gpg
+
+  # NVIDIA CUDA Repository
+  echo '# NVIDIA CUDA Repository'    >  "${ROOTFS}/etc/apt/sources.list.d/nvidia-cuda.list"
+  echo "deb ${MIRROR_NVIDIA_CUDA} /" >> "${ROOTFS}/etc/apt/sources.list.d/nvidia-cuda.list"
+
+  # Update Repository
+  chroot "${ROOTFS}" apt-get -y update
+
+  # Upgrade System
+  chroot "${ROOTFS}" apt-get -y dist-upgrade
+
+  # Install Driver
+  chroot "${ROOTFS}" apt-get -y install cuda-drivers
+fi
+
+################################################################################
 # Cleanup
 ################################################################################
 
@@ -270,13 +296,6 @@ cp /etc/resolv.conf "${ROOTFS}/etc/resolv.conf"
 chroot "${ROOTFS}" apt-get -y update
 
 ################################################################################
-# Overlay
-################################################################################
-
-# Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
-
-################################################################################
 # Kernel
 ################################################################################
 
@@ -305,6 +324,26 @@ chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}
 
 # Copy Kernel
 find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${PROFILE}/kernel.img" \;
+
+################################################################################
+# Overlay
+################################################################################
+
+# Require Package
+chroot "${ROOTFS}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+
+################################################################################
+# NVIDIA
+################################################################################
+
+# Check Environment Variable
+if [ "${NVIDIA}" = 'YES' ]; then
+  # Load Boot Time DRM Kernel Mode Setting
+  echo "nvidia"         >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia_modeset" >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia_uvm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
+fi
 
 ################################################################################
 # Initramfs
