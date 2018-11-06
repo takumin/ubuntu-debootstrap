@@ -288,10 +288,7 @@ if [ "${TYPE}" = 'live' ]; then
   mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 elif [ "${TYPE}" = 'deploy' ]; then
   # Check Disk Type
-  if [ "x${ROOT_DISK_TYPE}" = "xSSD" ]; then
-    # Enter Key Message
-    echo 'SSD Secure Erase'
-
+  if [ "x${ROOT_DISK_TYPE}" = 'xSSD' ]; then
     # Check SSD Frozen
     if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null 2>&1; then
       # Suspend-to-RAM (ACPI State S3)
@@ -305,6 +302,13 @@ elif [ "${TYPE}" = 'deploy' ]; then
 
     # Secure Erase
     hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
+  # Check Disk Type
+  elif [ "x${ROOT_DISK_TYPE}" = 'xNVME' ]; then
+    # Check Command
+    if nvme version 1>/dev/null 2>&1; then
+      # Secure Erase
+      nvme format "${ROOT_DISK_PATH}"
+    fi
   fi
 
   # Wait Probe
