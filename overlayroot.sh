@@ -18,6 +18,7 @@ fi
 : ${RELEASE:="bionic"} # [trusty|xenial|bionic]
 : ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
 : ${PROFILE:="server"} # [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
+: ${KEYBOARD:="JP"}    # [JP|US]
 
 # User
 : ${USER_NAME:="ubuntu"}
@@ -159,6 +160,29 @@ mount -t sysfs                      sysfs    "${ROOTFS}/sys"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
 chmod 1777 "${ROOTFS}/dev/shm"
+
+################################################################################
+# Localize
+################################################################################
+
+# Timezone
+echo 'Asia/Tokyo' > "${ROOTFS}/etc/timezone"
+ln -fs /usr/share/zoneinfo/Asia/Tokyo "${ROOTFS}/etc/localtime"
+chroot "${ROOTFS}" dpkg-reconfigure tzdata
+
+# Locale
+chroot "${ROOTFS}" locale-gen ja_JP.UTF-8
+chroot "${ROOTFS}" update-locale LANG=ja_JP.UTF-8
+
+# Keyboard
+if [ "${KEYBOARD}" = 'JP' ]; then
+  # Japanese Keyboard
+  sed -i -e 's@XKBMODEL="pc105"@XKBMODEL="jp106"@' "${ROOTFS}/etc/default/keyboard"
+  sed -i -e 's@XKBLAYOUT="us"@XKBLAYOUT="jp"@'     "${ROOTFS}/etc/default/keyboard"
+fi
+
+# CapsLock to Ctrl
+sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/keyboard"
 
 ################################################################################
 # Admin User
