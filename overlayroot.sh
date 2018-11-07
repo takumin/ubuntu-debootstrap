@@ -261,8 +261,29 @@ fi
 
 # Check Environment Variable
 if [ "${PROFILE}" = 'desktop' ]; then
+  # HWE Version Xorg
+  if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
+    chroot "${ROOTFS}" apt-get -y install xserver-xorg-lts-xenial \
+                                          xserver-xorg-core-lts-xenial \
+                                          xserver-xorg-input-all-lts-xenial \
+                                          xserver-xorg-video-all-lts-xenial \
+                                          libwayland-egl1-mesa-lts-xenial
+  elif [ "${RELEASE}-${KERNEL}" = 'xenial-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'xenial-signed-generic-hwe' ]; then
+    chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
+  fi
+
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
+
+  # User Directory
+  chroot "${ROOTFS}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
+  rm "${ROOTFS}/home/${USER_NAME}/.config/user-dirs.locale"
+
+  # Check Ubuntu Version
+  if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+    # Input Method
+    chroot "${ROOTFS}" su -c "im-config -n fcitx" "${USER_NAME}"
+  fi
 fi
 
 ################################################################################
