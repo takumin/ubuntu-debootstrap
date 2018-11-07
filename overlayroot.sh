@@ -15,13 +15,19 @@ fi
 ################################################################################
 
 # Generic
-: ${RELEASE:="bionic"}      # [trusty|xenial|bionic]
-: ${KERNEL:="generic"}      # [generic|generic-hwe|signed-generic|signed-generic-hwe]
-: ${PROFILE:="server"}      # [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
+: ${RELEASE:="bionic"} # [trusty|xenial|bionic]
+: ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
+: ${PROFILE:="server"} # [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
+
+# User
+: ${USER_NAME:="ubuntu"}
+: ${USER_PASS:="ubuntu"}
+: ${USER_FULL:="Ubuntu User"}
+: ${USER_KEYS:=""}
 
 # Storage
-: ${ROOTFS:="/run/rootfs"}  # Root File System Mount Point
-: ${DISTDIR:="./release-${RELEASE}-${KERNEL}-${PROFILE}"}
+: ${ROOTFS:="/run/rootfs"}                                # Root File System Mount Point
+: ${DESTDIR:="./release-${RELEASE}-${KERNEL}-${PROFILE}"} # Destination Directory
 
 # Mirror
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
@@ -83,12 +89,12 @@ esac
 ################################################################################
 
 # Check Release Directory
-if [ -d "${DISTDIR}" ]; then
+if [ -d "${DESTDIR}" ]; then
   # Cleanup Release Directory
-  find "${DISTDIR}" -type f | xargs rm -f
+  find "${DESTDIR}" -type f | xargs rm -f
 else
   # Create Release Directory
-  mkdir -p "${DISTDIR}"
+  mkdir -p "${DESTDIR}"
 fi
 
 # Unmount Root Partition
@@ -153,6 +159,68 @@ mount -t sysfs                      sysfs    "${ROOTFS}/sys"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
 mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
 chmod 1777 "${ROOTFS}/dev/shm"
+
+################################################################################
+# Admin User
+################################################################################
+
+# Add Group
+chroot "${ROOTFS}" addgroup --system admin
+chroot "${ROOTFS}" addgroup --system lpadmin
+chroot "${ROOTFS}" addgroup --system sambashare
+
+# Add User
+chroot "${ROOTFS}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
+chroot "${ROOTFS}" adduser "${USER_NAME}" adm
+chroot "${ROOTFS}" adduser "${USER_NAME}" admin
+chroot "${ROOTFS}" adduser "${USER_NAME}" audio
+chroot "${ROOTFS}" adduser "${USER_NAME}" cdrom
+chroot "${ROOTFS}" adduser "${USER_NAME}" dialout
+chroot "${ROOTFS}" adduser "${USER_NAME}" dip
+chroot "${ROOTFS}" adduser "${USER_NAME}" lpadmin
+chroot "${ROOTFS}" adduser "${USER_NAME}" plugdev
+chroot "${ROOTFS}" adduser "${USER_NAME}" sambashare
+chroot "${ROOTFS}" adduser "${USER_NAME}" staff
+chroot "${ROOTFS}" adduser "${USER_NAME}" sudo
+chroot "${ROOTFS}" adduser "${USER_NAME}" users
+chroot "${ROOTFS}" adduser "${USER_NAME}" video
+
+# Trusty/Xenial Only
+if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+  chroot "${ROOTFS}" adduser "${USER_NAME}" netdev
+fi
+
+# Change Password
+chroot ${ROOTFS} sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
+
+# SSH Public Key
+if [ "x${USER_KEYS}" != "x" ]; then
+  mkdir -p "${ROOTFS}/home/${USER_NAME}/.ssh"
+  chmod 0700 "${ROOTFS}/home/${USER_NAME}/.ssh"
+  echo "${USER_KEYS}" > "${ROOTFS}/home/${USER_NAME}/.ssh/authorized_keys"
+  chmod 0644 "${ROOTFS}/home/${USER_NAME}/.ssh/authorized_keys"
+fi
+
+# Proxy Configuration
+if [ "x${NO_PROXY}" != "x" ]; then
+  echo "export no_proxy=\"${NO_PROXY}\""       >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export NO_PROXY=\"${NO_PROXY}\""       >> "${ROOTFS}/home/${USER_NAME}/.profile"
+fi
+if [ "x${FTP_PROXY}" != "x" ]; then
+  echo "export ftp_proxy=\"${FTP_PROXY}\""     >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export FTP_PROXY=\"${FTP_PROXY}\""     >> "${ROOTFS}/home/${USER_NAME}/.profile"
+fi
+if [ "x${HTTP_PROXY}" != "x" ]; then
+  echo "export http_proxy=\"${HTTP_PROXY}\""   >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export HTTP_PROXY=\"${HTTP_PROXY}\""   >> "${ROOTFS}/home/${USER_NAME}/.profile"
+fi
+if [ "x${HTTPS_PROXY}" != "x" ]; then
+  echo "export https_proxy=\"${HTTPS_PROXY}\"" >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\"" >> "${ROOTFS}/home/${USER_NAME}/.profile"
+fi
+
+# User Dir Permission
+chroot "${ROOTFS}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
 
 ################################################################################
 # Repository
@@ -353,25 +421,25 @@ chmod 0640 "${ROOTFS}/var/lib/apt/lists/lock"
 ################################################################################
 
 # Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "${DISTDIR}/packages.manifest"
+chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "${DESTDIR}/packages.manifest"
 
 # Unmount RootFs
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
 # Create SquashFS Image
-mksquashfs "${ROOTFS}" "${DISTDIR}/rootfs.squashfs" -comp xz
+mksquashfs "${ROOTFS}" "${DESTDIR}/rootfs.squashfs" -comp xz
 
 # Create TarBall Image
-tar -I pixz -p --acls --xattrs --one-file-system -cf "${DISTDIR}/rootfs.tar.xz" -C "${ROOTFS}" .
+tar -I pixz -p --acls --xattrs --one-file-system -cf "${DESTDIR}/rootfs.tar.xz" -C "${ROOTFS}" .
 
 # Copy Kernel
-find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DISTDIR}/kernel.img" \;
+find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DESTDIR}/kernel.img" \;
 
 # Copy Initrd
-find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DISTDIR}/initrd.img" \;
+find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DESTDIR}/initrd.img" \;
 
 # Permission Files
-find "${DISTDIR}" -type f | xargs chmod 0644
+find "${DESTDIR}" -type f | xargs chmod 0644
 
 # Owner/Group Files
 if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
