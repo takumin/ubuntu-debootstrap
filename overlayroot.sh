@@ -28,7 +28,7 @@ fi
 
 # Storage
 : ${ROOTFS:="/run/rootfs"}                                # Root File System Mount Point
-: ${DESTDIR:="./release-${RELEASE}-${KERNEL}-${PROFILE}"} # Destination Directory
+: ${DESTDIR:="./release/${RELEASE}-${KERNEL}-${PROFILE}"} # Destination Directory
 
 # Mirror
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
@@ -467,5 +467,5 @@ find "${DESTDIR}" -type f | xargs chmod 0644
 
 # Owner/Group Files
 if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
-  chown -R "${SUDO_UID}:${SUDO_GID}" "./release"
+  chown -R "${SUDO_UID}:${SUDO_GID}" "${DESTDIR}"
 fi
