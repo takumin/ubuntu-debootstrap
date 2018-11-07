@@ -120,7 +120,7 @@ VARIANT="--variant=minbase"
 COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-INCLUDE="--include=gnupg"
+INCLUDE="--include=gnupg,tzdata,locales"
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
