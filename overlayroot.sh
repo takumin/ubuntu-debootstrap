@@ -17,18 +17,18 @@ fi
 # Generic
 : ${RELEASE:="bionic"}      # [trusty|xenial|bionic]
 : ${KERNEL:="generic"}      # [generic|generic-hwe|signed-generic|signed-generic-hwe]
-: ${PROFILE:="server"}      # [minimal|standard|server|desktop]
-: ${NVIDIA:="NO"}           # [YES|NO]
+: ${PROFILE:="server"}      # [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
 
-# Disk
+# Storage
 : ${ROOTFS:="/run/rootfs"}  # Root File System Mount Point
+: ${DISTDIR:="./release-${RELEASE}-${KERNEL}-${PROFILE}"}
 
 # Mirror
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
 : ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
-: ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64"}
+: ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64"}
 
 # Proxy
 : ${NO_PROXY:=""}
@@ -42,40 +42,53 @@ fi
 ################################################################################
 
 # Release
-if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bionic' ]; then
-  echo "RELEASE: trusty or xenial or bionic"
-  exit 1
-fi
+case "${RELEASE}" in
+  'trusty' ) ;;
+  'xenial' ) ;;
+  'bionic' ) ;;
+  * )
+    echo "RELEASE: trusty or xenial or bionic"
+    exit 1
+    ;;
+esac
 
 # Kernel
-if [ "${KERNEL}" != 'generic' -a "${KERNEL}" != 'generic-hwe' -a "${KERNEL}" != 'signed-generic' -a "${KERNEL}" != 'signed-generic-hwe' ]; then
-  echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
-  exit 1
-fi
+case "${KERNEL}" in
+  'generic' ) ;;
+  'generic-hwe' ) ;;
+  'signed-generic' ) ;;
+  'signed-generic-hwe' ) ;;
+  * )
+    echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
+    exit 1
+    ;;
+esac
 
 # Profile
-if [ "${PROFILE}" != 'minimal' -a "${PROFILE}" != 'standard' -a "${PROFILE}" != 'server' -a "${PROFILE}" != 'desktop' ]; then
-  echo "PROFILE: minimal or standard or server or desktop"
-  exit 1
-fi
-
-# NVIDIA
-if [ "${NVIDIA}" != 'YES' -a "${NVIDIA}" != 'NO' ]; then
-  echo "NVIDIA: YES or NO"
-  exit 1
-fi
+case "${PROFILE}" in
+  'minimal' ) ;;
+  'standard' ) ;;
+  'server' ) ;;
+  'server-nvidia' ) ;;
+  'desktop' ) ;;
+  'desktop-nvidia' ) ;;
+  * )
+    echo "PROFILE: minimal or standard or server or server-nvidia or desktop or desktop-nvidia"
+    exit 1
+    ;;
+esac
 
 ################################################################################
 # Cleanup
 ################################################################################
 
 # Check Release Directory
-if [ -d "./release/${RELEASE}/${KERNEL}/${PROFILE}" ]; then
+if [ -d "${DISTDIR}" ]; then
   # Cleanup Release Directory
-  find "./release/${RELEASE}/${KERNEL}/${PROFILE}" -type f | xargs rm -f
+  find "${DISTDIR}" -type f | xargs rm -f
 else
   # Create Release Directory
-  mkdir -p "./release/${RELEASE}/${KERNEL}/${PROFILE}"
+  mkdir -p "${DISTDIR}"
 fi
 
 # Unmount Root Partition
@@ -102,12 +115,16 @@ COMPONENTS="--components=main,restricted,universe,multiverse"
 # Debootstrap Include Packages
 INCLUDE="--include=gnupg"
 
-# Install Base System
+# Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
-  env http_proxy="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}" debootstrap "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+  APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
+  DEBOOTSTRAP_COMMAND="env http_proxy=\"${APT_PROXY}\" https_proxy=\"${APT_PROXY}\" debootstrap"
 else
-  debootstrap "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+  DEBOOTSTRAP_COMMAND="debootstrap"
 fi
+
+# Install Base System
+${DEBOOTSTRAP_COMMAND} "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -178,6 +195,33 @@ chroot "${ROOTFS}" apt-get -y update
 chroot "${ROOTFS}" apt-get -y dist-upgrade
 
 ################################################################################
+# Kernel
+################################################################################
+
+# Select Kernel
+case "${RELEASE}-${KERNEL}" in
+  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  * )
+    echo "Unknown Release Codename & Kernel Type..."
+    exit 1
+    ;;
+esac
+
+# Install Kernel
+chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
+
+################################################################################
 # Minimal
 ################################################################################
 
@@ -189,7 +233,7 @@ chroot "${ROOTFS}" apt-get -y install ubuntu-minimal
 ################################################################################
 
 # Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+chroot "${ROOTFS}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
 
 ################################################################################
 # Standard
@@ -226,7 +270,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${NVIDIA}" = 'YES' ]; then
+if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # NVIDIA Apt Public Key
   wget -qO "${ROOTFS}/tmp/nvidia-keyring.gpg" https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
   chroot "${ROOTFS}" apt-key add /tmp/nvidia-keyring.gpg
@@ -243,7 +287,30 @@ if [ "${NVIDIA}" = 'YES' ]; then
 
   # Install Driver
   chroot "${ROOTFS}" apt-get -y install cuda-drivers
+
+  # Load Boot Time DRM Kernel Mode Setting
+  echo "nvidia"         >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia_modeset" >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia_uvm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
 fi
+
+################################################################################
+# Initramfs
+################################################################################
+
+# Get Linux Kernel Version
+_CURRENT_LINUX_VERSION="`uname -r`"
+_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
+
+# Check Linux Kernel Version
+if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
+  # Remove Current Kernel Version Module
+  chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
+fi
+
+# Update Initramfs
+chroot "${ROOTFS}" update-initramfs -u -k all
 
 ################################################################################
 # Cleanup
@@ -260,123 +327,30 @@ find "${ROOTFS}/var/lib/apt/lists" -type f | xargs rm -f
 touch "${ROOTFS}/var/lib/apt/lists/lock"
 chmod 0640 "${ROOTFS}/var/lib/apt/lists/lock"
 
-# Log
-find "${ROOTFS}/var/log" -type f | xargs rm -f
-touch "${ROOTFS}/var/log/lastlog"
-chmod 0644 "${ROOTFS}/var/log/lastlog"
-
-################################################################################
-# Infomation
-################################################################################
-
-# Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "./release/${RELEASE}/${KERNEL}/${PROFILE}/packages.manifest"
-
 ################################################################################
 # Archive
 ################################################################################
+
+# Packages List
+chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "${DISTDIR}/packages.manifest"
 
 # Unmount RootFs
 awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
 
 # Create SquashFS Image
-mksquashfs "${ROOTFS}" "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.squashfs" -e 'boot/grub' -comp xz
+mksquashfs "${ROOTFS}" "${DISTDIR}/rootfs.squashfs" -comp xz
 
 # Create TarBall Image
-tar -I pixz -p --acls --xattrs --one-file-system -cf "./release/${RELEASE}/${KERNEL}/${PROFILE}/rootfs.tar.xz" -C "${ROOTFS}" --exclude './boot/grub' .
-
-# Require Mount
-mount -t devtmpfs                   devtmpfs "${ROOTFS}/dev"
-mount -t devpts   -o gid=5,mode=620 devpts   "${ROOTFS}/dev/pts"
-mount -t proc                       proc     "${ROOTFS}/proc"
-mount -t tmpfs    -o mode=755       tmpfs    "${ROOTFS}/run"
-mount -t sysfs                      sysfs    "${ROOTFS}/sys"
-mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
-mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
-chmod 1777 "${ROOTFS}/dev/shm"
-
-# Remove Resolv.conf
-rm "${ROOTFS}/etc/resolv.conf"
-
-# Copy Host Resolv.conf
-cp /etc/resolv.conf "${ROOTFS}/etc/resolv.conf"
-
-################################################################################
-# Repository
-################################################################################
-
-# Update Repository
-chroot "${ROOTFS}" apt-get -y update
-
-################################################################################
-# Kernel
-################################################################################
-
-# Select Kernel
-case "${RELEASE}-${KERNEL}" in
-  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  * )
-    echo "Unknown Release Codename & Kernel Type..."
-    exit 1
-    ;;
-esac
-
-# Install Kernel
-chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
+tar -I pixz -p --acls --xattrs --one-file-system -cf "${DISTDIR}/rootfs.tar.xz" -C "${ROOTFS}" .
 
 # Copy Kernel
-find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${PROFILE}/kernel.img" \;
-
-################################################################################
-# Initramfs
-################################################################################
-
-# Check Environment Variable
-if [ "${NVIDIA}" = 'YES' ]; then
-  # Load Boot Time DRM Kernel Mode Setting
-  echo "nvidia"         >> "${ROOTFS}/etc/initramfs-tools/modules"
-  echo "nvidia_modeset" >> "${ROOTFS}/etc/initramfs-tools/modules"
-  echo "nvidia_uvm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
-  echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
-fi
-
-# Get Linux Kernel Version
-_CURRENT_LINUX_VERSION="`uname -r`"
-_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
-
-# Check Linux Kernel Version
-if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
-  # Remove Current Kernel Version Module
-  chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
-fi
-
-# Update Initramfs
-chroot "${ROOTFS}" update-initramfs -u -k all
+find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DISTDIR}/kernel.img" \;
 
 # Copy Initrd
-find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "./release/${RELEASE}/${KERNEL}/${PROFILE}/initrd.img" \;
-
-################################################################################
-# Permission
-################################################################################
+find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DISTDIR}/initrd.img" \;
 
 # Permission Files
-find "./release" -type f | xargs chmod 0644
-
-################################################################################
-# Owner/Group
-################################################################################
+find "${DISTDIR}" -type f | xargs chmod 0644
 
 # Owner/Group Files
 if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
