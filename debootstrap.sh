@@ -302,13 +302,13 @@ elif [ "${TYPE}" = 'deploy' ]; then
 
     # Secure Erase
     hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
-  # Check Disk Type
-  elif [ "x${ROOT_DISK_TYPE}" = 'xNVME' ]; then
-    # Check Command
-    if nvme version 1>/dev/null 2>&1; then
-      # Secure Erase
-      nvme format "${ROOT_DISK_PATH}"
-    fi
+  # # Check Disk Type
+  # elif [ "x${ROOT_DISK_TYPE}" = 'xNVME' ]; then
+  #   # Check Command
+  #   if nvme version 1>/dev/null 2>&1; then
+  #     # Secure Erase
+  #     nvme format "${ROOT_DISK_PATH}"
+  #   fi
   fi
 
   # Wait Probe
