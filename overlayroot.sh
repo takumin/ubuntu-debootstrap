@@ -332,7 +332,7 @@ chroot "${ROOTFS}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramf
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'standard' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'desktop' ]; then
+if [ "${PROFILE}" = 'standard' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-standard
 fi
@@ -342,7 +342,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'server' ]; then
+if [ "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
 fi
@@ -352,7 +352,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'desktop' ]; then
+if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # HWE Version Xorg
   if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
     chroot "${ROOTFS}" apt-get -y install xserver-xorg-lts-xenial \
