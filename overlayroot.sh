@@ -371,11 +371,14 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   chroot "${ROOTFS}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
   rm "${ROOTFS}/home/${USER_NAME}/.config/user-dirs.locale"
 
-  # Check Ubuntu Version
-  if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
-    # Input Method
-    chroot "${ROOTFS}" su -c "im-config -n fcitx" "${USER_NAME}"
+  # Check Release Version
+  if [ "${RELEASE}" = 'bionic' ]; then
+    # Install Package
+    chroot "${ROOTFS}" apt-get -y install fcitx fcitx-mozc
   fi
+
+  # Input Method
+  chroot "${ROOTFS}" su -c "im-config -n fcitx" "${USER_NAME}"
 fi
 
 ################################################################################
