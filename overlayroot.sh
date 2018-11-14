@@ -373,6 +373,7 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
 
   # Check Release Version
   if [ "${RELEASE}" = 'bionic' ]; then
+    # Workaround: System Log Error Message
     # https://askubuntu.com/questions/1044635/why-do-i-receive-an-error-message-while-trying-to-access-some-of-my-gnome-shell
     chroot "${ROOTFS}" apt-get -y install gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0
 
