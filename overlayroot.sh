@@ -379,6 +379,11 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
 
     # Install Package
     chroot "${ROOTFS}" apt-get -y install fcitx fcitx-mozc
+
+    # Default Fcitx
+    echo '[org.gnome.settings-daemon.plugins.keyboard]' >  "${ROOTFS}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
+    echo 'active=false'                                 >> "${ROOTFS}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
+    chroot "${ROOTFS}" glib-compile-schemas /usr/share/glib-2.0/schemas
   fi
 
   # Input Method
