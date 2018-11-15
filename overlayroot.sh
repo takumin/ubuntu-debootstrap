@@ -367,7 +367,12 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
                                           libwayland-egl1-mesa-lts-xenial
     chroot "${ROOTFS}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
   elif [ "${RELEASE}-${KERNEL}" = 'xenial-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'xenial-signed-generic-hwe' ]; then
-    chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
+    chroot "${ROOTFS}" apt-get -y install xserver-xorg-core-hwe-16.04 \
+                                          xserver-xorg-input-all-hwe-16.04 \
+                                          xserver-xorg-video-all-hwe-16.04 \
+                                          xserver-xorg-legacy-hwe-16.04 \
+                                          libgl1-mesa-dri
+    chroot "${ROOTFS}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
   fi
 
   # Install Package
