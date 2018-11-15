@@ -325,11 +325,6 @@ find "${ROOTFS}/var/lib/apt/lists" -type f | xargs rm -f
 touch "${ROOTFS}/var/lib/apt/lists/lock"
 chmod 0640 "${ROOTFS}/var/lib/apt/lists/lock"
 
-# Log
-find "${ROOTFS}/var/log" -type f | xargs rm -f
-touch "${ROOTFS}/var/log/lastlog"
-chmod 0644 "${ROOTFS}/var/log/lastlog"
-
 ################################################################################
 # Infomation
 ################################################################################
