@@ -205,8 +205,39 @@ fi
 
 # Check Environment Variable
 if [ "${PROFILE}" = 'desktop' ]; then
+  # HWE Version Xorg
+  if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
+    chroot "${ROOTFS}" apt-get -y install xserver-xorg-core-lts-xenial \
+                                          xserver-xorg-input-all-lts-xenial \
+                                          xserver-xorg-video-all-lts-xenial \
+                                          libegl1-mesa-lts-xenial \
+                                          libgbm1-lts-xenial \
+                                          libgl1-mesa-dri-lts-xenial \
+                                          libgl1-mesa-glx-lts-xenial \
+                                          libgles1-mesa-lts-xenial \
+                                          libgles2-mesa-lts-xenial \
+                                          libwayland-egl1-mesa-lts-xenial
+    chroot "${ROOTFS}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
+  elif [ "${RELEASE}-${KERNEL}" = 'xenial-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'xenial-signed-generic-hwe' ]; then
+    chroot "${ROOTFS}" apt-get -y install xserver-xorg-hwe-16.04
+  fi
+
   # Install Package
   chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
+
+  # Check Release Version
+  if [ "${RELEASE}" = 'bionic' ]; then
+    # Workaround: Fix System Log Error Message
+    chroot "${ROOTFS}" apt-get -y install gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0
+
+    # Install Input Method Package
+    chroot "${ROOTFS}" apt-get -y install fcitx fcitx-mozc
+
+    # Default Input Method for Fcitx
+    echo '[org.gnome.settings-daemon.plugins.keyboard]' >  "${ROOTFS}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
+    echo 'active=false'                                 >> "${ROOTFS}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
+    chroot "${ROOTFS}" glib-compile-schemas /usr/share/glib-2.0/schemas
+  fi
 fi
 
 ################################################################################
