@@ -44,22 +44,39 @@ fi
 ################################################################################
 
 # Release
-if [ "${RELEASE}" != 'trusty' -a "${RELEASE}" != 'xenial' -a "${RELEASE}" != 'bionic' ]; then
-  echo "RELEASE: trusty or xenial or bionic"
-  exit 1
-fi
+case "${RELEASE}" in
+  'trusty' ) ;;
+  'xenial' ) ;;
+  'bionic' ) ;;
+  * )
+    echo "RELEASE: trusty or xenial or bionic"
+    exit 1
+    ;;
+esac
 
 # Kernel
-if [ "${KERNEL}" != 'generic' -a "${KERNEL}" != 'generic-hwe' -a "${KERNEL}" != 'signed-generic' -a "${KERNEL}" != 'signed-generic-hwe' ]; then
-  echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
-  exit 1
-fi
+case "${KERNEL}" in
+  'generic' ) ;;
+  'generic-hwe' ) ;;
+  'signed-generic' ) ;;
+  'signed-generic-hwe' ) ;;
+  * )
+    echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
+    exit 1
+    ;;
+esac
 
 # Profile
-if [ "${PROFILE}" != 'minimal' -a "${PROFILE}" != 'standard' -a "${PROFILE}" != 'server' -a "${PROFILE}" != 'desktop' ]; then
-  echo "PROFILE: minimal or standard or server or desktop"
-  exit 1
-fi
+case "${PROFILE}" in
+  'minimal' ) ;;
+  'standard' ) ;;
+  'server' ) ;;
+  'desktop' ) ;;
+  * )
+    echo "PROFILE: minimal or standard or server or desktop"
+    exit 1
+    ;;
+esac
 
 ################################################################################
 # Cleanup
