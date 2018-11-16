@@ -123,7 +123,7 @@ DEBOOTSTRAP_VARIANT="--variant=minbase"
 DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-DEBOOTSTRAP_INCLUDES="--include=gnupg,tzdata,locales,console-setup"
+DEBOOTSTRAP_INCLUDES="--include=gnupg"
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
