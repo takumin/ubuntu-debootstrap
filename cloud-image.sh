@@ -93,22 +93,22 @@ esac
 ################################################################################
 
 # Root File System Mount Point
-declare -i WORKDIR="/run/rootfs"
+declare WORKDIR="/run/rootfs"
 
 # Destination Directory
-declare -i DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
+declare DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
 # Debootstrap Command
-declare -i DEBOOTSTRAP_COMMAND="debootstrap"
+declare DEBOOTSTRAP_COMMAND="debootstrap"
 
 # Debootstrap Variant
-declare -i DEBOOTSTRAP_VARIANT="--variant=minbase"
+declare DEBOOTSTRAP_VARIANT="--variant=minbase"
 
 # Debootstrap Components
-declare -i DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
+declare DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-declare -i DEBOOTSTRAP_INCLUDES="--include=gnupg"
+declare DEBOOTSTRAP_INCLUDES="--include=gnupg"
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
@@ -143,7 +143,7 @@ case "${RELEASE}-${KERNEL}" in
 esac
 
 # Glib Schemas Directory
-declare -i GLIB_SCHEMAS_DIR="/usr/share/glib-2.0/schemas"
+declare GLIB_SCHEMAS_DIR="/usr/share/glib-2.0/schemas"
 
 ################################################################################
 # Cleanup
