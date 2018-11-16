@@ -90,6 +90,49 @@ case "${RELEASE}-${KERNEL}" in
 esac
 
 ################################################################################
+# Conversion Environment
+################################################################################
+
+# Select Kernel Package
+case "${RELEASE}-${KERNEL}" in
+  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  * )
+    echo "Unknown Release Codename & Kernel Type..."
+    exit 1
+    ;;
+esac
+
+# Debootstrap Command
+DEBOOTSTRAP_COMMAND="debootstrap"
+
+# Debootstrap Variant
+DEBOOTSTRAP_VARIANT="--variant=minbase"
+
+# Debootstrap Components
+DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
+
+# Debootstrap Include Packages
+DEBOOTSTRAP_INCLUDES="--include=gnupg,tzdata,locales,console-setup"
+
+# Check APT Proxy
+if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
+  # Debootstrap Apt Proxy Environment
+  APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
+  DEBOOTSTRAP_ENVIRONMENT="env http_proxy=\"${APT_PROXY}\" https_proxy=\"${APT_PROXY}\""
+fi
+
+################################################################################
 # Cleanup
 ################################################################################
 
@@ -117,21 +160,15 @@ mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
 # Debootstrap
 ################################################################################
 
-# Debootstrap Use Variant
-VARIANT="--variant=minbase"
-
-# Debootstrap Components
-COMPONENTS="--components=main,restricted,universe,multiverse"
-
-# Debootstrap Include Packages
-INCLUDE="--include=gnupg"
-
 # Install Base System
-if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
-  env http_proxy="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}" debootstrap "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
-else
-  debootstrap "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
-fi
+${DEBOOTSTRAP_ENVIRONMENT} \
+  ${DEBOOTSTRAP_COMMAND} \
+  ${DEBOOTSTRAP_VARIANT} \
+  ${DEBOOTSTRAP_COMPONENTS} \
+  ${DEBOOTSTRAP_INCLUDES} \
+  ${RELEASE} \
+  ${ROOTFS} \
+  ${MIRROR_UBUNTU}
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -406,26 +443,6 @@ chroot "${ROOTFS}" apt-get -y update
 ################################################################################
 # Kernel
 ################################################################################
-
-# Select Kernel
-case "${RELEASE}-${KERNEL}" in
-  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  * )
-    echo "Unknown Release Codename & Kernel Type..."
-    exit 1
-    ;;
-esac
 
 # Install Kernel
 chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
