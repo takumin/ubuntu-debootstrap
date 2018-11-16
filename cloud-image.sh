@@ -152,7 +152,7 @@ declare GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 # Check Release Directory
 if [ -d "${DESTDIR}" ]; then
   # Cleanup Release Directory
-  find "${DESTDIR}" -type f -0 | xargs -0 rm -f
+  find "${DESTDIR}" -type f -print0 | xargs -0 rm -f
 else
   # Create Release Directory
   mkdir -p "${DESTDIR}"
@@ -187,12 +187,12 @@ declare -x DEBIAN_PRIORITY="critical"
 declare -x DEBCONF_NONINTERACTIVE_SEEN="true"
 
 # Cleanup Files
-find "${WORKDIR}/dev"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
-find "${WORKDIR}/proc"    -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
-find "${WORKDIR}/run"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
-find "${WORKDIR}/sys"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
-find "${WORKDIR}/tmp"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
-find "${WORKDIR}/var/tmp" -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/dev"     -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/proc"    -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/run"     -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/sys"     -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/tmp"     -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/var/tmp" -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
 
 # Require Mount
 mount -t devtmpfs                   devtmpfs "${WORKDIR}/dev"
@@ -363,7 +363,7 @@ chroot "${WORKDIR}" apt-get -y autoremove --purge
 chroot "${WORKDIR}" apt-get -y clean
 
 # Repository List
-find "${WORKDIR}/var/lib/apt/lists" -type f -0 | xargs -0 rm -f
+find "${WORKDIR}/var/lib/apt/lists" -type f -print0 | xargs -0 rm -f
 touch "${WORKDIR}/var/lib/apt/lists/lock"
 chmod 0640 "${WORKDIR}/var/lib/apt/lists/lock"
 
@@ -445,7 +445,7 @@ find "${WORKDIR}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DESTD
 ################################################################################
 
 # Permission Files
-find "${DESTDIR}" -type f -0 | xargs -0 chmod 0644
+find "${DESTDIR}" -type f -print0 | xargs -0 chmod 0644
 
 ################################################################################
 # Owner/Group
