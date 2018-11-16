@@ -93,27 +93,27 @@ esac
 ################################################################################
 
 # Root File System Mount Point
-declare WORKDIR="/run/rootfs"
+declare WORKDIR='/run/rootfs'
 
 # Destination Directory
 declare DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
 # Debootstrap Command
-declare DEBOOTSTRAP_COMMAND="debootstrap"
+declare DEBOOTSTRAP_COMMAND='debootstrap'
 
 # Debootstrap Variant
-declare DEBOOTSTRAP_VARIANT="--variant=minbase"
+declare DEBOOTSTRAP_VARIANT='--variant=minbase'
 
 # Debootstrap Components
-declare DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
+declare DEBOOTSTRAP_COMPONENTS='--components=main,restricted,universe,multiverse'
 
 # Debootstrap Include Packages
-declare DEBOOTSTRAP_INCLUDES="--include=gnupg"
+declare DEBOOTSTRAP_INCLUDES='--include=gnupg'
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
   # Debootstrap Apt Proxy Environment
-  declare -i APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
+  declare APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
 
   # Debootstrap Proxy Command
   declare -a DEBOOTSTRAP_PROXY=( "env" "http_proxy=${APT_PROXY}" "https_proxy=${APT_PROXY}" "${DEBOOTSTRAP_COMMAND}" )
@@ -124,18 +124,18 @@ fi
 
 # Select Kernel Package
 case "${RELEASE}-${KERNEL}" in
-  'trusty-generic'            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  'xenial-generic'            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  'bionic-generic'            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  'trusty-generic-hwe'        ) declare -i KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-  'xenial-generic-hwe'        ) declare -i KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-  'bionic-generic-hwe'        ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  'trusty-signed-generic'     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  'xenial-signed-generic'     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  'bionic-signed-generic'     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  'trusty-signed-generic-hwe' ) declare -i KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-  'xenial-signed-generic-hwe' ) declare -i KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-  'bionic-signed-generic-hwe' ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  'trusty-generic'            ) declare KERNEL_PACKAGE='linux-image-generic' ;;
+  'xenial-generic'            ) declare KERNEL_PACKAGE='linux-image-generic' ;;
+  'bionic-generic'            ) declare KERNEL_PACKAGE='linux-image-generic' ;;
+  'trusty-generic-hwe'        ) declare KERNEL_PACKAGE='linux-image-generic-lts-xenial' ;;
+  'xenial-generic-hwe'        ) declare KERNEL_PACKAGE='linux-image-generic-hwe-16.04' ;;
+  'bionic-generic-hwe'        ) declare KERNEL_PACKAGE='linux-image-generic' ;;
+  'trusty-signed-generic'     ) declare KERNEL_PACKAGE='linux-signed-image-generic' ;;
+  'xenial-signed-generic'     ) declare KERNEL_PACKAGE='linux-signed-image-generic' ;;
+  'bionic-signed-generic'     ) declare KERNEL_PACKAGE='linux-signed-image-generic' ;;
+  'trusty-signed-generic-hwe' ) declare KERNEL_PACKAGE='linux-signed-image-generic-lts-xenial' ;;
+  'xenial-signed-generic-hwe' ) declare KERNEL_PACKAGE='linux-signed-image-generic-hwe-16.04' ;;
+  'bionic-signed-generic-hwe' ) declare KERNEL_PACKAGE='linux-signed-image-generic' ;;
   * )
     echo 'Unknown Release Codename & Kernel Type...'
     exit 1
@@ -143,7 +143,7 @@ case "${RELEASE}-${KERNEL}" in
 esac
 
 # Glib Schemas Directory
-declare GLIB_SCHEMAS_DIR="/usr/share/glib-2.0/schemas"
+declare GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
 ################################################################################
 # Cleanup
