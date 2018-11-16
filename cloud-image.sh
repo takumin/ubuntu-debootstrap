@@ -111,10 +111,7 @@ DEBOOTSTRAP_COMPONENTS='--components=main,restricted,universe,multiverse'
 DEBOOTSTRAP_INCLUDES='--include=gnupg'
 
 # Check APT Proxy
-if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
-  # Debootstrap Apt Proxy Environment
-  APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
-
+if [ "x${APT_PROXY}" != "x" ]; then
   # Debootstrap Proxy Command
   declare -a DEBOOTSTRAP_PROXY=( "env" "http_proxy=${APT_PROXY}" "https_proxy=${APT_PROXY}" "${DEBOOTSTRAP_COMMAND}" )
 
