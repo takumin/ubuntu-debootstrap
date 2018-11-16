@@ -287,7 +287,7 @@ if [ "${PROFILE}" = 'desktop' ]; then
   # Check Release/Kernel Version
   case "${RELEASE}-${KERNEL}" in
     # Trusty Part
-    "trusty-generic-hwe" | "trusty-signed-generic-hwe" )
+    trusty-*-hwe )
       # Require Packages
       chroot "${WORKDIR}" apt-get -y install \
         xserver-xorg-core-lts-xenial \
@@ -305,7 +305,7 @@ if [ "${PROFILE}" = 'desktop' ]; then
       chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
       ;;
     # Xenial Part
-    "xenial-generic-hwe" | "xenial-signed-generic-hwe" )
+    xenial-*-hwe )
       # Require Packages
       chroot "${WORKDIR}" apt-get -y install \
         xserver-xorg-core-hwe-16.04 \
@@ -316,6 +316,10 @@ if [ "${PROFILE}" = 'desktop' ]; then
 
       # HWE Version Xorg Server
       chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
+      ;;
+    # Bionic Part
+    bionic-*-hwe )
+      # None...
       ;;
   esac
 
