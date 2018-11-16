@@ -94,49 +94,57 @@ esac
 ################################################################################
 
 # Root File System Mount Point
-WORKDIR="/run/rootfs"
+declare -i WORKDIR="/run/rootfs"
 
 # Destination Directory
-DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
+declare -i DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
 # Debootstrap Command
-DEBOOTSTRAP_COMMAND="debootstrap"
+declare -i DEBOOTSTRAP_COMMAND="debootstrap"
 
 # Debootstrap Variant
-DEBOOTSTRAP_VARIANT="--variant=minbase"
+declare -i DEBOOTSTRAP_VARIANT="--variant=minbase"
 
 # Debootstrap Components
-DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
+declare -i DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-DEBOOTSTRAP_INCLUDES="--include=gnupg"
+declare -i DEBOOTSTRAP_INCLUDES="--include=gnupg"
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
   # Debootstrap Apt Proxy Environment
-  APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
-  DEBOOTSTRAP_ENVIRONMENT="env http_proxy=\"${APT_PROXY}\" https_proxy=\"${APT_PROXY}\""
+  declare -i APT_PROXY="http://${APT_PROXY_HOST}:${APT_PROXY_PORT}"
+
+  # Debootstrap Proxy Command
+  declare -a DEBOOTSTRAP_PROXY=( "env" "http_proxy=${APT_PROXY}" "https_proxy=${APT_PROXY}" "${DEBOOTSTRAP_COMMAND}" )
+
+  # Debootstrap Override Command
+  DEBOOTSTRAP_COMMAND="${DEBOOTSTRAP_PROXY[*]}"
 fi
 
 # Select Kernel Package
 case "${RELEASE}-${KERNEL}" in
-  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-generic"            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
+  "xenial-generic"            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
+  "bionic-generic"            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-generic-hwe"        ) declare -i KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) declare -i KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
+  "trusty-signed-generic"     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "xenial-signed-generic"     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "bionic-signed-generic"     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-signed-generic-hwe" ) declare -i KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) declare -i KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
   * )
     echo "Unknown Release Codename & Kernel Type..."
     exit 1
     ;;
 esac
+
+# Glib Schemas Directory
+declare -i GLIB_SCHEMAS_DIR="/usr/share/glib-2.0/schemas"
 
 ################################################################################
 # Cleanup
@@ -145,7 +153,7 @@ esac
 # Check Release Directory
 if [ -d "${DESTDIR}" ]; then
   # Cleanup Release Directory
-  find "${DESTDIR}" -type f | xargs rm -f
+  find "${DESTDIR}" -type f -0 | xargs -0 rm -f
 else
   # Create Release Directory
   mkdir -p "${DESTDIR}"
@@ -167,32 +175,25 @@ mount -t tmpfs -o mode=0755 tmpfs "${WORKDIR}"
 ################################################################################
 
 # Install Base System
-${DEBOOTSTRAP_ENVIRONMENT} \
-  ${DEBOOTSTRAP_COMMAND} \
-  ${DEBOOTSTRAP_VARIANT} \
-  ${DEBOOTSTRAP_COMPONENTS} \
-  ${DEBOOTSTRAP_INCLUDES} \
-  ${RELEASE} \
-  ${WORKDIR} \
-  ${MIRROR_UBUNTU}
+${DEBOOTSTRAP_COMMAND} ${DEBOOTSTRAP_VARIANT} ${DEBOOTSTRAP_COMPONENTS} ${DEBOOTSTRAP_INCLUDES} "${RELEASE}" "${WORKDIR}" "${MIRROR_UBUNTU}"
 
 # Require Environment
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-export HOME="/root"
-export LC_ALL="C"
-export LANGUAGE="C"
-export LANG="C"
-export DEBIAN_FRONTEND="noninteractive"
-export DEBIAN_PRIORITY="critical"
-export DEBCONF_NONINTERACTIVE_SEEN="true"
+declare -x PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+declare -x HOME="/root"
+declare -x LC_ALL="C"
+declare -x LANGUAGE="C"
+declare -x LANG="C"
+declare -x DEBIAN_FRONTEND="noninteractive"
+declare -x DEBIAN_PRIORITY="critical"
+declare -x DEBCONF_NONINTERACTIVE_SEEN="true"
 
 # Cleanup Files
-find "${WORKDIR}/dev"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${WORKDIR}/proc"    -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${WORKDIR}/run"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${WORKDIR}/sys"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${WORKDIR}/tmp"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${WORKDIR}/var/tmp" -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/dev"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/proc"    -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/run"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/sys"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/tmp"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
+find "${WORKDIR}/var/tmp" -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
 
 # Require Mount
 mount -t devtmpfs                   devtmpfs "${WORKDIR}/dev"
@@ -283,27 +284,40 @@ fi
 
 # Check Environment Variable
 if [ "${PROFILE}" = 'desktop' ]; then
-  # HWE Version Xorg
-  if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
-    chroot "${WORKDIR}" apt-get -y install xserver-xorg-core-lts-xenial \
-                                          xserver-xorg-input-all-lts-xenial \
-                                          xserver-xorg-video-all-lts-xenial \
-                                          libegl1-mesa-lts-xenial \
-                                          libgbm1-lts-xenial \
-                                          libgl1-mesa-dri-lts-xenial \
-                                          libgl1-mesa-glx-lts-xenial \
-                                          libgles1-mesa-lts-xenial \
-                                          libgles2-mesa-lts-xenial \
-                                          libwayland-egl1-mesa-lts-xenial
-    chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
-  elif [ "${RELEASE}-${KERNEL}" = 'xenial-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'xenial-signed-generic-hwe' ]; then
-    chroot "${WORKDIR}" apt-get -y install xserver-xorg-core-hwe-16.04 \
-                                          xserver-xorg-input-all-hwe-16.04 \
-                                          xserver-xorg-video-all-hwe-16.04 \
-                                          xserver-xorg-legacy-hwe-16.04 \
-                                          libgl1-mesa-dri
-    chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
-  fi
+  # Check Release/Kernel Version
+  case "${RELEASE}-${KERNEL}" in
+    # Trusty Part
+    "trusty-generic-hwe" | "trusty-signed-generic-hwe" )
+      # Require Packages
+      chroot "${WORKDIR}" apt-get -y install \
+        xserver-xorg-core-lts-xenial \
+        xserver-xorg-input-all-lts-xenial \
+        xserver-xorg-video-all-lts-xenial \
+        libegl1-mesa-lts-xenial \
+        libgbm1-lts-xenial \
+        libgl1-mesa-dri-lts-xenial \
+        libgl1-mesa-glx-lts-xenial \
+        libgles1-mesa-lts-xenial \
+        libgles2-mesa-lts-xenial \
+        libwayland-egl1-mesa-lts-xenial
+
+      # HWE Version Xorg Server
+      chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
+      ;;
+    # Xenial Part
+    "xenial-generic-hwe" | "xenial-signed-generic-hwe" )
+      # Require Packages
+      chroot "${WORKDIR}" apt-get -y install \
+        xserver-xorg-core-hwe-16.04 \
+        xserver-xorg-input-all-hwe-16.04 \
+        xserver-xorg-video-all-hwe-16.04 \
+        xserver-xorg-legacy-hwe-16.04 \
+        libgl1-mesa-dri
+
+      # HWE Version Xorg Server
+      chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
+      ;;
+  esac
 
   # Install Package
   chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
@@ -317,9 +331,11 @@ if [ "${PROFILE}" = 'desktop' ]; then
     chroot "${WORKDIR}" apt-get -y install fcitx fcitx-mozc
 
     # Default Input Method for Fcitx
-    echo '[org.gnome.settings-daemon.plugins.keyboard]' >  "${WORKDIR}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
-    echo 'active=false'                                 >> "${WORKDIR}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
-    chroot "${WORKDIR}" glib-compile-schemas /usr/share/glib-2.0/schemas
+    echo '[org.gnome.settings-daemon.plugins.keyboard]' >  "${WORKDIR}/${GLIB_SCHEMAS_DIR}/99_japanese-input-method.gschema.override"
+    echo 'active=false'                                 >> "${WORKDIR}/${GLIB_SCHEMAS_DIR}/99_japanese-input-method.gschema.override"
+
+    # Compile Glib Schemas
+    chroot "${WORKDIR}" glib-compile-schemas "${GLIB_SCHEMAS_DIR}"
   fi
 fi
 
@@ -344,7 +360,7 @@ chroot "${WORKDIR}" apt-get -y autoremove --purge
 chroot "${WORKDIR}" apt-get -y clean
 
 # Repository List
-find "${WORKDIR}/var/lib/apt/lists" -type f | xargs rm -f
+find "${WORKDIR}/var/lib/apt/lists" -type f -0 | xargs -0 rm -f
 touch "${WORKDIR}/var/lib/apt/lists/lock"
 chmod 0640 "${WORKDIR}/var/lib/apt/lists/lock"
 
@@ -406,13 +422,13 @@ find "${WORKDIR}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DESTDIR}
 ################################################################################
 
 # Get Linux Kernel Version
-_CURRENT_LINUX_VERSION="`uname -r`"
-_CHROOT_LINUX_VERSION="`chroot \"${WORKDIR}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
+CURRENT_VERSION="$(uname -r)"
+CHROOT_VERSION="$(chroot \"${WORKDIR}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
 
 # Check Linux Kernel Version
-if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
+if [ "${CURRENT_VERSION}" != "${CHROOT_VERSION}" ]; then
   # Remove Current Kernel Version Module
-  chroot "${WORKDIR}" update-initramfs -d -k "`uname -r`"
+  chroot "${WORKDIR}" update-initramfs -d -k "$(uname -r)"
 fi
 
 # Update Initramfs
@@ -426,7 +442,7 @@ find "${WORKDIR}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DESTD
 ################################################################################
 
 # Permission Files
-find "${DESTDIR}" -type f | xargs chmod 0644
+find "${DESTDIR}" -type f -0 | xargs -0 chmod 0644
 
 ################################################################################
 # Owner/Group
