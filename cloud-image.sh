@@ -14,13 +14,13 @@ fi
 # Default Variables
 ################################################################################
 
+# Destination Directory
+: ${DESTDIR:="$(cd $(dirname $0); pwd)/release"}
+
 # Generic
 : ${RELEASE:="bionic"} # [trusty|xenial|bionic]
 : ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
 : ${PROFILE:="server"} # [minimal|standard|server|desktop]
-
-# Destination Directory
-: ${DESTDIR:="$(cd $(dirname $0); pwd)/release"}
 
 # Cloud-Init Datasources
 : ${DATASOURCES:="NoCloud"}
@@ -30,9 +30,8 @@ fi
 : ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
-: ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64"}
 
-# Proxy
+# Forward Proxy URL
 : ${NO_PROXY:=""}
 : ${APT_PROXY:=""}
 : ${FTP_PROXY:=""}
