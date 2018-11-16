@@ -131,7 +131,7 @@ else
 fi
 
 # Install Base System
-${DEBOOTSTRAP_COMMAND} "${VARIANT}" "${COMPONENTS}" "${INCLUDE}" "${RELEASE}" "${ROOTFS}" "${MIRROR_UBUNTU}"
+${DEBOOTSTRAP_COMMAND} ${VARIANT} ${COMPONENTS} ${INCLUDE} ${RELEASE} ${ROOTFS} ${MIRROR_UBUNTU}
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -192,6 +192,7 @@ sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/key
 chroot "${ROOTFS}" addgroup --system admin
 chroot "${ROOTFS}" addgroup --system lpadmin
 chroot "${ROOTFS}" addgroup --system sambashare
+chroot "${ROOTFS}" addgroup --system netdev
 
 # Add User
 chroot "${ROOTFS}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
@@ -208,11 +209,7 @@ chroot "${ROOTFS}" adduser "${USER_NAME}" staff
 chroot "${ROOTFS}" adduser "${USER_NAME}" sudo
 chroot "${ROOTFS}" adduser "${USER_NAME}" users
 chroot "${ROOTFS}" adduser "${USER_NAME}" video
-
-# Trusty/Xenial Only
-if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
-  chroot "${ROOTFS}" adduser "${USER_NAME}" netdev
-fi
+chroot "${ROOTFS}" adduser "${USER_NAME}" netdev
 
 # Change Password
 chroot ${ROOTFS} sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
