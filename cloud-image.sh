@@ -49,7 +49,7 @@ case "${RELEASE}" in
   'xenial' ) ;;
   'bionic' ) ;;
   * )
-    echo "RELEASE: trusty or xenial or bionic"
+    echo 'RELEASE: trusty or xenial or bionic'
     exit 1
     ;;
 esac
@@ -61,7 +61,7 @@ case "${KERNEL}" in
   'signed-generic' ) ;;
   'signed-generic-hwe' ) ;;
   * )
-    echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
+    echo 'KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe'
     exit 1
     ;;
 esac
@@ -73,7 +73,7 @@ case "${PROFILE}" in
   'server' ) ;;
   'desktop' ) ;;
   * )
-    echo "PROFILE: minimal or standard or server or desktop"
+    echo 'PROFILE: minimal or standard or server or desktop'
     exit 1
     ;;
 esac
@@ -84,8 +84,8 @@ esac
 
 # Select Kernel
 case "${RELEASE}-${KERNEL}" in
-  "bionic-generic-hwe"        ) KERNEL="generic" ;;
-  "bionic-signed-generic-hwe" ) KERNEL="signed-generic" ;;
+  'bionic-generic-hwe'        ) KERNEL='generic' ;;
+  'bionic-signed-generic-hwe' ) KERNEL='signed-generic' ;;
   *                           ) ;;
 esac
 
@@ -94,22 +94,22 @@ esac
 ################################################################################
 
 # Root File System Mount Point
-declare -i WORKDIR="/run/rootfs"
+declare -i WORKDIR='/run/rootfs'
 
 # Destination Directory
 declare -i DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
 # Debootstrap Command
-declare -i DEBOOTSTRAP_COMMAND="debootstrap"
+declare -i DEBOOTSTRAP_COMMAND='debootstrap'
 
 # Debootstrap Variant
-declare -i DEBOOTSTRAP_VARIANT="--variant=minbase"
+declare -i DEBOOTSTRAP_VARIANT='--variant=minbase'
 
 # Debootstrap Components
-declare -i DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
+declare -i DEBOOTSTRAP_COMPONENTS='--components=main,restricted,universe,multiverse'
 
 # Debootstrap Include Packages
-declare -i DEBOOTSTRAP_INCLUDES="--include=gnupg"
+declare -i DEBOOTSTRAP_INCLUDES='--include=gnupg'
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" -a "x${APT_PROXY_PORT}" != "x" ]; then
@@ -125,26 +125,26 @@ fi
 
 # Select Kernel Package
 case "${RELEASE}-${KERNEL}" in
-  "trusty-generic"            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  "xenial-generic"            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  "bionic-generic"            ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-generic-hwe"        ) declare -i KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-  "xenial-generic-hwe"        ) declare -i KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-  "bionic-generic-hwe"        ) declare -i KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-signed-generic"     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "xenial-signed-generic"     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "bionic-signed-generic"     ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "trusty-signed-generic-hwe" ) declare -i KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-  "xenial-signed-generic-hwe" ) declare -i KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-  "bionic-signed-generic-hwe" ) declare -i KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  'trusty-generic'            ) declare -i KERNEL_PACKAGE='linux-image-generic' ;;
+  'xenial-generic'            ) declare -i KERNEL_PACKAGE='linux-image-generic' ;;
+  'bionic-generic'            ) declare -i KERNEL_PACKAGE='linux-image-generic' ;;
+  'trusty-generic-hwe'        ) declare -i KERNEL_PACKAGE='linux-image-generic-lts-xenial' ;;
+  'xenial-generic-hwe'        ) declare -i KERNEL_PACKAGE='linux-image-generic-hwe-16.04' ;;
+  'bionic-generic-hwe'        ) declare -i KERNEL_PACKAGE='linux-image-generic' ;;
+  'trusty-signed-generic'     ) declare -i KERNEL_PACKAGE='linux-signed-image-generic' ;;
+  'xenial-signed-generic'     ) declare -i KERNEL_PACKAGE='linux-signed-image-generic' ;;
+  'bionic-signed-generic'     ) declare -i KERNEL_PACKAGE='linux-signed-image-generic' ;;
+  'trusty-signed-generic-hwe' ) declare -i KERNEL_PACKAGE='linux-signed-image-generic-lts-xenial' ;;
+  'xenial-signed-generic-hwe' ) declare -i KERNEL_PACKAGE='linux-signed-image-generic-hwe-16.04' ;;
+  'bionic-signed-generic-hwe' ) declare -i KERNEL_PACKAGE='linux-signed-image-generic' ;;
   * )
-    echo "Unknown Release Codename & Kernel Type..."
+    echo 'Unknown Release Codename & Kernel Type...'
     exit 1
     ;;
 esac
 
 # Glib Schemas Directory
-declare -i GLIB_SCHEMAS_DIR="/usr/share/glib-2.0/schemas"
+declare -i GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
 ################################################################################
 # Cleanup
@@ -178,14 +178,14 @@ mount -t tmpfs -o mode=0755 tmpfs "${WORKDIR}"
 ${DEBOOTSTRAP_COMMAND} ${DEBOOTSTRAP_VARIANT} ${DEBOOTSTRAP_COMPONENTS} ${DEBOOTSTRAP_INCLUDES} "${RELEASE}" "${WORKDIR}" "${MIRROR_UBUNTU}"
 
 # Require Environment
-declare -x PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-declare -x HOME="/root"
-declare -x LC_ALL="C"
-declare -x LANGUAGE="C"
-declare -x LANG="C"
-declare -x DEBIAN_FRONTEND="noninteractive"
-declare -x DEBIAN_PRIORITY="critical"
-declare -x DEBCONF_NONINTERACTIVE_SEEN="true"
+declare -x PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+declare -x HOME='/root'
+declare -x LC_ALL='C'
+declare -x LANGUAGE='C'
+declare -x LANG='C'
+declare -x DEBIAN_FRONTEND='noninteractive'
+declare -x DEBIAN_PRIORITY='critical'
+declare -x DEBCONF_NONINTERACTIVE_SEEN='true'
 
 # Cleanup Files
 find "${WORKDIR}/dev"     -mindepth 1 -0 | xargs -0 --no-run-if-empty rm -fr
