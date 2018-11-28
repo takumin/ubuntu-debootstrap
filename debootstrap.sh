@@ -32,10 +32,11 @@ set -e
 
 # Proxy
 : ${NO_PROXY:=""}
-: ${APT_PROXY:=""}
 : ${FTP_PROXY:=""}
 : ${HTTP_PROXY:=""}
 : ${HTTPS_PROXY:=""}
+: ${APT_PROXY_HOST:=""}
+: ${APT_PROXY_PORT:=""}
 : ${APT_NO_PROXY:=""}
 
 # DNS
