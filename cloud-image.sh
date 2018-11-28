@@ -22,37 +22,58 @@ fi
 # shellcheck disable=SC2086
 : ${DESTDIR:="$(cd "$(dirname $0)"; pwd)/release"}
 
-# Generic
+# Release Codename
+# Value: [trusty|xenial|bionic]
 # shellcheck disable=SC2086
-: ${RELEASE:="bionic"} # [trusty|xenial|bionic]
+: ${RELEASE:="bionic"}
+
+# Kernel Package
+# Value: [generic|generic-hwe|signed-generic|signed-generic-hwe]
 # shellcheck disable=SC2086
-: ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
+: ${KERNEL:="generic"}
+
+# Package Selection
+# Value: [minimal|standard|server|desktop]
 # shellcheck disable=SC2086
-: ${PROFILE:="server"} # [minimal|standard|server|desktop]
+: ${PROFILE:="server"}
 
 # Cloud-Init Datasources
 # shellcheck disable=SC2086
 : ${DATASOURCES:="NoCloud"}
 
-# Repository Mirror URL
+# Apt Repository - Official
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
+
+# Apt Repository URL - Canonical Partner
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
+
+# Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
+
+# Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
 
-# Forward Proxy URL
+# Proxy - No Proxy List
 # shellcheck disable=SC2086
 : ${NO_PROXY:=""}
+
+# Proxy - Apt Proxy
 # shellcheck disable=SC2086
 : ${APT_PROXY:=""}
+
+# Proxy - FTP Proxy
 # shellcheck disable=SC2086
 : ${FTP_PROXY:=""}
+
+# Proxy - HTTP Proxy
 # shellcheck disable=SC2086
 : ${HTTP_PROXY:=""}
+
+# Proxy - HTTPS Proxy
 # shellcheck disable=SC2086
 : ${HTTPS_PROXY:=""}
 

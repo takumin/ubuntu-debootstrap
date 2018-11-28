@@ -22,47 +22,79 @@ fi
 # shellcheck disable=SC2086
 : ${DESTDIR:="$(cd "$(dirname $0)"; pwd)/release"}
 
-# Generic
+# Release Codename
+# Value: [trusty|xenial|bionic]
 # shellcheck disable=SC2086
-: ${RELEASE:="bionic"} # [trusty|xenial|bionic]
-# shellcheck disable=SC2086
-: ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
-# shellcheck disable=SC2086
-: ${PROFILE:="server"} # [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
-# shellcheck disable=SC2086
-: ${KEYBOARD:="JP"}    # [JP|US]
+: ${RELEASE:="bionic"}
 
-# User
+# Kernel Package
+# Value: [generic|generic-hwe|signed-generic|signed-generic-hwe]
+# shellcheck disable=SC2086
+: ${KERNEL:="generic"}
+
+# Package Selection
+# Value: [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
+# shellcheck disable=SC2086
+: ${PROFILE:="server"}
+
+# Keyboard Type
+# Value: [JP|US]
+# shellcheck disable=SC2086
+: ${KEYBOARD:="JP"}
+
+# User - Name
 # shellcheck disable=SC2086
 : ${USER_NAME:="ubuntu"}
+
+# User - Password
 # shellcheck disable=SC2086
 : ${USER_PASS:="ubuntu"}
+
+# User - Full Name
 # shellcheck disable=SC2086
 : ${USER_FULL:="Ubuntu User"}
+
+# User - SSH Public Key
 # shellcheck disable=SC2086
 : ${USER_KEYS:=""}
 
-# Mirror
+# Apt Repository - Official
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
+
+# Apt Repository URL - Canonical Partner
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
+
+# Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
+
+# Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
+
+# Apt Repository URL - NVIDIA CUDA
 # shellcheck disable=SC2086
 : ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64"}
 
-# Proxy
+# Proxy - No Proxy List
 # shellcheck disable=SC2086
 : ${NO_PROXY:=""}
+
+# Proxy - Apt Proxy
 # shellcheck disable=SC2086
 : ${APT_PROXY:=""}
+
+# Proxy - FTP Proxy
 # shellcheck disable=SC2086
 : ${FTP_PROXY:=""}
+
+# Proxy - HTTP Proxy
 # shellcheck disable=SC2086
 : ${HTTP_PROXY:=""}
+
+# Proxy - HTTPS Proxy
 # shellcheck disable=SC2086
 : ${HTTPS_PROXY:=""}
 
