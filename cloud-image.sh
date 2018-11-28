@@ -15,30 +15,45 @@ fi
 ################################################################################
 
 # Root File System Mount Point
+# shellcheck disable=SC2086
 : ${WORKDIR:="/run/rootfs"}
 
 # Destination Directory
-: ${DESTDIR:="$(cd $(dirname $0); pwd)/release"}
+# shellcheck disable=SC2086
+: ${DESTDIR:="$(cd "$(dirname $0)"; pwd)/release"}
 
 # Generic
+# shellcheck disable=SC2086
 : ${RELEASE:="bionic"} # [trusty|xenial|bionic]
+# shellcheck disable=SC2086
 : ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
+# shellcheck disable=SC2086
 : ${PROFILE:="server"} # [minimal|standard|server|desktop]
 
 # Cloud-Init Datasources
+# shellcheck disable=SC2086
 : ${DATASOURCES:="NoCloud"}
 
 # Repository Mirror URL
+# shellcheck disable=SC2086
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
+# shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
+# shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
+# shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
 
 # Forward Proxy URL
+# shellcheck disable=SC2086
 : ${NO_PROXY:=""}
+# shellcheck disable=SC2086
 : ${APT_PROXY:=""}
+# shellcheck disable=SC2086
 : ${FTP_PROXY:=""}
+# shellcheck disable=SC2086
 : ${HTTP_PROXY:=""}
+# shellcheck disable=SC2086
 : ${HTTPS_PROXY:=""}
 
 ################################################################################
@@ -423,7 +438,7 @@ find "${WORKDIR}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DESTDIR}
 
 # Get Linux Kernel Version
 CURRENT_VERSION="$(uname -r)"
-CHROOT_VERSION="$(chroot ${WORKDIR} dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
+CHROOT_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
 
 # Check Linux Kernel Version
 if [ "${CURRENT_VERSION}" != "${CHROOT_VERSION}" ]; then
