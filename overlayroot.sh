@@ -614,8 +614,8 @@ if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   chroot "${WORKDIR}" apt-key add /tmp/nvidia-keyring.gpg
 
   # NVIDIA CUDA Repository
-  echo '# NVIDIA CUDA Repository'    >  "${WORKDIR}/etc/apt/sources.list.d/nvidia-cuda.list"
-  echo "deb ${MIRROR_NVIDIA_CUDA} /" >> "${WORKDIR}/etc/apt/sources.list.d/nvidia-cuda.list"
+  echo '# NVIDIA CUDA Repository'              >  "${WORKDIR}/etc/apt/sources.list.d/nvidia-cuda.list"
+  echo "deb $(eval "${MIRROR_NVIDIA_CUDA}") /" >> "${WORKDIR}/etc/apt/sources.list.d/nvidia-cuda.list"
 
   # Update Repository
   chroot "${WORKDIR}" apt-get -y update

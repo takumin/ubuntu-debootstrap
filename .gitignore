@@ -1,5 +1,3 @@
 .envrc
-config/*
-!config/.gitkeep
 release/*
 !release/.gitkeep
