@@ -14,6 +14,9 @@ fi
 # Default Variables
 ################################################################################
 
+# Root File System Mount Point
+: ${WORKDIR:="/run/rootfs"}
+
 # Destination Directory
 : ${DESTDIR:="$(cd $(dirname $0); pwd)/release"}
 
@@ -91,9 +94,6 @@ esac
 ################################################################################
 # Require Environment
 ################################################################################
-
-# Root File System Mount Point
-WORKDIR='/run/rootfs'
 
 # Destination Directory
 DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"

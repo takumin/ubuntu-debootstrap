@@ -14,6 +14,12 @@ fi
 # Default Variables
 ################################################################################
 
+# Root File System Mount Point
+: ${WORKDIR:="/run/rootfs"}
+
+# Destination Directory
+: ${DESTDIR:="$(cd $(dirname $0); pwd)/release"}
+
 # Generic
 : ${RELEASE:="bionic"} # [trusty|xenial|bionic]
 : ${KERNEL:="generic"} # [generic|generic-hwe|signed-generic|signed-generic-hwe]
@@ -25,10 +31,6 @@ fi
 : ${USER_PASS:="ubuntu"}
 : ${USER_FULL:="Ubuntu User"}
 : ${USER_KEYS:=""}
-
-# Storage
-: ${WORKDIR:="/run/rootfs"}                               # Root File System Mount Point
-: ${DESTDIR:="./release/${RELEASE}-${KERNEL}-${PROFILE}"} # Destination Directory
 
 # Mirror
 : ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
