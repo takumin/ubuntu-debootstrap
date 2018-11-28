@@ -220,6 +220,52 @@ case "${RELEASE}-${KERNEL}" in
     ;;
 esac
 
+# HWE Xorg Package
+case "${RELEASE}-${KERNEL}" in
+  # Trusty Part
+  trusty-*-hwe )
+    # Require Packages
+    declare -a XORG_HWE_REQUIRE_PACKAGES=(
+      'xserver-xorg-core-lts-xenial'
+      'xserver-xorg-input-all-lts-xenial'
+      'xserver-xorg-video-all-lts-xenial'
+      'libegl1-mesa-lts-xenial'
+      'libgbm1-lts-xenial'
+      'libgl1-mesa-dri-lts-xenial'
+      'libgl1-mesa-glx-lts-xenial'
+      'libgles1-mesa-lts-xenial'
+      'libgles2-mesa-lts-xenial'
+      'libwayland-egl1-mesa-lts-xenial'
+    )
+    # HWE Xorg Package
+    XORG_HWE_PACKAGE='xserver-xorg-lts-xenial'
+    ;;
+  # Xenial Part
+  xenial-*-hwe )
+    # Require Packages
+    declare -a XORG_HWE_REQUIRE_PACKAGES=(
+      'xserver-xorg-core-hwe-16.04'
+      'xserver-xorg-input-all-hwe-16.04'
+      'xserver-xorg-video-all-hwe-16.04'
+      'xserver-xorg-legacy-hwe-16.04'
+      'libgl1-mesa-dri'
+    )
+    # HWE Xorg Package
+    XORG_HWE_PACKAGE='xserver-xorg-hwe-16.04'
+    ;;
+  # Bionic Part
+  bionic-*-hwe )
+    # Require Packages
+    XORG_HWE_REQUIRE_PACKAGES=''
+    # HWE Xorg Package
+    XORG_HWE_PACKAGE=''
+    ;;
+  * )
+    echo "Unknown Release Codename & Kernel Type..."
+    exit 1
+    ;;
+esac
+
 # Glib Schemas Directory
 GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
@@ -560,49 +606,19 @@ chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 # Check Environment Variable
 if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # Check Release/Kernel Version
-  case "${RELEASE}-${KERNEL}" in
-    # Trusty Part
-    trusty-*-hwe )
-      # Require Packages
-      XORG_HWE_REQUIRE_PACKAGES=(
-        xserver-xorg-core-lts-xenial
-        xserver-xorg-input-all-lts-xenial
-        xserver-xorg-video-all-lts-xenial
-        libegl1-mesa-lts-xenial
-        libgbm1-lts-xenial
-        libgl1-mesa-dri-lts-xenial
-        libgl1-mesa-glx-lts-xenial
-        libgles1-mesa-lts-xenial
-        libgles2-mesa-lts-xenial
-        libwayland-egl1-mesa-lts-xenial
-      )
+  case "${KERNEL}" in
+    *-hwe )
+      # Check Package List
+      if [ -n "${XORG_HWE_REQUIRE_PACKAGES[*]}" ]; then
+        # Install Require Packages
+        chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[*]}"
+      fi
 
-      # Install Require Packages
-      chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[*]}"
-
-      # HWE Version Xorg Server
-      chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
-      ;;
-    # Xenial Part
-    xenial-*-hwe )
-      # Require Packages
-      XORG_HWE_REQUIRE_PACKAGES=(
-        xserver-xorg-core-hwe-16.04
-        xserver-xorg-input-all-hwe-16.04
-        xserver-xorg-video-all-hwe-16.04
-        xserver-xorg-legacy-hwe-16.04
-        libgl1-mesa-dri
-      )
-
-      # Install Require Packages
-      chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[*]}"
-
-      # HWE Version Xorg Server
-      chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
-      ;;
-    # Bionic Part
-    bionic-*-hwe )
-      # None...
+      # Check Package List
+      if [ -n "${XORG_HWE_PACKAGE}" ]; then
+        # HWE Version Xorg Server
+        chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${XORG_HWE_PACKAGE}"
+      fi
       ;;
   esac
 
