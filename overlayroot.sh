@@ -590,9 +590,9 @@ if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # Load Boot Time DRM Kernel Mode Setting
   {
     echo 'nvidia'
+    echo 'nvidia_drm'
     echo 'nvidia_modeset'
     echo 'nvidia_uvm'
-    echo 'nvidia_drm'
   } >> "${WORKDIR}/etc/initramfs-tools/modules"
 fi
 
