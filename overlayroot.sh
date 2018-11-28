@@ -260,10 +260,6 @@ case "${RELEASE}-${KERNEL}" in
     # HWE Xorg Package
     XORG_HWE_PACKAGE=''
     ;;
-  * )
-    echo "Unknown Release Codename & Kernel Type..."
-    exit 1
-    ;;
 esac
 
 # Glib Schemas Directory
