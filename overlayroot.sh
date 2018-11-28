@@ -241,7 +241,7 @@ sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/key
 
 # Root Login
 mkdir -p "${ROOTFS}/etc/systemd/system/getty@tty1.service.d"
-cat > "${ROOTFS}/etc/systemd/system/ssh-keygen.service" << __EOF__
+cat > "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << __EOF__
 [Service]
 Type=idle
 ExecStart=
@@ -252,7 +252,7 @@ __EOF__
 echo "~/.startup.sh" >> "${ROOTFS}/root/.bash_login"
 
 # Startup Script
-cat > "${ROOTFS}/etc/systemd/system/ssh-keygen.service" << '__EOF__'
+cat > "${ROOTFS}/root/.startup.sh" << '__EOF__'
 #!/bin/bash
 
 script_cmdline ()
