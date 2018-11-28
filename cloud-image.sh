@@ -16,7 +16,7 @@ fi
 
 # Root File System Mount Point
 # shellcheck disable=SC2086
-: ${WORKDIR:="/run/rootfs"}
+: ${WORKDIR:='/run/rootfs'}
 
 # Destination Directory
 # shellcheck disable=SC2086
@@ -25,57 +25,57 @@ fi
 # Release Codename
 # Value: [trusty|xenial|bionic]
 # shellcheck disable=SC2086
-: ${RELEASE:="bionic"}
+: ${RELEASE:='bionic'}
 
 # Kernel Package
 # Value: [generic|generic-hwe|signed-generic|signed-generic-hwe]
 # shellcheck disable=SC2086
-: ${KERNEL:="generic"}
+: ${KERNEL:='generic'}
 
 # Package Selection
 # Value: [minimal|standard|server|desktop]
 # shellcheck disable=SC2086
-: ${PROFILE:="server"}
+: ${PROFILE:='server'}
 
 # Cloud-Init Datasources
 # shellcheck disable=SC2086
-: ${DATASOURCES:="NoCloud"}
+: ${DATASOURCES:='NoCloud'}
 
 # Apt Repository - Official
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
+: ${MIRROR_UBUNTU:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu'}
 
 # Apt Repository URL - Canonical Partner
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
+: ${MIRROR_UBUNTU_PARTNER:='http://archive.canonical.com'}
 
 # Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
+: ${MIRROR_UBUNTU_JA:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu'}
 
 # Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
+: ${MIRROR_UBUNTU_JA_NONFREE:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free'}
 
 # Proxy - No Proxy List
 # shellcheck disable=SC2086
-: ${NO_PROXY:=""}
+: ${NO_PROXY:=''}
 
 # Proxy - Apt Proxy
 # shellcheck disable=SC2086
-: ${APT_PROXY:=""}
+: ${APT_PROXY:=''}
 
 # Proxy - FTP Proxy
 # shellcheck disable=SC2086
-: ${FTP_PROXY:=""}
+: ${FTP_PROXY:=''}
 
 # Proxy - HTTP Proxy
 # shellcheck disable=SC2086
-: ${HTTP_PROXY:=""}
+: ${HTTP_PROXY:=''}
 
 # Proxy - HTTPS Proxy
 # shellcheck disable=SC2086
-: ${HTTPS_PROXY:=""}
+: ${HTTPS_PROXY:=''}
 
 ################################################################################
 # Check Environment
@@ -134,15 +134,21 @@ esac
 # Get Release Version
 case "${RELEASE}" in
   'trusty' )
+    # shellcheck disable=SC2034
     RELEASE_MAJOR='14'
+    # shellcheck disable=SC2034
     RELEASE_MINOR='04'
     ;;
   'xenial' )
+    # shellcheck disable=SC2034
     RELEASE_MAJOR='16'
+    # shellcheck disable=SC2034
     RELEASE_MINOR='04'
     ;;
   'bionic' )
+    # shellcheck disable=SC2034
     RELEASE_MAJOR='18'
+    # shellcheck disable=SC2034
     RELEASE_MINOR='04'
     ;;
 esac

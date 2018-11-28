@@ -16,7 +16,7 @@ fi
 
 # Root File System Mount Point
 # shellcheck disable=SC2086
-: ${WORKDIR:="/run/rootfs"}
+: ${WORKDIR:='/run/rootfs'}
 
 # Destination Directory
 # shellcheck disable=SC2086
@@ -25,78 +25,78 @@ fi
 # Release Codename
 # Value: [trusty|xenial|bionic]
 # shellcheck disable=SC2086
-: ${RELEASE:="bionic"}
+: ${RELEASE:='bionic'}
 
 # Kernel Package
 # Value: [generic|generic-hwe|signed-generic|signed-generic-hwe]
 # shellcheck disable=SC2086
-: ${KERNEL:="generic"}
+: ${KERNEL:='generic'}
 
 # Package Selection
 # Value: [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
 # shellcheck disable=SC2086
-: ${PROFILE:="server"}
+: ${PROFILE:='server'}
 
 # Keyboard Type
 # Value: [JP|US]
 # shellcheck disable=SC2086
-: ${KEYBOARD:="JP"}
+: ${KEYBOARD:='JP'}
 
 # User - Name
 # shellcheck disable=SC2086
-: ${USER_NAME:="ubuntu"}
+: ${USER_NAME:='ubuntu'}
 
 # User - Password
 # shellcheck disable=SC2086
-: ${USER_PASS:="ubuntu"}
+: ${USER_PASS:='ubuntu'}
 
 # User - Full Name
 # shellcheck disable=SC2086
-: ${USER_FULL:="Ubuntu User"}
+: ${USER_FULL:='Ubuntu User'}
 
 # User - SSH Public Key
 # shellcheck disable=SC2086
-: ${USER_KEYS:=""}
+: ${USER_KEYS:=''}
 
 # Apt Repository - Official
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu"}
+: ${MIRROR_UBUNTU:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu'}
 
 # Apt Repository URL - Canonical Partner
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU_PARTNER:="http://archive.canonical.com"}
+: ${MIRROR_UBUNTU_PARTNER:='http://archive.canonical.com'}
 
 # Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU_JA:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu"}
+: ${MIRROR_UBUNTU_JA:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu'}
 
 # Apt Repository URL - Japanese Team
 # shellcheck disable=SC2086
-: ${MIRROR_UBUNTU_JA_NONFREE:="http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free"}
+: ${MIRROR_UBUNTU_JA_NONFREE:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free'}
 
 # Apt Repository URL - NVIDIA CUDA
-# shellcheck disable=SC2086
-: ${MIRROR_NVIDIA_CUDA:="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64"}
+# shellcheck disable=SC2016,SC2086
+: ${MIRROR_NVIDIA_CUDA:='http://developer.download.nvidia.com/compute/cuda/repos/ubuntu${RELEASE_MAJOR}${RELEASE_MINOR}/x86_64'}
 
 # Proxy - No Proxy List
 # shellcheck disable=SC2086
-: ${NO_PROXY:=""}
+: ${NO_PROXY:=''}
 
 # Proxy - Apt Proxy
 # shellcheck disable=SC2086
-: ${APT_PROXY:=""}
+: ${APT_PROXY:=''}
 
 # Proxy - FTP Proxy
 # shellcheck disable=SC2086
-: ${FTP_PROXY:=""}
+: ${FTP_PROXY:=''}
 
 # Proxy - HTTP Proxy
 # shellcheck disable=SC2086
-: ${HTTP_PROXY:=""}
+: ${HTTP_PROXY:=''}
 
 # Proxy - HTTPS Proxy
 # shellcheck disable=SC2086
-: ${HTTPS_PROXY:=""}
+: ${HTTPS_PROXY:=''}
 
 ################################################################################
 # Check Environment
@@ -157,15 +157,21 @@ esac
 # Get Release Version
 case "${RELEASE}" in
   'trusty' )
+    # shellcheck disable=SC2034
     RELEASE_MAJOR='14'
+    # shellcheck disable=SC2034
     RELEASE_MINOR='04'
     ;;
   'xenial' )
+    # shellcheck disable=SC2034
     RELEASE_MAJOR='16'
+    # shellcheck disable=SC2034
     RELEASE_MINOR='04'
     ;;
   'bionic' )
+    # shellcheck disable=SC2034
     RELEASE_MAJOR='18'
+    # shellcheck disable=SC2034
     RELEASE_MINOR='04'
     ;;
 esac
@@ -558,17 +564,21 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
     # Trusty Part
     trusty-*-hwe )
       # Require Packages
-      chroot "${WORKDIR}" apt-get -y install \
-        xserver-xorg-core-lts-xenial \
-        xserver-xorg-input-all-lts-xenial \
-        xserver-xorg-video-all-lts-xenial \
-        libegl1-mesa-lts-xenial \
-        libgbm1-lts-xenial \
-        libgl1-mesa-dri-lts-xenial \
-        libgl1-mesa-glx-lts-xenial \
-        libgles1-mesa-lts-xenial \
-        libgles2-mesa-lts-xenial \
+      XORG_HWE_REQUIRE_PACKAGES=(
+        xserver-xorg-core-lts-xenial
+        xserver-xorg-input-all-lts-xenial
+        xserver-xorg-video-all-lts-xenial
+        libegl1-mesa-lts-xenial
+        libgbm1-lts-xenial
+        libgl1-mesa-dri-lts-xenial
+        libgl1-mesa-glx-lts-xenial
+        libgles1-mesa-lts-xenial
+        libgles2-mesa-lts-xenial
         libwayland-egl1-mesa-lts-xenial
+      )
+
+      # Install Require Packages
+      chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[*]}"
 
       # HWE Version Xorg Server
       chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
@@ -576,12 +586,16 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
     # Xenial Part
     xenial-*-hwe )
       # Require Packages
-      chroot "${WORKDIR}" apt-get -y install \
-        xserver-xorg-core-hwe-16.04 \
-        xserver-xorg-input-all-hwe-16.04 \
-        xserver-xorg-video-all-hwe-16.04 \
-        xserver-xorg-legacy-hwe-16.04 \
+      XORG_HWE_REQUIRE_PACKAGES=(
+        xserver-xorg-core-hwe-16.04
+        xserver-xorg-input-all-hwe-16.04
+        xserver-xorg-video-all-hwe-16.04
+        xserver-xorg-legacy-hwe-16.04
         libgl1-mesa-dri
+      )
+
+      # Install Require Packages
+      chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[*]}"
 
       # HWE Version Xorg Server
       chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
