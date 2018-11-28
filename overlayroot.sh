@@ -241,49 +241,53 @@ sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/key
 
 # Root Login
 mkdir -p "${ROOTFS}/etc/systemd/system/getty@tty1.service.d"
-echo "[Service]"                                                   >  "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
-echo "Type=idle"                                                   >> "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
-echo "ExecStart="                                                  >> "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
-echo "ExecStart=-/sbin/agetty --autologin root --noclear %I linux" >> "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+cat > "${ROOTFS}/etc/systemd/system/ssh-keygen.service" << __EOF__
+[Service]
+Type=idle
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear %I linux
+__EOF__
 
 # Login Run Script
 echo "~/.startup.sh" >> "${ROOTFS}/root/.bash_login"
 
 # Startup Script
-echo '#!/bin/bash'                                                                           >  "${ROOTFS}/root/.startup.sh"
-echo ''                                                                                      >> "${ROOTFS}/root/.startup.sh"
-echo 'script_cmdline ()'                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo '{'                                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo '    local param'                                                                       >> "${ROOTFS}/root/.startup.sh"
-echo '    for param in $(< /proc/cmdline); do'                                               >> "${ROOTFS}/root/.startup.sh"
-echo '        case "${param}" in'                                                            >> "${ROOTFS}/root/.startup.sh"
-echo '            script=*) echo "${param#*=}" ; return 0 ;;'                                >> "${ROOTFS}/root/.startup.sh"
-echo '        esac'                                                                          >> "${ROOTFS}/root/.startup.sh"
-echo '    done'                                                                              >> "${ROOTFS}/root/.startup.sh"
-echo '}'                                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo ''                                                                                      >> "${ROOTFS}/root/.startup.sh"
-echo 'startup_script ()'                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo '{'                                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo '    local script rt'                                                                   >> "${ROOTFS}/root/.startup.sh"
-echo '    script="$(script_cmdline)"'                                                        >> "${ROOTFS}/root/.startup.sh"
-echo '    if [[ -n "${script}" && ! -x /tmp/startup_script ]]; then'                         >> "${ROOTFS}/root/.startup.sh"
-echo '        if [[ "${script}" =~ ^http:// || "${script}" =~ ^ftp:// ]]; then'              >> "${ROOTFS}/root/.startup.sh"
-echo '            wget "${script}" --retry-connrefused -q -O /tmp/startup_script >/dev/null' >> "${ROOTFS}/root/.startup.sh"
-echo '            rt=$?'                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo '        else'                                                                          >> "${ROOTFS}/root/.startup.sh"
-echo '            cp "${script}" /tmp/startup_script'                                        >> "${ROOTFS}/root/.startup.sh"
-echo '            rt=$?'                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo '        fi'                                                                            >> "${ROOTFS}/root/.startup.sh"
-echo '        if [[ ${rt} -eq 0 ]]; then'                                                    >> "${ROOTFS}/root/.startup.sh"
-echo '            chmod +x /tmp/startup_script'                                              >> "${ROOTFS}/root/.startup.sh"
-echo '            /tmp/startup_script'                                                       >> "${ROOTFS}/root/.startup.sh"
-echo '        fi'                                                                            >> "${ROOTFS}/root/.startup.sh"
-echo '    fi'                                                                                >> "${ROOTFS}/root/.startup.sh"
-echo '}'                                                                                     >> "${ROOTFS}/root/.startup.sh"
-echo ''                                                                                      >> "${ROOTFS}/root/.startup.sh"
-echo 'if [ "$(tty)" = '/dev/tty1' ]; then'                                                   >> "${ROOTFS}/root/.startup.sh"
-echo '    startup_script'                                                                    >> "${ROOTFS}/root/.startup.sh"
-echo 'fi'                                                                                    >> "${ROOTFS}/root/.startup.sh"
+cat > "${ROOTFS}/etc/systemd/system/ssh-keygen.service" << '__EOF__'
+#!/bin/bash
+
+script_cmdline ()
+{
+  local param
+  for param in $(< /proc/cmdline); do
+    case "${param}" in
+      script=*) echo "${param#*=}" ; return 0 ;;
+    esac
+  done
+}
+
+startup_script ()
+{
+  local script rt
+  script="$(script_cmdline)"
+  if [[ -n "${script}" && ! -x /tmp/startup_script ]]; then
+    if [[ "${script}" =~ ^http:// || "${script}" =~ ^ftp:// ]]; then
+      wget "${script}" --retry-connrefused -q -O /tmp/startup_script >/dev/null
+      rt=$?
+    else
+      cp "${script}" /tmp/startup_script
+      rt=$?
+    fi
+    if [[ ${rt} -eq 0 ]]; then
+      chmod +x /tmp/startup_script
+      /tmp/startup_script
+    fi
+  fi
+}
+
+if [ "$(tty)" = '/dev/tty1' ]; then
+  startup_script
+fi
+__EOF__
 
 # Set Permission
 chmod 0755 "${ROOTFS}/root/.startup.sh"
@@ -407,6 +411,43 @@ chroot "${ROOTFS}" apt-get -y install ubuntu-minimal
 
 # Require Package
 chroot "${ROOTFS}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+
+################################################################################
+# SSH
+################################################################################
+
+# Require Package
+chroot "${ROOTFS}" apt-get -y install ssh
+
+# Remove Temporary SSH Host Keys
+find "${ROOTFS}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
+
+# Generate SSH Host Keys for System Boot
+cat > "${ROOTFS}/etc/systemd/system/ssh-keygen.service" << __EOF__
+[Unit]
+Description=Generate SSH Host Keys During Boot
+Before=ssh.service
+After=local-fs.target
+ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key.pub
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/dpkg-reconfigure --frontend noninteractive openssh-server
+
+[Install]
+WantedBy=multi-user.target
+__EOF__
+
+# Enabled Systemd Service
+chroot "${ROOTFS}" systemctl enable ssh-keygen.service
 
 ################################################################################
 # Standard
