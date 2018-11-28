@@ -686,17 +686,13 @@ fi
 ################################################################################
 
 # Get Linux Kernel Version
-CURRENT_VERSION="$(uname -r)"
-CHROOT_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
+KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
 
-# Check Linux Kernel Version
-if [ "${CURRENT_VERSION}" != "${CHROOT_VERSION}" ]; then
-  # Remove Current Kernel Version Module
-  chroot "${WORKDIR}" update-initramfs -d -k "$(uname -r)"
-fi
+# Cleanup Initramfs
+chroot "${WORKDIR}" update-initramfs -d -k all
 
-# Update Initramfs
-chroot "${WORKDIR}" update-initramfs -u -k all
+# Create Initramfs
+chroot "${WORKDIR}" update-initramfs -c -k "${KERNEL_VERSION}"
 
 ################################################################################
 # Cleanup
