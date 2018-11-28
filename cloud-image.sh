@@ -131,6 +131,22 @@ esac
 # Require Environment
 ################################################################################
 
+# Get Release Version
+case "${RELEASE}" in
+  'trusty' )
+    RELEASE_MAJOR='14'
+    RELEASE_MINOR='04'
+    ;;
+  'xenial' )
+    RELEASE_MAJOR='16'
+    RELEASE_MINOR='04'
+    ;;
+  'bionic' )
+    RELEASE_MAJOR='18'
+    RELEASE_MINOR='04'
+    ;;
+esac
+
 # Destination Directory
 DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
