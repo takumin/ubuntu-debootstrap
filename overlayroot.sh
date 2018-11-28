@@ -236,6 +236,59 @@ fi
 sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/keyboard"
 
 ################################################################################
+# TTY Autologin
+################################################################################
+
+# Root Login
+mkdir -p "${ROOTFS}/etc/systemd/system/getty@tty1.service.d"
+echo "[Service]"                                                   >  "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+echo "Type=idle"                                                   >> "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+echo "ExecStart="                                                  >> "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+echo "ExecStart=-/sbin/agetty --autologin root --noclear %I linux" >> "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf"
+
+# Login Run Script
+echo "~/.startup.sh" >> "${ROOTFS}/root/.bash_login"
+
+# Startup Script
+echo '#!/bin/bash'                                                                           >  "${ROOTFS}/root/.startup.sh"
+echo ''                                                                                      >> "${ROOTFS}/root/.startup.sh"
+echo 'script_cmdline ()'                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo '{'                                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo '    local param'                                                                       >> "${ROOTFS}/root/.startup.sh"
+echo '    for param in $(< /proc/cmdline); do'                                               >> "${ROOTFS}/root/.startup.sh"
+echo '        case "${param}" in'                                                            >> "${ROOTFS}/root/.startup.sh"
+echo '            script=*) echo "${param#*=}" ; return 0 ;;'                                >> "${ROOTFS}/root/.startup.sh"
+echo '        esac'                                                                          >> "${ROOTFS}/root/.startup.sh"
+echo '    done'                                                                              >> "${ROOTFS}/root/.startup.sh"
+echo '}'                                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo ''                                                                                      >> "${ROOTFS}/root/.startup.sh"
+echo 'startup_script ()'                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo '{'                                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo '    local script rt'                                                                   >> "${ROOTFS}/root/.startup.sh"
+echo '    script="$(script_cmdline)"'                                                        >> "${ROOTFS}/root/.startup.sh"
+echo '    if [[ -n "${script}" && ! -x /tmp/startup_script ]]; then'                         >> "${ROOTFS}/root/.startup.sh"
+echo '        if [[ "${script}" =~ ^http:// || "${script}" =~ ^ftp:// ]]; then'              >> "${ROOTFS}/root/.startup.sh"
+echo '            wget "${script}" --retry-connrefused -q -O /tmp/startup_script >/dev/null' >> "${ROOTFS}/root/.startup.sh"
+echo '            rt=$?'                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo '        else'                                                                          >> "${ROOTFS}/root/.startup.sh"
+echo '            cp "${script}" /tmp/startup_script'                                        >> "${ROOTFS}/root/.startup.sh"
+echo '            rt=$?'                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo '        fi'                                                                            >> "${ROOTFS}/root/.startup.sh"
+echo '        if [[ ${rt} -eq 0 ]]; then'                                                    >> "${ROOTFS}/root/.startup.sh"
+echo '            chmod +x /tmp/startup_script'                                              >> "${ROOTFS}/root/.startup.sh"
+echo '            /tmp/startup_script'                                                       >> "${ROOTFS}/root/.startup.sh"
+echo '        fi'                                                                            >> "${ROOTFS}/root/.startup.sh"
+echo '    fi'                                                                                >> "${ROOTFS}/root/.startup.sh"
+echo '}'                                                                                     >> "${ROOTFS}/root/.startup.sh"
+echo ''                                                                                      >> "${ROOTFS}/root/.startup.sh"
+echo 'if [ "$(tty)" = '/dev/tty1' ]; then'                                                   >> "${ROOTFS}/root/.startup.sh"
+echo '    startup_script'                                                                    >> "${ROOTFS}/root/.startup.sh"
+echo 'fi'                                                                                    >> "${ROOTFS}/root/.startup.sh"
+
+# Set Permission
+chmod 0755 "${ROOTFS}/root/.startup.sh"
+
+################################################################################
 # Admin User
 ################################################################################
 
