@@ -295,7 +295,7 @@ chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'standard' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'desktop' ]; then
+if [ "${PROFILE}" != 'minimal' ]; then
   # Install Package
   chroot "${WORKDIR}" apt-get -y install ubuntu-standard
 fi

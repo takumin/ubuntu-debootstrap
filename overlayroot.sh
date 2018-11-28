@@ -509,7 +509,7 @@ chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'standard' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
+if [ "${PROFILE}" != 'minimal' ]; then
   # Install Package
   chroot "${WORKDIR}" apt-get -y install ubuntu-standard
 fi
