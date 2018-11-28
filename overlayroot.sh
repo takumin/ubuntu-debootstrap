@@ -27,7 +27,7 @@ fi
 : ${USER_KEYS:=""}
 
 # Storage
-: ${ROOTFS:="/run/rootfs"}                                # Root File System Mount Point
+: ${WORKDIR:="/run/rootfs"}                               # Root File System Mount Point
 : ${DESTDIR:="./release/${RELEASE}-${KERNEL}-${PROFILE}"} # Destination Directory
 
 # Mirror
@@ -153,15 +153,15 @@ else
 fi
 
 # Unmount Root Partition
-awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-if-empty umount
+awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}" | sort -r | xargs --no-run-if-empty umount
 
 ################################################################################
 # Disk
 ################################################################################
 
 # Mount Root File System Partition
-mkdir -p "${ROOTFS}"
-mount -t tmpfs -o mode=0755 tmpfs "${ROOTFS}"
+mkdir -p "${WORKDIR}"
+mount -t tmpfs -o mode=0755 tmpfs "${WORKDIR}"
 
 ################################################################################
 # Debootstrap
@@ -174,7 +174,7 @@ ${DEBOOTSTRAP_ENVIRONMENT} \
   ${DEBOOTSTRAP_COMPONENTS} \
   ${DEBOOTSTRAP_INCLUDES} \
   ${RELEASE} \
-  ${ROOTFS} \
+  ${WORKDIR} \
   ${MIRROR_UBUNTU}
 
 # Require Environment
@@ -188,60 +188,60 @@ export DEBIAN_PRIORITY="critical"
 export DEBCONF_NONINTERACTIVE_SEEN="true"
 
 # Cleanup Files
-find "${ROOTFS}/dev"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/proc"    -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/run"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/sys"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/tmp"     -mindepth 1 | xargs --no-run-if-empty rm -fr
-find "${ROOTFS}/var/tmp" -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/dev"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/proc"    -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/run"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/sys"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/tmp"     -mindepth 1 | xargs --no-run-if-empty rm -fr
+find "${WORKDIR}/var/tmp" -mindepth 1 | xargs --no-run-if-empty rm -fr
 
 # Require Mount
-mount -t devtmpfs                   devtmpfs "${ROOTFS}/dev"
-mount -t devpts   -o gid=5,mode=620 devpts   "${ROOTFS}/dev/pts"
-mount -t proc                       proc     "${ROOTFS}/proc"
-mount -t tmpfs    -o mode=755       tmpfs    "${ROOTFS}/run"
-mount -t sysfs                      sysfs    "${ROOTFS}/sys"
-mount -t tmpfs                      tmpfs    "${ROOTFS}/tmp"
-mount -t tmpfs                      tmpfs    "${ROOTFS}/var/tmp"
-chmod 1777 "${ROOTFS}/dev/shm"
+mount -t devtmpfs                   devtmpfs "${WORKDIR}/dev"
+mount -t devpts   -o gid=5,mode=620 devpts   "${WORKDIR}/dev/pts"
+mount -t proc                       proc     "${WORKDIR}/proc"
+mount -t tmpfs    -o mode=755       tmpfs    "${WORKDIR}/run"
+mount -t sysfs                      sysfs    "${WORKDIR}/sys"
+mount -t tmpfs                      tmpfs    "${WORKDIR}/tmp"
+mount -t tmpfs                      tmpfs    "${WORKDIR}/var/tmp"
+chmod 1777 "${WORKDIR}/dev/shm"
 
 ################################################################################
 # System
 ################################################################################
 
 # Default Hostname
-echo 'localhost' > "${ROOTFS}/etc/hostname"
+echo 'localhost' > "${WORKDIR}/etc/hostname"
 
 ################################################################################
 # Localize
 ################################################################################
 
 # Timezone
-echo 'Asia/Tokyo' > "${ROOTFS}/etc/timezone"
-ln -fs /usr/share/zoneinfo/Asia/Tokyo "${ROOTFS}/etc/localtime"
-chroot "${ROOTFS}" dpkg-reconfigure tzdata
+echo 'Asia/Tokyo' > "${WORKDIR}/etc/timezone"
+ln -fs /usr/share/zoneinfo/Asia/Tokyo "${WORKDIR}/etc/localtime"
+chroot "${WORKDIR}" dpkg-reconfigure tzdata
 
 # Locale
-chroot "${ROOTFS}" locale-gen ja_JP.UTF-8
-chroot "${ROOTFS}" update-locale LANG=ja_JP.UTF-8
+chroot "${WORKDIR}" locale-gen ja_JP.UTF-8
+chroot "${WORKDIR}" update-locale LANG=ja_JP.UTF-8
 
 # Keyboard
 if [ "${KEYBOARD}" = 'JP' ]; then
   # Japanese Keyboard
-  sed -i -e 's@XKBMODEL="pc105"@XKBMODEL="jp106"@' "${ROOTFS}/etc/default/keyboard"
-  sed -i -e 's@XKBLAYOUT="us"@XKBLAYOUT="jp"@'     "${ROOTFS}/etc/default/keyboard"
+  sed -i -e 's@XKBMODEL="pc105"@XKBMODEL="jp106"@' "${WORKDIR}/etc/default/keyboard"
+  sed -i -e 's@XKBLAYOUT="us"@XKBLAYOUT="jp"@'     "${WORKDIR}/etc/default/keyboard"
 fi
 
 # CapsLock to Ctrl
-sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/keyboard"
+sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${WORKDIR}/etc/default/keyboard"
 
 ################################################################################
 # TTY Autologin
 ################################################################################
 
 # Root Login
-mkdir -p "${ROOTFS}/etc/systemd/system/getty@tty1.service.d"
-cat > "${ROOTFS}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << __EOF__
+mkdir -p "${WORKDIR}/etc/systemd/system/getty@tty1.service.d"
+cat > "${WORKDIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << __EOF__
 [Service]
 Type=idle
 ExecStart=
@@ -249,10 +249,10 @@ ExecStart=-/sbin/agetty --autologin root --noclear %I linux
 __EOF__
 
 # Login Run Script
-echo "~/.startup.sh" >> "${ROOTFS}/root/.bash_login"
+echo "~/.startup.sh" >> "${WORKDIR}/root/.bash_login"
 
 # Startup Script
-cat > "${ROOTFS}/root/.startup.sh" << '__EOF__'
+cat > "${WORKDIR}/root/.startup.sh" << '__EOF__'
 #!/bin/bash
 
 script_cmdline ()
@@ -290,73 +290,73 @@ fi
 __EOF__
 
 # Set Permission
-chmod 0755 "${ROOTFS}/root/.startup.sh"
+chmod 0755 "${WORKDIR}/root/.startup.sh"
 
 ################################################################################
 # Admin User
 ################################################################################
 
 # Add Group
-chroot "${ROOTFS}" addgroup --system admin
-chroot "${ROOTFS}" addgroup --system lpadmin
-chroot "${ROOTFS}" addgroup --system sambashare
-chroot "${ROOTFS}" addgroup --system netdev
+chroot "${WORKDIR}" addgroup --system admin
+chroot "${WORKDIR}" addgroup --system lpadmin
+chroot "${WORKDIR}" addgroup --system sambashare
+chroot "${WORKDIR}" addgroup --system netdev
 
 # Add User
-chroot "${ROOTFS}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
-chroot "${ROOTFS}" adduser "${USER_NAME}" adm
-chroot "${ROOTFS}" adduser "${USER_NAME}" admin
-chroot "${ROOTFS}" adduser "${USER_NAME}" audio
-chroot "${ROOTFS}" adduser "${USER_NAME}" cdrom
-chroot "${ROOTFS}" adduser "${USER_NAME}" dialout
-chroot "${ROOTFS}" adduser "${USER_NAME}" dip
-chroot "${ROOTFS}" adduser "${USER_NAME}" lpadmin
-chroot "${ROOTFS}" adduser "${USER_NAME}" plugdev
-chroot "${ROOTFS}" adduser "${USER_NAME}" sambashare
-chroot "${ROOTFS}" adduser "${USER_NAME}" staff
-chroot "${ROOTFS}" adduser "${USER_NAME}" sudo
-chroot "${ROOTFS}" adduser "${USER_NAME}" users
-chroot "${ROOTFS}" adduser "${USER_NAME}" video
-chroot "${ROOTFS}" adduser "${USER_NAME}" netdev
+chroot "${WORKDIR}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
+chroot "${WORKDIR}" adduser "${USER_NAME}" adm
+chroot "${WORKDIR}" adduser "${USER_NAME}" admin
+chroot "${WORKDIR}" adduser "${USER_NAME}" audio
+chroot "${WORKDIR}" adduser "${USER_NAME}" cdrom
+chroot "${WORKDIR}" adduser "${USER_NAME}" dialout
+chroot "${WORKDIR}" adduser "${USER_NAME}" dip
+chroot "${WORKDIR}" adduser "${USER_NAME}" lpadmin
+chroot "${WORKDIR}" adduser "${USER_NAME}" plugdev
+chroot "${WORKDIR}" adduser "${USER_NAME}" sambashare
+chroot "${WORKDIR}" adduser "${USER_NAME}" staff
+chroot "${WORKDIR}" adduser "${USER_NAME}" sudo
+chroot "${WORKDIR}" adduser "${USER_NAME}" users
+chroot "${WORKDIR}" adduser "${USER_NAME}" video
+chroot "${WORKDIR}" adduser "${USER_NAME}" netdev
 
 # Change Password
-chroot ${ROOTFS} sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
+chroot ${WORKDIR} sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
 
 # SSH Public Key
 if [ "x${USER_KEYS}" != "x" ]; then
-  mkdir -p "${ROOTFS}/home/${USER_NAME}/.ssh"
-  chmod 0700 "${ROOTFS}/home/${USER_NAME}/.ssh"
-  echo "${USER_KEYS}" > "${ROOTFS}/home/${USER_NAME}/.ssh/authorized_keys"
-  chmod 0644 "${ROOTFS}/home/${USER_NAME}/.ssh/authorized_keys"
+  mkdir -p "${WORKDIR}/home/${USER_NAME}/.ssh"
+  chmod 0700 "${WORKDIR}/home/${USER_NAME}/.ssh"
+  echo "${USER_KEYS}" > "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
+  chmod 0644 "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
 fi
 
 # Proxy Configuration
 if [ "x${NO_PROXY}" != "x" ]; then
-  echo "export no_proxy=\"${NO_PROXY}\""       >> "${ROOTFS}/home/${USER_NAME}/.profile"
-  echo "export NO_PROXY=\"${NO_PROXY}\""       >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export no_proxy=\"${NO_PROXY}\""       >> "${WORKDIR}/home/${USER_NAME}/.profile"
+  echo "export NO_PROXY=\"${NO_PROXY}\""       >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 if [ "x${FTP_PROXY}" != "x" ]; then
-  echo "export ftp_proxy=\"${FTP_PROXY}\""     >> "${ROOTFS}/home/${USER_NAME}/.profile"
-  echo "export FTP_PROXY=\"${FTP_PROXY}\""     >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export ftp_proxy=\"${FTP_PROXY}\""     >> "${WORKDIR}/home/${USER_NAME}/.profile"
+  echo "export FTP_PROXY=\"${FTP_PROXY}\""     >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 if [ "x${HTTP_PROXY}" != "x" ]; then
-  echo "export http_proxy=\"${HTTP_PROXY}\""   >> "${ROOTFS}/home/${USER_NAME}/.profile"
-  echo "export HTTP_PROXY=\"${HTTP_PROXY}\""   >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export http_proxy=\"${HTTP_PROXY}\""   >> "${WORKDIR}/home/${USER_NAME}/.profile"
+  echo "export HTTP_PROXY=\"${HTTP_PROXY}\""   >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 if [ "x${HTTPS_PROXY}" != "x" ]; then
-  echo "export https_proxy=\"${HTTPS_PROXY}\"" >> "${ROOTFS}/home/${USER_NAME}/.profile"
-  echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\"" >> "${ROOTFS}/home/${USER_NAME}/.profile"
+  echo "export https_proxy=\"${HTTPS_PROXY}\"" >> "${WORKDIR}/home/${USER_NAME}/.profile"
+  echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\"" >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 
 # User Dir Permission
-chroot "${ROOTFS}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
+chroot "${WORKDIR}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
 
 ################################################################################
 # Repository
 ################################################################################
 
 # Official Repository
-cat > "${ROOTFS}/etc/apt/sources.list" << __EOF__
+cat > "${WORKDIR}/etc/apt/sources.list" << __EOF__
 # Official Repository
 deb ${MIRROR_UBUNTU} ${RELEASE}           main restricted universe multiverse
 deb ${MIRROR_UBUNTU} ${RELEASE}-updates   main restricted universe multiverse
@@ -365,17 +365,17 @@ deb ${MIRROR_UBUNTU} ${RELEASE}-security  main restricted universe multiverse
 __EOF__
 
 # Partner Repository
-cat > "${ROOTFS}/etc/apt/sources.list.d/ubuntu-partner.list" << __EOF__
+cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-partner.list" << __EOF__
 # Partner Repository
 deb ${MIRROR_UBUNTU_PARTNER} ${RELEASE} partner
 __EOF__
 
 # Japanese Team Repository
-wget -qO "${ROOTFS}/tmp/ubuntu-ja-archive-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg
-wget -qO "${ROOTFS}/tmp/ubuntu-jp-ppa-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg
-chroot "${ROOTFS}" apt-key add /tmp/ubuntu-ja-archive-keyring.gpg
-chroot "${ROOTFS}" apt-key add /tmp/ubuntu-jp-ppa-keyring.gpg
-cat > "${ROOTFS}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
+wget -qO "${WORKDIR}/tmp/ubuntu-ja-archive-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg
+wget -qO "${WORKDIR}/tmp/ubuntu-jp-ppa-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg
+chroot "${WORKDIR}" apt-key add /tmp/ubuntu-ja-archive-keyring.gpg
+chroot "${WORKDIR}" apt-key add /tmp/ubuntu-jp-ppa-keyring.gpg
+cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
 # Japanese Team Repository
 deb ${MIRROR_UBUNTU_JA} ${RELEASE} main
 deb ${MIRROR_UBUNTU_JA_NONFREE} ${RELEASE} multiverse
@@ -386,44 +386,44 @@ __EOF__
 ################################################################################
 
 # Update Repository
-chroot "${ROOTFS}" apt-get -y update
+chroot "${WORKDIR}" apt-get -y update
 
 # Upgrade System
-chroot "${ROOTFS}" apt-get -y dist-upgrade
+chroot "${WORKDIR}" apt-get -y dist-upgrade
 
 ################################################################################
 # Kernel
 ################################################################################
 
 # Install Kernel
-chroot "${ROOTFS}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
+chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
 
 ################################################################################
 # Minimal
 ################################################################################
 
 # Minimal Package
-chroot "${ROOTFS}" apt-get -y install ubuntu-minimal
+chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 
 ################################################################################
 # Overlay
 ################################################################################
 
 # Require Package
-chroot "${ROOTFS}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
 
 ################################################################################
 # SSH
 ################################################################################
 
 # Require Package
-chroot "${ROOTFS}" apt-get -y install ssh
+chroot "${WORKDIR}" apt-get -y install ssh
 
 # Remove Temporary SSH Host Keys
-find "${ROOTFS}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
+find "${WORKDIR}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
 
 # Generate SSH Host Keys for System Boot
-cat > "${ROOTFS}/etc/systemd/system/ssh-keygen.service" << __EOF__
+cat > "${WORKDIR}/etc/systemd/system/ssh-keygen.service" << __EOF__
 [Unit]
 Description=Generate SSH Host Keys During Boot
 Before=ssh.service
@@ -447,7 +447,7 @@ WantedBy=multi-user.target
 __EOF__
 
 # Enabled Systemd Service
-chroot "${ROOTFS}" systemctl enable ssh-keygen.service
+chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 
 ################################################################################
 # Standard
@@ -456,7 +456,7 @@ chroot "${ROOTFS}" systemctl enable ssh-keygen.service
 # Check Environment Variable
 if [ "${PROFILE}" = 'standard' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # Install Package
-  chroot "${ROOTFS}" apt-get -y install ubuntu-standard
+  chroot "${WORKDIR}" apt-get -y install ubuntu-standard
 fi
 
 ################################################################################
@@ -466,7 +466,7 @@ fi
 # Check Environment Variable
 if [ "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
   # Install Package
-  chroot "${ROOTFS}" apt-get -y install ubuntu-server language-pack-ja
+  chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
 fi
 
 ################################################################################
@@ -477,7 +477,7 @@ fi
 if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # HWE Version Xorg
   if [ "${RELEASE}-${KERNEL}" = 'trusty-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'trusty-signed-generic-hwe' ]; then
-    chroot "${ROOTFS}" apt-get -y install xserver-xorg-core-lts-xenial \
+    chroot "${WORKDIR}" apt-get -y install xserver-xorg-core-lts-xenial \
                                           xserver-xorg-input-all-lts-xenial \
                                           xserver-xorg-video-all-lts-xenial \
                                           libegl1-mesa-lts-xenial \
@@ -487,39 +487,39 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
                                           libgles1-mesa-lts-xenial \
                                           libgles2-mesa-lts-xenial \
                                           libwayland-egl1-mesa-lts-xenial
-    chroot "${ROOTFS}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
+    chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-lts-xenial
   elif [ "${RELEASE}-${KERNEL}" = 'xenial-generic-hwe' -o "${RELEASE}-${KERNEL}" = 'xenial-signed-generic-hwe' ]; then
-    chroot "${ROOTFS}" apt-get -y install xserver-xorg-core-hwe-16.04 \
+    chroot "${WORKDIR}" apt-get -y install xserver-xorg-core-hwe-16.04 \
                                           xserver-xorg-input-all-hwe-16.04 \
                                           xserver-xorg-video-all-hwe-16.04 \
                                           xserver-xorg-legacy-hwe-16.04 \
                                           libgl1-mesa-dri
-    chroot "${ROOTFS}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
+    chroot "${WORKDIR}" apt-get -y --no-install-recommends install xserver-xorg-hwe-16.04
   fi
 
   # Install Package
-  chroot "${ROOTFS}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
+  chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
   # User Directory
-  chroot "${ROOTFS}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
-  rm "${ROOTFS}/home/${USER_NAME}/.config/user-dirs.locale"
+  chroot "${WORKDIR}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
+  rm "${WORKDIR}/home/${USER_NAME}/.config/user-dirs.locale"
 
   # Check Release Version
   if [ "${RELEASE}" = 'bionic' ]; then
     # Workaround: Fix System Log Error Message
-    chroot "${ROOTFS}" apt-get -y install gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0
+    chroot "${WORKDIR}" apt-get -y install gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0
 
     # Install Package
-    chroot "${ROOTFS}" apt-get -y install fcitx fcitx-mozc
+    chroot "${WORKDIR}" apt-get -y install fcitx fcitx-mozc
 
     # Default Fcitx
-    echo '[org.gnome.settings-daemon.plugins.keyboard]' >  "${ROOTFS}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
-    echo 'active=false'                                 >> "${ROOTFS}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
-    chroot "${ROOTFS}" glib-compile-schemas /usr/share/glib-2.0/schemas
+    echo '[org.gnome.settings-daemon.plugins.keyboard]' >  "${WORKDIR}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
+    echo 'active=false'                                 >> "${WORKDIR}/usr/share/glib-2.0/schemas/99_gsettings-input-method.gschema.override"
+    chroot "${WORKDIR}" glib-compile-schemas /usr/share/glib-2.0/schemas
   fi
 
   # Input Method
-  chroot "${ROOTFS}" su -c "im-config -n fcitx" "${USER_NAME}"
+  chroot "${WORKDIR}" su -c "im-config -n fcitx" "${USER_NAME}"
 fi
 
 ################################################################################
@@ -529,27 +529,27 @@ fi
 # Check Environment Variable
 if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # NVIDIA Apt Public Key
-  wget -qO "${ROOTFS}/tmp/nvidia-keyring.gpg" https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
-  chroot "${ROOTFS}" apt-key add /tmp/nvidia-keyring.gpg
+  wget -qO "${WORKDIR}/tmp/nvidia-keyring.gpg" https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
+  chroot "${WORKDIR}" apt-key add /tmp/nvidia-keyring.gpg
 
   # NVIDIA CUDA Repository
-  echo '# NVIDIA CUDA Repository'    >  "${ROOTFS}/etc/apt/sources.list.d/nvidia-cuda.list"
-  echo "deb ${MIRROR_NVIDIA_CUDA} /" >> "${ROOTFS}/etc/apt/sources.list.d/nvidia-cuda.list"
+  echo '# NVIDIA CUDA Repository'    >  "${WORKDIR}/etc/apt/sources.list.d/nvidia-cuda.list"
+  echo "deb ${MIRROR_NVIDIA_CUDA} /" >> "${WORKDIR}/etc/apt/sources.list.d/nvidia-cuda.list"
 
   # Update Repository
-  chroot "${ROOTFS}" apt-get -y update
+  chroot "${WORKDIR}" apt-get -y update
 
   # Upgrade System
-  chroot "${ROOTFS}" apt-get -y dist-upgrade
+  chroot "${WORKDIR}" apt-get -y dist-upgrade
 
   # Install Driver
-  chroot "${ROOTFS}" apt-get -y install cuda-drivers
+  chroot "${WORKDIR}" apt-get -y install cuda-drivers
 
   # Load Boot Time DRM Kernel Mode Setting
-  echo "nvidia"         >> "${ROOTFS}/etc/initramfs-tools/modules"
-  echo "nvidia_modeset" >> "${ROOTFS}/etc/initramfs-tools/modules"
-  echo "nvidia_uvm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
-  echo "nvidia_drm"     >> "${ROOTFS}/etc/initramfs-tools/modules"
+  echo "nvidia"         >> "${WORKDIR}/etc/initramfs-tools/modules"
+  echo "nvidia_modeset" >> "${WORKDIR}/etc/initramfs-tools/modules"
+  echo "nvidia_uvm"     >> "${WORKDIR}/etc/initramfs-tools/modules"
+  echo "nvidia_drm"     >> "${WORKDIR}/etc/initramfs-tools/modules"
 fi
 
 ################################################################################
@@ -558,53 +558,53 @@ fi
 
 # Get Linux Kernel Version
 _CURRENT_LINUX_VERSION="`uname -r`"
-_CHROOT_LINUX_VERSION="`chroot \"${ROOTFS}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
+_CHROOT_LINUX_VERSION="`chroot \"${WORKDIR}\" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//'`"
 
 # Check Linux Kernel Version
 if [ "${_CURRENT_LINUX_VERSION}" != "${_CHROOT_LINUX_VERSION}" ]; then
   # Remove Current Kernel Version Module
-  chroot "${ROOTFS}" update-initramfs -d -k "`uname -r`"
+  chroot "${WORKDIR}" update-initramfs -d -k "`uname -r`"
 fi
 
 # Update Initramfs
-chroot "${ROOTFS}" update-initramfs -u -k all
+chroot "${WORKDIR}" update-initramfs -u -k all
 
 ################################################################################
 # Cleanup
 ################################################################################
 
 # Out Of Packages
-chroot "${ROOTFS}" apt-get -y autoremove --purge
+chroot "${WORKDIR}" apt-get -y autoremove --purge
 
 # Package Archive
-chroot "${ROOTFS}" apt-get -y clean
+chroot "${WORKDIR}" apt-get -y clean
 
 # Repository List
-find "${ROOTFS}/var/lib/apt/lists" -type f | xargs rm -f
-touch "${ROOTFS}/var/lib/apt/lists/lock"
-chmod 0640 "${ROOTFS}/var/lib/apt/lists/lock"
+find "${WORKDIR}/var/lib/apt/lists" -type f | xargs rm -f
+touch "${WORKDIR}/var/lib/apt/lists/lock"
+chmod 0640 "${WORKDIR}/var/lib/apt/lists/lock"
 
 ################################################################################
 # Archive
 ################################################################################
 
 # Packages List
-chroot "${ROOTFS}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "${DESTDIR}/packages.manifest"
+chroot "${WORKDIR}" dpkg -l | sed -E '1,5d' | awk '{print $2 "\t" $3}' > "${DESTDIR}/packages.manifest"
 
 # Unmount RootFs
-awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}/" | sort -r | xargs --no-run-if-empty umount
+awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}/" | sort -r | xargs --no-run-if-empty umount
 
 # Create SquashFS Image
-mksquashfs "${ROOTFS}" "${DESTDIR}/rootfs.squashfs" -comp xz
+mksquashfs "${WORKDIR}" "${DESTDIR}/rootfs.squashfs" -comp xz
 
 # Create TarBall Image
-tar -I pixz -p --acls --xattrs --one-file-system -cf "${DESTDIR}/rootfs.tar.xz" -C "${ROOTFS}" .
+tar -I pixz -p --acls --xattrs --one-file-system -cf "${DESTDIR}/rootfs.tar.xz" -C "${WORKDIR}" .
 
 # Copy Kernel
-find "${ROOTFS}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DESTDIR}/kernel.img" \;
+find "${WORKDIR}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DESTDIR}/kernel.img" \;
 
 # Copy Initrd
-find "${ROOTFS}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DESTDIR}/initrd.img" \;
+find "${WORKDIR}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DESTDIR}/initrd.img" \;
 
 # Permission Files
 find "${DESTDIR}" -type f | xargs chmod 0644
