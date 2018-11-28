@@ -461,11 +461,38 @@ chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE
 chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 
 ################################################################################
+# Standard
+################################################################################
+
+# Check Environment Variable
+if [ "${PROFILE}" != 'minimal' ]; then
+  # Install Package
+  chroot "${WORKDIR}" apt-get -y install ubuntu-standard
+fi
+
+################################################################################
+# Server
+################################################################################
+
+# Check Environment Variable
+if [ "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
+  # Install Package
+  chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
+fi
+
+################################################################################
+# Netboot
+################################################################################
+
+# Require Package
+chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl
+
+################################################################################
 # Overlay
 ################################################################################
 
 # Require Package
-chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+chroot "${WORKDIR}" apt-get -y install overlayroot
 
 ################################################################################
 # SSH
@@ -503,26 +530,6 @@ __EOF__
 
 # Enabled Systemd Service
 chroot "${WORKDIR}" systemctl enable ssh-keygen.service
-
-################################################################################
-# Standard
-################################################################################
-
-# Check Environment Variable
-if [ "${PROFILE}" != 'minimal' ]; then
-  # Install Package
-  chroot "${WORKDIR}" apt-get -y install ubuntu-standard
-fi
-
-################################################################################
-# Server
-################################################################################
-
-# Check Environment Variable
-if [ "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
-  # Install Package
-  chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
-fi
 
 ################################################################################
 # Desktop
