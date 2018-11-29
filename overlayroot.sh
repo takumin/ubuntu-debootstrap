@@ -180,6 +180,9 @@ case "${RELEASE}" in
     ;;
 esac
 
+# Download Files Directory
+CACHEDIR="$(cd "$(dirname $0)"; pwd)/.cache"
+
 # Destination Directory
 DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
@@ -298,15 +301,61 @@ INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.
 GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
 ################################################################################
+# Download
+################################################################################
+
+# Check Ubuntu Japanese Team Repository Keyring
+if [ ! -f "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" ]; then
+  # Download Ubuntu Japanese Team Repository Keyring
+  wget -qO "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" 'https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg'
+fi
+
+# Check Ubuntu Japanese Team Repository Keyring
+if [ ! -f "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" ]; then
+  # Download Ubuntu Japanese Team Repository Keyring
+  wget -qO "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" 'https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg'
+fi
+
+# Check NVIDIA CUDA Repository Keyring
+if [ ! -f "${CACHEDIR}/nvidia-keyring.gpg" ]; then
+  # Download NVIDIA CUDA Repository Keyring
+  wget -qO "${CACHEDIR}/nvidia-keyring.gpg" "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${RELEASE_MAJOR}${RELEASE_MINOR}/x86_64/7fa2af80.pub"
+fi
+
+# Check Intel LAN Driver
+if [ ! -f "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" ]; then
+  # Download Intel LAN Driver
+  wget -qO "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${INTEL_E1000E_URL}"
+fi
+
+# Check Intel LAN Driver
+if [ ! -f "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" ]; then
+  # Download Intel LAN Driver
+  wget -qO "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${INTEL_IGB_URL}"
+fi
+
+# Check Intel LAN Driver
+if [ ! -f "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" ]; then
+  # Download Intel LAN Driver
+  wget -qO "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
+fi
+
+################################################################################
 # Cleanup
 ################################################################################
 
-# Check Release Directory
+# Check Cache Directory
+if [ -d "${CACHEDIR}" ]; then
+  # Create Cache Directory
+  mkdir -p "${CACHEDIR}"
+fi
+
+# Check Destination Directory
 if [ -d "${DESTDIR}" ]; then
-  # Cleanup Release Directory
+  # Cleanup Destination Directory
   find "${DESTDIR}" -type f -print0 | xargs -0 rm -f
 else
-  # Create Release Directory
+  # Create Destination Directory
   mkdir -p "${DESTDIR}"
 fi
 
@@ -523,8 +572,8 @@ deb ${MIRROR_UBUNTU_PARTNER} ${RELEASE} partner
 __EOF__
 
 # Japanese Team Repository
-wget -qO "${WORKDIR}/tmp/ubuntu-ja-archive-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg
-wget -qO "${WORKDIR}/tmp/ubuntu-jp-ppa-keyring.gpg" https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg
+cp "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" "${WORKDIR}/tmp/ubuntu-ja-archive-keyring.gpg"
+cp "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" "${WORKDIR}/tmp/ubuntu-jp-ppa-keyring.gpg"
 chroot "${WORKDIR}" apt-key add /tmp/ubuntu-ja-archive-keyring.gpg
 chroot "${WORKDIR}" apt-key add /tmp/ubuntu-jp-ppa-keyring.gpg
 cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
@@ -688,7 +737,7 @@ fi
 # Check Environment Variable
 if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   # NVIDIA Apt Public Key
-  wget -qO "${WORKDIR}/tmp/nvidia-keyring.gpg" https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
+  cp "${CACHEDIR}/nvidia-keyring.gpg" "${WORKDIR}/tmp/nvidia-keyring.gpg"
   chroot "${WORKDIR}" apt-key add /tmp/nvidia-keyring.gpg
 
   # NVIDIA CUDA Repository
@@ -723,10 +772,10 @@ chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_
 # Build Tools
 chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev
 
-# Download Archive
-wget -qO "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${INTEL_E1000E_URL}"
-wget -qO "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" "${INTEL_IGB_URL}"
-wget -qO "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
+# Copy Archive
+cp "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz"
+cp "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz"
+cp "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz"
 
 # Extract Archive
 tar -xf "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
