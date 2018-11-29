@@ -287,6 +287,10 @@ case "${RELEASE}-${KERNEL}" in
 esac
 
 # Intel LAN Driver Version
+INTEL_E1000E_URL='https://downloadmirror.intel.com/15817/eng/e1000e-3.4.2.1.tar.gz'
+INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_VERSION}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
+INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.20.tar.gz'
+INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
 INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.1.tar.gz'
 INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
 
@@ -710,7 +714,7 @@ if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
 fi
 
 ################################################################################
-# Intel 10Ge Driver
+# Intel LAN Driver
 ################################################################################
 
 # Kernel Header
@@ -720,12 +724,18 @@ chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_
 chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev
 
 # Download Archive
+wget -qO "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${INTEL_E1000E_URL}"
+wget -qO "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" "${INTEL_IGB_URL}"
 wget -qO "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
 
 # Extract Archive
+tar -xf "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 
 # Build Driver
+chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" install
+chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" install
 chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
 
 ################################################################################
