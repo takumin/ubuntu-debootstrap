@@ -712,8 +712,11 @@ fi
 # Intel
 ################################################################################
 
-# Require Packages
-chroot "${WORKDIR}" apt-get -y install build-essential "${KERNEL_HEADER_PACKAGE}"
+# Build Tools
+chroot "${WORKDIR}" apt-get -y install build-essential
+
+# Kernel Header
+chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
 
 # Download Archive
 wget -qO "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
