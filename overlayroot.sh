@@ -286,17 +286,6 @@ case "${RELEASE}-${KERNEL}" in
     ;;
 esac
 
-# Select Intel Lan Driver Version
-case "${RELEASE}" in
-  "trusty" ) INTEL_IXGBE_VERSION="" ;;
-  "xenial" ) INTEL_IXGBE_VERSION="5.3.7" ;;
-  "bionic" ) INTEL_IXGBE_VERSION="5.5.1" ;;
-  * )
-    echo "Unknown Release Codename Type..."
-    exit 1
-    ;;
-esac
-
 # Intel LAN Driver Version
 INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.1.tar.gz'
 INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
