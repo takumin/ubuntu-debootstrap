@@ -601,7 +601,7 @@ chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 
 # Check Environment Variable
 if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
-  # Check Release/Kernel Version
+  # Check Kernel Version
   case "${KERNEL}" in
     *-hwe )
       # Check Package List
