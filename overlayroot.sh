@@ -204,20 +204,40 @@ if [ "x${APT_PROXY}" != "x" ]; then
   DEBOOTSTRAP_COMMAND="${DEBOOTSTRAP_PROXY[*]}"
 fi
 
-# Select Kernel Package
+# Select Kernel Image Package
 case "${RELEASE}-${KERNEL}" in
-  "trusty-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "xenial-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "bionic-generic"            ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-lts-xenial" ;;
-  "xenial-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic-hwe-16.04" ;;
-  "bionic-generic-hwe"        ) KERNEL_PACKAGE="linux-image-generic" ;;
-  "trusty-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "xenial-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "bionic-signed-generic"     ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
-  "trusty-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
-  "xenial-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-  "bionic-signed-generic-hwe" ) KERNEL_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-generic"            ) KERNEL_IMAGE_PACKAGE="linux-image-generic" ;;
+  "xenial-generic"            ) KERNEL_IMAGE_PACKAGE="linux-image-generic" ;;
+  "bionic-generic"            ) KERNEL_IMAGE_PACKAGE="linux-image-generic" ;;
+  "trusty-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic" ;;
+  "trusty-signed-generic"     ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
+  "xenial-signed-generic"     ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
+  "bionic-signed-generic"     ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
+  "trusty-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
+  * )
+    echo "Unknown Release Codename & Kernel Type..."
+    exit 1
+    ;;
+esac
+
+# Select Kernel Header Package
+case "${RELEASE}-${KERNEL}" in
+  "trusty-generic"            ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+  "xenial-generic"            ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+  "bionic-generic"            ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+  "trusty-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic-lts-xenial" ;;
+  "xenial-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic-hwe-16.04" ;;
+  "bionic-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+  "trusty-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
+  "xenial-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
+  "bionic-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
+  "trusty-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-lts-xenial" ;;
+  "xenial-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-hwe-16.04" ;;
+  "bionic-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
   * )
     echo "Unknown Release Codename & Kernel Type..."
     exit 1
@@ -534,10 +554,10 @@ chroot "${WORKDIR}" apt-get -y dist-upgrade
 ################################################################################
 
 # Install Kernel
-chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
+chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_IMAGE_PACKAGE}"
 
 # Get Kernel Version
-KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
+KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-[0-9\.-]+-generic' | sed -E 's/linux-image-//')"
 
 ################################################################################
 # Minimal
@@ -704,13 +724,13 @@ fi
 ################################################################################
 
 # Require Packages
-chroot "${WORKDIR}" apt-get -y install build-essential
+chroot "${WORKDIR}" apt-get -y install build-essential "${KERNEL_HEADER_PACKAGE}"
 
 # Download Archive
 wget -qO "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
 
 # Extract Archive
-tar -xvf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 
 # Build Driver
 chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
