@@ -775,34 +775,37 @@ fi
 # Intel LAN Driver
 ################################################################################
 
-# Kernel Header
-chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
+# HWE Xorg Package
+if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'generic-hwe' ]; then
+  # Kernel Header
+  chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
 
-# Build Tools
-chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev
+  # Build Tools
+  chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev
 
-# Copy Archive
-cp "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz"
-cp "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz"
-cp "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz"
+  # Copy Archive
+  cp "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz"
+  cp "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz"
+  cp "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz"
 
-# Extract Archive
-tar -xf "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
-tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
-tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+  # Extract Archive
+  tar -xf "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+  tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+  tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 
-# Build Driver
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" install
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" install
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
+  # Build Driver
+  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" install
+  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" install
+  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
 
-# Cleanup Driver
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" clean
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" clean
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" clean
+  # Cleanup Driver
+  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" clean
+  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" clean
+  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" clean
 
-# Workaround e1000e
-echo 'e1000e' >> "${WORKDIR}/etc/initramfs-tools/modules"
+  # Workaround e1000e
+  echo 'e1000e' >> "${WORKDIR}/etc/initramfs-tools/modules"
+fi
 
 ################################################################################
 # Initramfs
