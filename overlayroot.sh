@@ -396,7 +396,8 @@ ExecStart=-/sbin/agetty --autologin root --noclear %I linux
 __EOF__
 
 # Login Run Script
-echo "\~/.startup.sh" >> "${WORKDIR}/root/.bash_login"
+# shellcheck disable=SC2088
+echo '~/.startup.sh' >> "${WORKDIR}/root/.bash_login"
 
 # Startup Script
 cat > "${WORKDIR}/root/.startup.sh" << '__EOF__'
