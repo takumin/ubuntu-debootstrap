@@ -289,12 +289,21 @@ case "${RELEASE}-${KERNEL}" in
     ;;
 esac
 
-# Intel LAN Driver Version
+# Ubuntu Japanese Team Repository Keyring URL
+UBUNTU_JA_FREE_KEYRING_URL='https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg'
+UBUNTU_JA_NONFREE_KEYRING_URL='https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg'
+
+# NVIDIA CUDA Repository Keyring URL
+NVIDIA_CUDA_KEYRING_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${RELEASE_MAJOR}${RELEASE_MINOR}/x86_64/7fa2af80.pub"
+
+# Intel LAN Driver URL
 INTEL_E1000E_URL='https://downloadmirror.intel.com/15817/eng/e1000e-3.4.2.1.tar.gz'
-INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s@\.tar\.gz$@@;')"
 INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.20.tar.gz'
-INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^igb-@@; s@\.tar\.gz$@@;')"
 INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.1.tar.gz'
+
+# Intel LAN Driver Version
+INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s@\.tar\.gz$@@;')"
+INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^igb-@@; s@\.tar\.gz$@@;')"
 INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
 
 # Glib Schemas Directory
@@ -307,19 +316,19 @@ GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 # Check Ubuntu Japanese Team Repository Keyring
 if [ ! -f "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" ]; then
   # Download Ubuntu Japanese Team Repository Keyring
-  wget -qO "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" 'https://www.ubuntulinux.jp/ubuntu-ja-archive-keyring.gpg'
+  wget -qO "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" "${UBUNTU_JA_FREE_KEYRING_URL}"
 fi
 
 # Check Ubuntu Japanese Team Repository Keyring
 if [ ! -f "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" ]; then
   # Download Ubuntu Japanese Team Repository Keyring
-  wget -qO "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" 'https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.gpg'
+  wget -qO "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" "${UBUNTU_JA_NONFREE_KEYRING_URL}"
 fi
 
 # Check NVIDIA CUDA Repository Keyring
 if [ ! -f "${CACHEDIR}/nvidia-keyring.gpg" ]; then
   # Download NVIDIA CUDA Repository Keyring
-  wget -qO "${CACHEDIR}/nvidia-keyring.gpg" "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${RELEASE_MAJOR}${RELEASE_MINOR}/x86_64/7fa2af80.pub"
+  wget -qO "${CACHEDIR}/nvidia-keyring.gpg" "${NVIDIA_CUDA_KEYRING_URL}"
 fi
 
 # Check Intel LAN Driver
