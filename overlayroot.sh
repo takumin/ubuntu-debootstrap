@@ -314,37 +314,37 @@ GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 ################################################################################
 
 # Check Ubuntu Japanese Team Repository Keyring
-if [ ! -f "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" ]; then
+if [ ! -e "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" ]; then
   # Download Ubuntu Japanese Team Repository Keyring
   wget -qO "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" "${UBUNTU_JA_FREE_KEYRING_URL}"
 fi
 
 # Check Ubuntu Japanese Team Repository Keyring
-if [ ! -f "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" ]; then
+if [ ! -e "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" ]; then
   # Download Ubuntu Japanese Team Repository Keyring
   wget -qO "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" "${UBUNTU_JA_NONFREE_KEYRING_URL}"
 fi
 
 # Check NVIDIA CUDA Repository Keyring
-if [ ! -f "${CACHEDIR}/nvidia-keyring.gpg" ]; then
+if [ ! -e "${CACHEDIR}/nvidia-keyring.gpg" ]; then
   # Download NVIDIA CUDA Repository Keyring
   wget -qO "${CACHEDIR}/nvidia-keyring.gpg" "${NVIDIA_CUDA_KEYRING_URL}"
 fi
 
 # Check Intel LAN Driver
-if [ ! -f "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" ]; then
+if [ ! -e "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" ]; then
   # Download Intel LAN Driver
   wget -qO "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${INTEL_E1000E_URL}"
 fi
 
 # Check Intel LAN Driver
-if [ ! -f "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" ]; then
+if [ ! -e "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" ]; then
   # Download Intel LAN Driver
   wget -qO "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${INTEL_IGB_URL}"
 fi
 
 # Check Intel LAN Driver
-if [ ! -f "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" ]; then
+if [ ! -e "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" ]; then
   # Download Intel LAN Driver
   wget -qO "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
 fi
