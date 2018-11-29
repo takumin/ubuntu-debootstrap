@@ -792,9 +792,9 @@ tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 
 # Build Driver
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" install
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" install
-chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
+chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" install clean
+chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" install clean
+chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install clean
 
 ################################################################################
 # Initramfs
