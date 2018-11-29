@@ -607,7 +607,7 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
       # Check Package List
       if [ -n "${XORG_HWE_REQUIRE_PACKAGES[*]}" ]; then
         # Install Require Packages
-        chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[*]}"
+        chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[@]}"
       fi
 
       # Check Package List
