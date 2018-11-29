@@ -24,7 +24,7 @@ fi
 
 # Destination Directory
 # shellcheck disable=SC2086
-: ${DESTDIR:="$(cd "$(dirname $0)"; pwd)/release"}
+: ${DESTDIR:="$(cd "$(dirname "$0")"; pwd)/release"}
 
 # Release Codename
 # Value: [trusty|xenial|bionic]
@@ -181,7 +181,7 @@ case "${RELEASE}" in
 esac
 
 # Download Files Directory
-CACHEDIR="$(cd "$(dirname $0)"; pwd)/.cache"
+CACHEDIR="$(cd "$(dirname "$0")"; pwd)/.cache"
 
 # Destination Directory
 DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
@@ -291,9 +291,9 @@ esac
 
 # Intel LAN Driver Version
 INTEL_E1000E_URL='https://downloadmirror.intel.com/15817/eng/e1000e-3.4.2.1.tar.gz'
-INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_VERSION}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
+INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s@\.tar\.gz$@@;')"
 INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.20.tar.gz'
-INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
+INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^igb-@@; s@\.tar\.gz$@@;')"
 INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.1.tar.gz'
 INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
 
