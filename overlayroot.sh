@@ -801,6 +801,9 @@ chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "
 chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" clean
 chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" clean
 
+# Workaround e1000e
+echo 'e1000e' >> "${WORKDIR}/etc/initramfs-tools/modules"
+
 ################################################################################
 # Initramfs
 ################################################################################
