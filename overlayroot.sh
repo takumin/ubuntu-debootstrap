@@ -713,11 +713,11 @@ fi
 # Intel 10Ge Driver
 ################################################################################
 
-# Build Tools
-chroot "${WORKDIR}" apt-get -y install build-essential
-
 # Kernel Header
 chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
+
+# Build Tools
+chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev
 
 # Download Archive
 wget -qO "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
