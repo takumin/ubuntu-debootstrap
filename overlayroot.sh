@@ -310,6 +310,28 @@ INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.
 GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
 ################################################################################
+# Cleanup
+################################################################################
+
+# Check Cache Directory
+if [ -d "${CACHEDIR}" ]; then
+  # Create Cache Directory
+  mkdir -p "${CACHEDIR}"
+fi
+
+# Check Destination Directory
+if [ -d "${DESTDIR}" ]; then
+  # Cleanup Destination Directory
+  find "${DESTDIR}" -type f -print0 | xargs -0 rm -f
+else
+  # Create Destination Directory
+  mkdir -p "${DESTDIR}"
+fi
+
+# Unmount Root Partition
+awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}" | sort -r | xargs --no-run-if-empty umount
+
+################################################################################
 # Download
 ################################################################################
 
@@ -348,28 +370,6 @@ if [ ! -e "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" ]; then
   # Download Intel LAN Driver
   wget -qO "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
 fi
-
-################################################################################
-# Cleanup
-################################################################################
-
-# Check Cache Directory
-if [ -d "${CACHEDIR}" ]; then
-  # Create Cache Directory
-  mkdir -p "${CACHEDIR}"
-fi
-
-# Check Destination Directory
-if [ -d "${DESTDIR}" ]; then
-  # Cleanup Destination Directory
-  find "${DESTDIR}" -type f -print0 | xargs -0 rm -f
-else
-  # Create Destination Directory
-  mkdir -p "${DESTDIR}"
-fi
-
-# Unmount Root Partition
-awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}" | sort -r | xargs --no-run-if-empty umount
 
 ################################################################################
 # Disk
