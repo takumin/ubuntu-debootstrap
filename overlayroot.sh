@@ -266,6 +266,21 @@ case "${RELEASE}-${KERNEL}" in
     ;;
 esac
 
+# Select Intel Lan Driver Version
+case "${RELEASE}" in
+  "trusty" ) INTEL_IXGBE_VERSION="" ;;
+  "xenial" ) INTEL_IXGBE_VERSION="5.3.7" ;;
+  "bionic" ) INTEL_IXGBE_VERSION="5.5.1" ;;
+  * )
+    echo "Unknown Release Codename Type..."
+    exit 1
+    ;;
+esac
+
+# Intel LAN Driver Version
+INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.1.tar.gz'
+INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
+
 # Glib Schemas Directory
 GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
@@ -521,6 +536,9 @@ chroot "${WORKDIR}" apt-get -y dist-upgrade
 # Install Kernel
 chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_PACKAGE}"
 
+# Get Kernel Version
+KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
+
 ################################################################################
 # Minimal
 ################################################################################
@@ -682,11 +700,24 @@ if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
 fi
 
 ################################################################################
-# Initramfs
+# Intel
 ################################################################################
 
-# Get Linux Kernel Version
-KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-.*-generic' | sed -E 's/linux-image-//')"
+# Require Packages
+chroot "${WORKDIR}" apt-get -y install build-essential
+
+# Download Archive
+wget -qO "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${INTEL_IXGBE_URL}"
+
+# Extract Archive
+tar -xvf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+
+# Build Driver
+chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
+
+################################################################################
+# Initramfs
+################################################################################
 
 # Cleanup Initramfs
 chroot "${WORKDIR}" update-initramfs -d -k all
