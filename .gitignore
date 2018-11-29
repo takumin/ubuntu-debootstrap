@@ -1,4 +1,4 @@
-.cache
+.cache/
 .envrc
 release/*
 !release/.gitkeep
