@@ -545,20 +545,28 @@ fi
 
 # Proxy Configuration
 if [ "x${NO_PROXY}" != "x" ]; then
-	echo "export no_proxy=\"${NO_PROXY}\""       >> "${WORKDIR}/home/${USER_NAME}/.profile"
-	echo "export NO_PROXY=\"${NO_PROXY}\""       >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	{
+		echo "export no_proxy=\"${NO_PROXY}\""
+		echo "export NO_PROXY=\"${NO_PROXY}\""
+	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 if [ "x${FTP_PROXY}" != "x" ]; then
-	echo "export ftp_proxy=\"${FTP_PROXY}\""     >> "${WORKDIR}/home/${USER_NAME}/.profile"
-	echo "export FTP_PROXY=\"${FTP_PROXY}\""     >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	{
+		echo "export ftp_proxy=\"${FTP_PROXY}\""
+		echo "export FTP_PROXY=\"${FTP_PROXY}\""
+	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 if [ "x${HTTP_PROXY}" != "x" ]; then
-	echo "export http_proxy=\"${HTTP_PROXY}\""   >> "${WORKDIR}/home/${USER_NAME}/.profile"
-	echo "export HTTP_PROXY=\"${HTTP_PROXY}\""   >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	{
+		echo "export http_proxy=\"${HTTP_PROXY}\""
+		echo "export HTTP_PROXY=\"${HTTP_PROXY}\""
+	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 if [ "x${HTTPS_PROXY}" != "x" ]; then
-	echo "export https_proxy=\"${HTTPS_PROXY}\"" >> "${WORKDIR}/home/${USER_NAME}/.profile"
-	echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\"" >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	{
+		echo "export https_proxy=\"${HTTPS_PROXY}\""
+		echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\""
+	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
 fi
 
 # User Dir Permission
