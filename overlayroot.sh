@@ -761,14 +761,6 @@ if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
 
   # Install Driver
   chroot "${WORKDIR}" apt-get -y install cuda-drivers
-
-  # Load Boot Time DRM Kernel Mode Setting
-  # {
-  #   echo 'nvidia'
-  #   echo 'nvidia_drm'
-  #   echo 'nvidia_modeset'
-  #   echo 'nvidia_uvm'
-  # } >> "${WORKDIR}/etc/initramfs-tools/modules"
 fi
 
 ################################################################################
