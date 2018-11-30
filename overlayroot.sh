@@ -115,7 +115,7 @@ case "${RELEASE}" in
 	* )
 		echo "RELEASE: trusty or xenial or bionic"
 		exit 1
-		;;
+	;;
 esac
 
 # Kernel
@@ -127,7 +127,7 @@ case "${KERNEL}" in
 	* )
 		echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
 		exit 1
-		;;
+	;;
 esac
 
 # Profile
@@ -141,7 +141,7 @@ case "${PROFILE}" in
 	* )
 		echo "PROFILE: minimal or standard or server or server-nvidia or desktop or desktop-nvidia"
 		exit 1
-		;;
+	;;
 esac
 
 ################################################################################
@@ -166,19 +166,19 @@ case "${RELEASE}" in
 		RELEASE_MAJOR='14'
 		# shellcheck disable=SC2034
 		RELEASE_MINOR='04'
-		;;
+	;;
 	'xenial' )
 		# shellcheck disable=SC2034
 		RELEASE_MAJOR='16'
 		# shellcheck disable=SC2034
 		RELEASE_MINOR='04'
-		;;
+	;;
 	'bionic' )
 		# shellcheck disable=SC2034
 		RELEASE_MAJOR='18'
 		# shellcheck disable=SC2034
 		RELEASE_MINOR='04'
-		;;
+	;;
 esac
 
 # Download Files Directory
@@ -225,7 +225,7 @@ case "${RELEASE}-${KERNEL}" in
 	* )
 		echo "Unknown Release Codename & Kernel Type..."
 		exit 1
-		;;
+	;;
 esac
 
 # Select Kernel Header Package
@@ -245,48 +245,48 @@ case "${RELEASE}-${KERNEL}" in
 	* )
 		echo "Unknown Release Codename & Kernel Type..."
 		exit 1
-		;;
+	;;
 esac
 
 # HWE Xorg Package
 case "${RELEASE}-${KERNEL}" in
 	# Trusty Part
 	trusty-*-hwe )
-	# Require Packages
-	declare -a XORG_HWE_REQUIRE_PACKAGES=(
-		'xserver-xorg-core-lts-xenial'
-		'xserver-xorg-input-all-lts-xenial'
-		'xserver-xorg-video-all-lts-xenial'
-		'libegl1-mesa-lts-xenial'
-		'libgbm1-lts-xenial'
-		'libgl1-mesa-dri-lts-xenial'
-		'libgl1-mesa-glx-lts-xenial'
-		'libgles1-mesa-lts-xenial'
-		'libgles2-mesa-lts-xenial'
-		'libwayland-egl1-mesa-lts-xenial'
-	)
-	# HWE Xorg Package
-	XORG_HWE_PACKAGE='xserver-xorg-lts-xenial'
+		# Require Packages
+		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+			'xserver-xorg-core-lts-xenial'
+			'xserver-xorg-input-all-lts-xenial'
+			'xserver-xorg-video-all-lts-xenial'
+			'libegl1-mesa-lts-xenial'
+			'libgbm1-lts-xenial'
+			'libgl1-mesa-dri-lts-xenial'
+			'libgl1-mesa-glx-lts-xenial'
+			'libgles1-mesa-lts-xenial'
+			'libgles2-mesa-lts-xenial'
+			'libwayland-egl1-mesa-lts-xenial'
+		)
+		# HWE Xorg Package
+		XORG_HWE_PACKAGE='xserver-xorg-lts-xenial'
 	;;
 	# Xenial Part
 	xenial-*-hwe )
-	# Require Packages
-	declare -a XORG_HWE_REQUIRE_PACKAGES=(
-		'xserver-xorg-core-hwe-16.04'
-		'xserver-xorg-input-all-hwe-16.04'
-		'xserver-xorg-video-all-hwe-16.04'
-		'xserver-xorg-legacy-hwe-16.04'
-		'libgl1-mesa-dri'
-	)
-	# HWE Xorg Package
-	XORG_HWE_PACKAGE='xserver-xorg-hwe-16.04'
+		# Require Packages
+		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+			'xserver-xorg-core-hwe-16.04'
+			'xserver-xorg-input-all-hwe-16.04'
+			'xserver-xorg-video-all-hwe-16.04'
+			'xserver-xorg-legacy-hwe-16.04'
+			'libgl1-mesa-dri'
+		)
+		# HWE Xorg Package
+		XORG_HWE_PACKAGE='xserver-xorg-hwe-16.04'
 	;;
 	# Bionic Part
 	bionic-*-hwe )
-	# Require Packages
-	XORG_HWE_REQUIRE_PACKAGES=''
-	# HWE Xorg Package
-	XORG_HWE_PACKAGE=''
+		# Require Packages
+		XORG_HWE_REQUIRE_PACKAGES=''
+		# HWE Xorg Package
+		XORG_HWE_PACKAGE=''
 	;;
 esac
 
@@ -721,7 +721,7 @@ if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
 				# HWE Version Xorg Server
 				chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${XORG_HWE_PACKAGE}"
 			fi
-			;;
+		;;
 	esac
 
 	# Install Package
