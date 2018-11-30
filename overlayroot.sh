@@ -448,21 +448,23 @@ sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${WORKDIR}/etc/default/ke
 # TTY Autologin
 ################################################################################
 
-# Root Login
-mkdir -p "${WORKDIR}/etc/systemd/system/getty@tty1.service.d"
-cat > "${WORKDIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << '__EOF__'
+# Check Environment Variable
+if [ "${PROFILE}" = 'minimal' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
+  # Root Login
+  mkdir -p "${WORKDIR}/etc/systemd/system/getty@tty1.service.d"
+  cat > "${WORKDIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" << '__EOF__'
 [Service]
 Type=idle
 ExecStart=
 ExecStart=-/sbin/agetty --autologin root --noclear %I linux
 __EOF__
 
-# Login Run Script
-# shellcheck disable=SC2088
-echo '~/.startup.sh' >> "${WORKDIR}/root/.bash_login"
+  # Login Run Script
+  # shellcheck disable=SC2088
+  echo '~/.startup.sh' >> "${WORKDIR}/root/.bash_login"
 
-# Startup Script
-cat > "${WORKDIR}/root/.startup.sh" << '__EOF__'
+  # Startup Script
+  cat > "${WORKDIR}/root/.startup.sh" << '__EOF__'
 #!/bin/bash
 
 script_cmdline ()
@@ -499,8 +501,9 @@ if [ "$(tty)" = '/dev/tty1' ]; then
 fi
 __EOF__
 
-# Set Permission
-chmod 0755 "${WORKDIR}/root/.startup.sh"
+  # Set Permission
+  chmod 0755 "${WORKDIR}/root/.startup.sh"
+fi
 
 ################################################################################
 # Admin User
@@ -795,7 +798,7 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 
   # DKMS Configuration - e1000e
   echo 'PACKAGE_NAME="e1000e"'                                 >  "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
-  echo "PACKAGE_VERSION="${INTEL_E1000E_VERSION}""             >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo "PACKAGE_VERSION=\"${INTEL_E1000E_VERSION}\""           >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
   echo 'BUILT_MODULE_LOCATION="src"'                           >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
   echo 'BUILT_MODULE_NAME[0]="e1000e"'                         >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
   echo 'DEST_MODULE_LOCATION[0]="/kernel/drivers/net/e1000e/"' >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
@@ -806,7 +809,7 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 
   # DKMS Configuration - igb
   echo 'PACKAGE_NAME="igb"'                                 >  "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
-  echo "PACKAGE_VERSION="${INTEL_IGB_VERSION}""             >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo "PACKAGE_VERSION=\"${INTEL_IGB_VERSION}\""           >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
   echo 'BUILT_MODULE_LOCATION="src"'                        >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
   echo 'BUILT_MODULE_NAME[0]="igb"'                         >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
   echo 'DEST_MODULE_LOCATION[0]="/kernel/drivers/net/igb/"' >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
@@ -817,7 +820,7 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 
   # DKMS Configuration - ixgbe
   echo 'PACKAGE_NAME="ixgbe"'                                 >  "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
-  echo "PACKAGE_VERSION="${INTEL_IXGBE_VERSION}""             >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo "PACKAGE_VERSION=\"${INTEL_IXGBE_VERSION}\""           >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
   echo 'BUILT_MODULE_LOCATION="src"'                          >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
   echo 'BUILT_MODULE_NAME[0]="ixgbe"'                         >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
   echo 'DEST_MODULE_LOCATION[0]="/kernel/drivers/net/ixgbe/"' >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
