@@ -763,12 +763,12 @@ if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
   chroot "${WORKDIR}" apt-get -y install cuda-drivers
 
   # Load Boot Time DRM Kernel Mode Setting
-  {
-    echo 'nvidia'
-    echo 'nvidia_drm'
-    echo 'nvidia_modeset'
-    echo 'nvidia_uvm'
-  } >> "${WORKDIR}/etc/initramfs-tools/modules"
+  # {
+  #   echo 'nvidia'
+  #   echo 'nvidia_drm'
+  #   echo 'nvidia_modeset'
+  #   echo 'nvidia_uvm'
+  # } >> "${WORKDIR}/etc/initramfs-tools/modules"
 fi
 
 ################################################################################
@@ -781,7 +781,7 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
   chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
 
   # Build Tools
-  chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev
+  chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev dkms
 
   # Copy Archive
   cp "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz"
@@ -793,18 +793,53 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
   tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
   tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 
-  # Build Driver
-  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" install
-  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" install
-  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" install
+  # DKMS Configuration - e1000e
+  echo 'PACKAGE_NAME="e1000e"'                                 >  "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo "PACKAGE_VERSION="${INTEL_E1000E_VERSION}""             >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'BUILT_MODULE_LOCATION="src"'                           >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'BUILT_MODULE_NAME[0]="e1000e"'                         >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'DEST_MODULE_LOCATION[0]="/kernel/drivers/net/e1000e/"' >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'MAKE[0]="BUILD_KERNEL=${kernelver} make -C src"'       >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'CLEAN[0]="make -C src clean"'                          >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'AUTOINSTALL="yes"'                                     >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
+  echo 'REMAKE_INITRD="yes"'                                   >> "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf"
 
-  # Cleanup Driver
-  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/e1000e-${INTEL_E1000E_VERSION}/src" clean
-  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/igb-${INTEL_IGB_VERSION}/src" clean
-  chroot "${WORKDIR}" env BUILD_KERNEL="${KERNEL_VERSION}" make -j "$(nproc)" -C "/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/src" clean
+  # DKMS Configuration - igb
+  echo 'PACKAGE_NAME="igb"'                                 >  "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo "PACKAGE_VERSION="${INTEL_IGB_VERSION}""             >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'BUILT_MODULE_LOCATION="src"'                        >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'BUILT_MODULE_NAME[0]="igb"'                         >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'DEST_MODULE_LOCATION[0]="/kernel/drivers/net/igb/"' >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'MAKE[0]="BUILD_KERNEL=${kernelver} make -C src"'    >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'CLEAN[0]="make -C src clean"'                       >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'AUTOINSTALL="yes"'                                  >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
+  echo 'REMAKE_INITRD="yes"'                                >> "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf"
 
-  # Workaround e1000e
-  echo 'e1000e' >> "${WORKDIR}/etc/initramfs-tools/modules"
+  # DKMS Configuration - ixgbe
+  echo 'PACKAGE_NAME="ixgbe"'                                 >  "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo "PACKAGE_VERSION="${INTEL_IXGBE_VERSION}""             >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'BUILT_MODULE_LOCATION="src"'                          >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'BUILT_MODULE_NAME[0]="ixgbe"'                         >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'DEST_MODULE_LOCATION[0]="/kernel/drivers/net/ixgbe/"' >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'MAKE[0]="BUILD_KERNEL=${kernelver} make -C src"'      >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'CLEAN[0]="make -C src clean"'                         >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'AUTOINSTALL="yes"'                                    >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+  echo 'REMAKE_INITRD="yes"'                                  >> "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf"
+
+  # DKMS Installation - e1000e
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" add
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" build
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" install
+
+  # DKMS Installation - igb
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" add
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" build
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" install
+
+  # DKMS Installation - ixgbe
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" add
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" build
+  chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" install
 fi
 
 ################################################################################
