@@ -209,7 +209,7 @@ swapon "${SWAPPT}"
 ################################################################################
 
 # Download Root FileSystem Archive
-wget -qO /tmp/rootfs.tar.xz "${ROOTFS_URL}"
+wget -O /tmp/rootfs.tar.xz "${ROOTFS_URL}"
 
 # Extract Root FileSystem Archive
 sudo tar -xvpJf /tmp/rootfs.tar.xz -C "${ROOTFS}" --numeric-owner
