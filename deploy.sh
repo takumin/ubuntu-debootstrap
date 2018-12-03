@@ -91,6 +91,9 @@ esac
 # Require Packages
 ################################################################################
 
+# Update Repository
+apt-get -y update
+
 # Install Packages
 dpkg -l | awk '{print $2}' | grep -qs '^sed$'             || apt-get -y --no-install-recommends install sed
 dpkg -l | awk '{print $2}' | grep -qs '^mawk$'            || apt-get -y --no-install-recommends install mawk
