@@ -88,6 +88,23 @@ case "${LIVE_ROOTFS_URL}" in
 esac
 
 ################################################################################
+# Require Packages
+################################################################################
+
+# Install Packages
+dpkg -l | awk '{print $2}' | grep -qs '^sed$'             || apt-get -y --no-install-recommends install sed
+dpkg -l | awk '{print $2}' | grep -qs '^mawk$'            || apt-get -y --no-install-recommends install mawk
+dpkg -l | awk '{print $2}' | grep -qs '^curl$'            || apt-get -y --no-install-recommends install curl
+dpkg -l | awk '{print $2}' | grep -qs '^wget$'            || apt-get -y --no-install-recommends install wget
+dpkg -l | awk '{print $2}' | grep -qs '^ca-certificates$' || apt-get -y --no-install-recommends install ca-certificates
+dpkg -l | awk '{print $2}' | grep -qs '^efibootmgr$'      || apt-get -y --no-install-recommends install efibootmgr
+dpkg -l | awk '{print $2}' | grep -qs '^hdparm$'          || apt-get -y --no-install-recommends install hdparm
+dpkg -l | awk '{print $2}' | grep -qs '^nvme-cli$'        || apt-get -y --no-install-recommends install nvme-cli
+dpkg -l | awk '{print $2}' | grep -qs '^gdisk$'           || apt-get -y --no-install-recommends install gdisk
+dpkg -l | awk '{print $2}' | grep -qs '^dosfstools$'      || apt-get -y --no-install-recommends install dosfstools
+dpkg -l | awk '{print $2}' | grep -qs '^xfsprogs$'        || apt-get -y --no-install-recommends install xfsprogs
+
+################################################################################
 # Cleanup
 ################################################################################
 
