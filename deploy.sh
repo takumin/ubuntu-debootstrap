@@ -51,15 +51,15 @@ if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
   exit 1
 fi
 
-# Live RootFs Url
-LIVE_ROOTFS_URL=''
+# Deploy RootFs Url
+ROOTFS_DEPLOY_URL=''
 
 # Parse Boot Parameter
 for param in $(< /proc/cmdline); do
   case "${param}" in
-    root=*)
-      if [[ "${param#*=}" =~ ^http:// || "${param#*=}" =~ ^ftp:// ]]; then
-        LIVE_ROOTFS_URL="${param#*=}"
+    deploy=*)
+      if [[ "${param#*=}" =~ ^http:// || "${param#*=}" =~ ^https:// ]]; then
+        ROOTFS_DEPLOY_URL="${param#*=}/rootfs.tar.xz"
       else
         echo 'Unknown Boot Parameter'
         echo "${param}"
@@ -68,24 +68,6 @@ for param in $(< /proc/cmdline); do
       ;;
   esac
 done
-
-# Parse RootFs Type
-case "${LIVE_ROOTFS_URL}" in
-  *.tar.xz)
-    ROOTFS_URL="${LIVE_ROOTFS_URL}"
-    ;;
-  *squash)
-    ROOTFS_URL="${LIVE_ROOTFS_URL/squash/tar.xz}"
-    ;;
-  *squashfs)
-    ROOTFS_URL="${LIVE_ROOTFS_URL/squashfs/tar.xz}"
-    ;;
-  *)
-    echo 'Unknown RootFs FileType'
-    echo "${LIVE_ROOTFS_URL}"
-    exit 1
-    ;;
-esac
 
 ################################################################################
 # Require Packages
@@ -209,7 +191,7 @@ swapon "${SWAPPT}"
 ################################################################################
 
 # Download Root FileSystem Archive
-wget -O /tmp/rootfs.tar.xz "${ROOTFS_URL}"
+wget -O /tmp/rootfs.tar.xz "${ROOTFS_DEPLOY_URL}"
 
 # Extract Root FileSystem Archive
 sudo tar -xvpJf /tmp/rootfs.tar.xz -C "${ROOTFS}" --numeric-owner
