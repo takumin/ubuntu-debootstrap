@@ -384,6 +384,9 @@ mount -t tmpfs -o mode=0755 tmpfs "${WORKDIR}"
 # Debootstrap
 ################################################################################
 
+# Set Default Hostname
+declare -x HOSTNAME="localhost"
+
 # Install Base System
 ${DEBOOTSTRAP_COMMAND} ${DEBOOTSTRAP_VARIANT} ${DEBOOTSTRAP_COMPONENTS} ${DEBOOTSTRAP_INCLUDES} "${RELEASE}" "${WORKDIR}" "${MIRROR_UBUNTU}"
 
