@@ -917,6 +917,9 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 			intel_lan_driver_ixgbe_dkms
 			;;
 	esac
+
+	# Cleanup DKMS Initramfs Backup Image
+	find "${WORKDIR}/boot" -type f -name '*.old-dkms' -exec rm {} \;
 fi
 
 ################################################################################
@@ -932,6 +935,10 @@ chroot "${WORKDIR}" update-initramfs -c -k "${KERNEL_VERSION}"
 ################################################################################
 # Cleanup
 ################################################################################
+
+# Kernel&Initramfs Old Symbolic Link
+rm -f "${WORKDIR}/vmlinuz.old"
+rm -f "${WORKDIR}/initrd.img.old"
 
 # Out Of Packages
 chroot "${WORKDIR}" apt-get -y autoremove --purge
