@@ -269,11 +269,24 @@ if [ -d "/sys/firmware/efi" ]; then
   mount --bind /sys/firmware/efi/efivars "${ROOTFS}/sys/firmware/efi/efivars"
 fi
 
-# Create Resolv Configuration Directory
-mkdir -p "${ROOTFS}/run/resolvconf"
+# Resolve Configuration - resolvconf
+if [ -f "/run/resolvconf/resolv.conf" ];
+  # Create Resolv Configuration Directory
+  mkdir -p "${ROOTFS}/run/resolvconf"
 
-# Copy Resolv Configuration
-cp /run/resolvconf/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
+  # Copy Resolv Configuration
+  cp /run/resolvconf/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
+fi
+
+# Resolve Configuration - systemd-resolved
+if [ -f "/run/systemd/resolve/resolv.conf" ];
+  # Create Resolv Configuration Directory
+  mkdir -p "${ROOTFS}/run/systemd/resolve"
+
+  # Copy Resolv Configuration
+  cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/systemd/resolve/resolv.conf"
+  cp /run/systemd/resolve/stub-resolv.conf "${ROOTFS}/run/systemd/resolve/stub-resolv.conf"
+fi
 
 # Create Mount Point
 touch "${ROOTFS}/etc/fstab"
