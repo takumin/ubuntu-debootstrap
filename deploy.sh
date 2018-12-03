@@ -59,7 +59,7 @@ for param in $(< /proc/cmdline); do
   case "${param}" in
     deploy=*)
       if [[ "${param#*=}" =~ ^http:// || "${param#*=}" =~ ^https:// ]]; then
-        ROOTFS_DEPLOY_URL="${param#*=}/rootfs.tar.xz"
+        ROOTFS_DEPLOY_URL="${param#*=}"
       else
         echo 'Unknown Boot Parameter'
         echo "${param}"
