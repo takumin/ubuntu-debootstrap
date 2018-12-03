@@ -502,7 +502,7 @@ if [ "${PROFILE}" = 'minimal' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'serv
 	fi
 	__EOF__
 
-	# Set Permission
+	# Execute Permission
 	chmod 0755 "${WORKDIR}/root/.startup.sh"
 fi
 
@@ -656,6 +656,29 @@ fi
 
 # Require Package
 chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl
+
+# Check Release Version
+if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+	# Workaround initramfs dns
+	cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns" <<- '__EOF__'
+	#!/bin/sh -e
+
+	if [ "$1" = 'prereqs' ]; then
+		exit 0
+	fi
+
+	. /usr/share/initramfs-tools/hook-functions
+
+	for _LIBRARY in /lib/x86_64-linux-gnu/libnss_dns*; do
+		if [ -e "${_LIBRARY}" ]; then
+			copy_exec ${_LIBRARY} /lib
+		fi
+	done
+	__EOF__
+
+	# Execute Permission
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
+fi
 
 ################################################################################
 # Overlay
