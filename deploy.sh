@@ -133,6 +133,7 @@ if [ "x${ROOT_DISK_TYPE}" = 'xSSD' ]; then
   if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null 2>&1; then
     # Suspend-to-RAM (ACPI State S3)
     rtcwake -m mem -s 10
+
     # Wait
     sleep 10
   fi
@@ -144,15 +145,14 @@ if [ "x${ROOT_DISK_TYPE}" = 'xSSD' ]; then
   hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
 # Check Disk Type
 elif [ "x${ROOT_DISK_TYPE}" = 'xNVME' ]; then
-  # Check Command
-  if nvme version 1>/dev/null 2>&1; then
-    # Suspend-to-RAM (ACPI State S3)
-    rtcwake -m mem -s 10
-    # Wait
-    sleep 10
-    # Secure Erase
-    nvme format -s 1 "${ROOT_DISK_PATH}" || echo 'Not Secure Erase...'
-  fi
+  # Suspend-to-RAM (ACPI State S3)
+  rtcwake -m mem -s 10
+
+  # Wait
+  sleep 10
+
+  # Secure Erase
+  nvme format -s 1 "${ROOT_DISK_PATH}" || echo 'Not Secure Erase...'
 fi
 
 # Wait Probe
