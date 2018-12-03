@@ -781,25 +781,15 @@ fi
 # Intel LAN Driver
 ################################################################################
 
-# HWE Xorg Package
-if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'generic-hwe' ]; then
-	# Kernel Header
-	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
-
-	# Build Tools
-	chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev dkms
-
+intel_lan_driver_e1000e_dkms ()
+{
 	# Copy Archive
 	cp "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz"
-	cp "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz"
-	cp "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz"
 
 	# Extract Archive
 	tar -xf "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
-	tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
-	tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
 
-	# DKMS Configuration - e1000e
+	# DKMS Configuration
 	cat > "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf" <<- __EOF__
 	PACKAGE_NAME="e1000e"
 	PACKAGE_VERSION="${INTEL_E1000E_VERSION}"
@@ -812,7 +802,21 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 	REMAKE_INITRD="yes"
 	__EOF__
 
-	# DKMS Configuration - igb
+	# DKMS Installation
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" add
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" build
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" install
+}
+
+intel_lan_driver_igb_dkms ()
+{
+	# Copy Archive
+	cp "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz"
+
+	# Extract Archive
+	tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+
+	# DKMS Configuration
 	cat > "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf" <<- __EOF__
 	PACKAGE_NAME="igb"
 	PACKAGE_VERSION="${INTEL_IGB_VERSION}"
@@ -825,7 +829,21 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 	REMAKE_INITRD="yes"
 	__EOF__
 
-	# DKMS Configuration - ixgbe
+	# DKMS Installation
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" add
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" build
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" install
+}
+
+intel_lan_driver_ixgbe_dkms ()
+{
+	# Copy Archive
+	cp "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz"
+
+	# Extract Archive
+	tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+
+	# DKMS Configuration
 	cat > "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf" <<- __EOF__
 	PACKAGE_NAME="ixgbe"
 	PACKAGE_VERSION="${INTEL_IXGBE_VERSION}"
@@ -838,20 +856,41 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 	REMAKE_INITRD="yes"
 	__EOF__
 
-	# DKMS Installation - e1000e
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" add
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" build
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" install
-
-	# DKMS Installation - igb
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" add
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" build
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" install
-
-	# DKMS Installation - ixgbe
+	# DKMS Installation
 	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" add
 	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" build
 	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" install
+}
+
+# Check Profile&Kernel
+if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'generic-hwe' ]; then
+	# Kernel Header
+	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
+
+	# Build Tools
+	chroot "${WORKDIR}" apt-get -y install build-essential libelf-dev dkms
+
+	# Check Release&Kernel Version
+	case "${RELEASE}-${KERNEL}" in
+		trusty*)
+			intel_lan_driver_e1000e_dkms
+			intel_lan_driver_igb_dkms
+			intel_lan_driver_ixgbe_dkms
+			;;
+		xenial-generic)
+			intel_lan_driver_e1000e_dkms
+			intel_lan_driver_igb_dkms
+			intel_lan_driver_ixgbe_dkms
+			;;
+		xenial-generic-hwe)
+			intel_lan_driver_e1000e_dkms
+			intel_lan_driver_ixgbe_dkms
+			;;
+		bionic*)
+			intel_lan_driver_e1000e_dkms
+			intel_lan_driver_ixgbe_dkms
+			;;
+	esac
 fi
 
 ################################################################################
