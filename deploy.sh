@@ -51,6 +51,42 @@ if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
   exit 1
 fi
 
+# Live RootFs Url
+LIVE_ROOTFS_URL=''
+
+# Parse Boot Parameter
+for param in $(< /proc/cmdline); do
+  case "${param}" in
+    root=*)
+      if [[ "${param#*=}" =~ ^http:// || "${param#*=}" =~ ^ftp:// ]]; then
+        LIVE_ROOTFS_URL="${param#*=}"
+      else
+        echo 'Unknown Boot Parameter'
+        echo "${param}"
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+# Parse RootFs Type
+case "${LIVE_ROOTFS_URL}" in
+  *.tar.xz)
+    ROOTFS_URL="${LIVE_ROOTFS_URL}"
+    ;;
+  *squash)
+    ROOTFS_URL="${LIVE_ROOTFS_URL/squash/tar.xz}"
+    ;;
+  *squashfs)
+    ROOTFS_URL="${LIVE_ROOTFS_URL/squashfs/tar.xz}"
+    ;;
+  *)
+    echo 'Unknown RootFs FileType'
+    echo "${LIVE_ROOTFS_URL}"
+    exit 1
+    ;;
+esac
+
 ################################################################################
 # Cleanup
 ################################################################################
@@ -90,6 +126,10 @@ if [ "x${ROOT_DISK_TYPE}" = 'xSSD' ]; then
 elif [ "x${ROOT_DISK_TYPE}" = 'xNVME' ]; then
   # Check Command
   if nvme version 1>/dev/null 2>&1; then
+    # Suspend-to-RAM (ACPI State S3)
+    rtcwake -m mem -s 10
+    # Wait
+    sleep 10
     # Secure Erase
     nvme format -s 1 "${ROOT_DISK_PATH}" || echo 'Not Secure Erase...'
   fi
@@ -148,7 +188,10 @@ swapon "${SWAPPT}"
 # FileSystem
 ################################################################################
 
-# Extract Root FileSystem
+# Download Root FileSystem Archive
+wget -qO /tmp/rootfs.tar.xz "${ROOTFS_URL}"
+
+# Extract Root FileSystem Archive
 sudo tar -xvpJf /tmp/rootfs.tar.xz -C "${ROOTFS}" --numeric-owner
 
 # Require Environment
