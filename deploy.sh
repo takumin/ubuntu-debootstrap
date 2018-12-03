@@ -52,22 +52,62 @@ if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
 fi
 
 # Deploy RootFs Url
-ROOTFS_DEPLOY_URL=''
+DEPLOY_DISTRIBUTION=''
+DEPLOY_RELEASE=''
+DEPLOY_KERNEL=''
+DEPLOY_PROFILE=''
+DEPLOY_ROOTFS=''
+
+# Default Result Code
+RESULT=1
 
 # Parse Boot Parameter
 for param in $(< /proc/cmdline); do
   case "${param}" in
-    deploy=*)
+    distribution=*)
+      if [ -n "${param#*=}" ]; then
+        DEPLOY_DISTRIBUTION="${param#*=}"
+        RESULT=0
+      fi
+      ;;
+    release=*)
+      if [ -n "${param#*=}" ]; then
+        DEPLOY_RELEASE="${param#*=}"
+        RESULT=0
+      fi
+      ;;
+    kernel=*)
+      if [ -n "${param#*=}" ]; then
+        DEPLOY_KERNEL="${param#*=}"
+        RESULT=0
+      fi
+      ;;
+    profile=*)
+      if [ -n "${param#*=}" ]; then
+        DEPLOY_PROFILE="${param#*=}"
+        RESULT=0
+      fi
+      ;;
+    rootfs=*)
       if [[ "${param#*=}" =~ ^http:// || "${param#*=}" =~ ^https:// ]]; then
-        ROOTFS_DEPLOY_URL="${param#*=}"
-      else
-        echo 'Unknown Boot Parameter'
-        echo "${param}"
-        exit 1
+        DEPLOY_ROOTFS="${param#*=}"
+        RESULT=0
       fi
       ;;
   esac
 done
+
+# Check Result Code
+if [ "${RESULT}" -gt 0 ]; then
+  echo 'Unknown Boot Parameter'
+  echo "DEPLOY_DISTRIBUTION: ${DEPLOY_DISTRIBUTION}"
+  echo "DEPLOY_RELEASE:      ${DEPLOY_RELEASE}"
+  echo "DEPLOY_KERNEL:       ${DEPLOY_KERNEL}"
+  echo "DEPLOY_PROFILE:      ${DEPLOY_PROFILE}"
+  echo "DEPLOY_ROOTFS:       ${DEPLOY_ROOTFS}"
+  cat /proc/cmdline
+  exit 1
+fi
 
 ################################################################################
 # Require Packages
@@ -191,7 +231,7 @@ swapon "${SWAPPT}"
 ################################################################################
 
 # Download Root FileSystem Archive
-wget -O /tmp/rootfs.tar.xz "${ROOTFS_DEPLOY_URL}"
+wget -O /tmp/rootfs.tar.xz "${DEPLOY_ROOTFS}"
 
 # Extract Root FileSystem Archive
 sudo tar -xvpJf /tmp/rootfs.tar.xz -C "${ROOTFS}" --numeric-owner
@@ -278,6 +318,12 @@ else
   # Generate UEFI Boot Entry
   chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
   chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
+fi
+
+# Check Profile
+if [ "${DEPLOY_PROFILE}" = 'server' ]; then
+  # Default Text Console
+  sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"$@GRUB_CMDLINE_LINUX_DEFAULT="quiet"@' "${ROOTFS}/etc/default/grub"
 fi
 
 # Update Grub
