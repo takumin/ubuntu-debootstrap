@@ -270,7 +270,7 @@ if [ -d "/sys/firmware/efi" ]; then
 fi
 
 # Resolve Configuration - resolvconf
-if [ -f "/run/resolvconf/resolv.conf" ];
+if [ -f "/run/resolvconf/resolv.conf" ]; then
   # Create Resolv Configuration Directory
   mkdir -p "${ROOTFS}/run/resolvconf"
 
@@ -279,7 +279,7 @@ if [ -f "/run/resolvconf/resolv.conf" ];
 fi
 
 # Resolve Configuration - systemd-resolved
-if [ -f "/run/systemd/resolve/resolv.conf" ];
+if [ -f "/run/systemd/resolve/resolv.conf" ]; then
   # Create Resolv Configuration Directory
   mkdir -p "${ROOTFS}/run/systemd/resolve"
 
