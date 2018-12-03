@@ -919,7 +919,7 @@ if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'gene
 	esac
 
 	# Cleanup DKMS Initramfs Backup Image
-	find "${WORKDIR}/boot" -type f -name '*.old-dkms' -exec rm {} \;
+	find "${WORKDIR}/boot" -type f -name '*.old-dkms' -exec rm -f {} \;
 fi
 
 ################################################################################
