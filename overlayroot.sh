@@ -657,11 +657,21 @@ if [ "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
 fi
 
 ################################################################################
+# Network
+################################################################################
+
+# Check Release Version
+if [ "${RELEASE}" = 'xenial' -o "${RELEASE}" = 'bionic' ]; then
+	# NetPlan
+	chroot "${WORKDIR}" apt-get -y install nplan
+fi
+
+################################################################################
 # Netboot
 ################################################################################
 
 # Require Package
-chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl
+chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
 
 # Check Release Version
 if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
@@ -685,13 +695,6 @@ if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
 	# Execute Permission
 	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
 fi
-
-################################################################################
-# Overlay
-################################################################################
-
-# Require Package
-chroot "${WORKDIR}" apt-get -y install overlayroot
 
 ################################################################################
 # SSH
