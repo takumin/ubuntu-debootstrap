@@ -425,6 +425,9 @@ chmod 1777 "${WORKDIR}/dev/shm"
 # Default Hostname
 echo 'localhost' > "${WORKDIR}/etc/hostname"
 
+# Resolve Hostname
+echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
+
 ################################################################################
 # Localize
 ################################################################################
