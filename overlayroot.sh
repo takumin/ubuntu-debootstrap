@@ -829,7 +829,7 @@ intel_lan_driver_e1000e_dkms ()
 	BUILT_MODULE_NAME[0]="e1000e"
 	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/e1000e/"
 	MAKE[0]="BUILD_KERNEL=\${kernelver} make -C src"
-	CLEAN[0]="make -C src clean"
+	CLEAN[0]="BUILD_KERNEL=\${kernelver} make -C src clean"
 	AUTOINSTALL="yes"
 	REMAKE_INITRD="yes"
 	__EOF__
@@ -856,7 +856,7 @@ intel_lan_driver_igb_dkms ()
 	BUILT_MODULE_NAME[0]="igb"
 	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/igb/"
 	MAKE[0]="BUILD_KERNEL=\${kernelver} make -C src"
-	CLEAN[0]="make -C src clean"
+	CLEAN[0]="BUILD_KERNEL=\${kernelver} make -C src clean"
 	AUTOINSTALL="yes"
 	REMAKE_INITRD="yes"
 	__EOF__
@@ -883,7 +883,7 @@ intel_lan_driver_ixgbe_dkms ()
 	BUILT_MODULE_NAME[0]="ixgbe"
 	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/ixgbe/"
 	MAKE[0]="BUILD_KERNEL=\${kernelver} make -C src"
-	CLEAN[0]="make -C src clean"
+	CLEAN[0]="BUILD_KERNEL=\${kernelver} make -C src clean"
 	AUTOINSTALL="yes"
 	REMAKE_INITRD="yes"
 	__EOF__
