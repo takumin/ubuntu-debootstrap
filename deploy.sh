@@ -128,6 +128,7 @@ dpkg -l | awk '{print $2}' | grep -qs '^nvme-cli$'        || apt-get -y --no-ins
 dpkg -l | awk '{print $2}' | grep -qs '^gdisk$'           || apt-get -y --no-install-recommends install gdisk
 dpkg -l | awk '{print $2}' | grep -qs '^dosfstools$'      || apt-get -y --no-install-recommends install dosfstools
 dpkg -l | awk '{print $2}' | grep -qs '^xfsprogs$'        || apt-get -y --no-install-recommends install xfsprogs
+dpkg -l | awk '{print $2}' | grep -qs '^pv$'              || apt-get -y --no-install-recommends install pv
 
 ################################################################################
 # Cleanup
@@ -234,7 +235,7 @@ swapon "${SWAPPT}"
 wget -O /tmp/rootfs.tar.xz "${DEPLOY_ROOTFS}"
 
 # Extract Root FileSystem Archive
-sudo tar -xvpJf /tmp/rootfs.tar.xz -C "${ROOTFS}" --numeric-owner
+pv /tmp/rootfs.tar.xz | tar -xpJf - -C "${ROOTFS}" --numeric-owner
 
 # Require Environment
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
