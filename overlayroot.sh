@@ -445,7 +445,7 @@ chroot "${WORKDIR}" update-locale LANG=ja_JP.UTF-8
 if [ "${KEYBOARD}" = 'JP' ]; then
 	# Japanese Keyboard
 	sed -i -e 's@^XKBMODEL=.*$@XKBMODEL="jp106"@' "${WORKDIR}/etc/default/keyboard"
-	sed -i -e 's@^XKBLAYOUT=.*$@XKBLAYOUT="jp"@'     "${WORKDIR}/etc/default/keyboard"
+	sed -i -e 's@^XKBLAYOUT=.*$@XKBLAYOUT="jp"@'  "${WORKDIR}/etc/default/keyboard"
 fi
 
 # CapsLock to Ctrl
