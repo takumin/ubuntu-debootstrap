@@ -39,7 +39,7 @@ set -eu
 ################################################################################
 
 # Root Disk Type
-if [ "x${ROOT_DISK_TYPE}" != "xHDD" -a "x${ROOT_DISK_TYPE}" != "xSSD" -a "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
+if [ "x${ROOT_DISK_TYPE}" != "xHDD" ] && [ "x${ROOT_DISK_TYPE}" != "xSSD" ] && [ "x${ROOT_DISK_TYPE}" != "xNVME" ]; then
   echo "ROOT_DISK_TYPE: HDD or SSD or NVME"
   exit 1
 fi
@@ -363,7 +363,7 @@ chroot "${ROOTFS}" apt-get -y clean
 sync;sync;sync
 
 # Check Disk Type
-if [ "x${ROOT_DISK_TYPE}" = "xSSD" -o "x${ROOT_DISK_TYPE}" = "xNVME" ]; then
+if [ "x${ROOT_DISK_TYPE}" = "xSSD" ] || [ "x${ROOT_DISK_TYPE}" = "xNVME" ]; then
   # TRIM
   fstrim -v "${ROOTFS}"
 fi
