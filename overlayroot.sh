@@ -197,7 +197,7 @@ DEBOOTSTRAP_VARIANT="--variant=minbase"
 DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-DEBOOTSTRAP_INCLUDES="--include=gnupg,tzdata,locales,console-setup"
+DEBOOTSTRAP_INCLUDES="--include=tzdata,locales,console-setup,gnupg"
 
 # Check APT Proxy
 if [ "x${APT_PROXY}" != "x" ]; then
@@ -425,9 +425,6 @@ chmod 1777 "${WORKDIR}/dev/shm"
 # Default Hostname
 echo 'localhost' > "${WORKDIR}/etc/hostname"
 
-# Resolve Hostname
-echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
-
 ################################################################################
 # Localize
 ################################################################################
@@ -441,12 +438,14 @@ chroot "${WORKDIR}" dpkg-reconfigure tzdata
 chroot "${WORKDIR}" locale-gen ja_JP.UTF-8
 chroot "${WORKDIR}" update-locale LANG=ja_JP.UTF-8
 
-# Keyboard
+# Keyboard Model
 sed -i -e 's@^XKBMODEL=.*$@XKBMODEL="pc105"@' "${WORKDIR}/etc/default/keyboard"
 
+# Keyboard Layout
 if [ "${KEYBOARD}" = 'JP' ]; then
-	# Japanese Keyboard
 	sed -i -e 's@^XKBLAYOUT=.*$@XKBLAYOUT="jp"@'  "${WORKDIR}/etc/default/keyboard"
+else
+	sed -i -e 's@^XKBLAYOUT=.*$@XKBLAYOUT="us"@'  "${WORKDIR}/etc/default/keyboard"
 fi
 
 # CapsLock to Ctrl
