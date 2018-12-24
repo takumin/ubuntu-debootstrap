@@ -299,8 +299,8 @@ NVIDIA_CUDA_KEYRING_URL="https://developer.download.nvidia.com/compute/cuda/repo
 
 # Intel LAN Driver URL
 INTEL_E1000E_URL='https://downloadmirror.intel.com/15817/eng/e1000e-3.4.2.1.tar.gz'
-INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.20.tar.gz'
-INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.1.tar.gz'
+INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.22.tar.gz'
+INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.2.tar.gz'
 
 # Intel LAN Driver Version
 INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s@\.tar\.gz$@@;')"
