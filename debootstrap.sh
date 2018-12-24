@@ -485,14 +485,15 @@ chroot "${ROOTFS}" locale-gen ja_JP.UTF-8
 chroot "${ROOTFS}" update-locale LANG=ja_JP.UTF-8
 
 # Keyboard
+sed -i -e 's@^XKBMODEL=.*$@XKBMODEL="pc105"@' "${WORKDIR}/etc/default/keyboard"
+
 if [ "${KEYBOARD}" = 'JP' ]; then
   # Japanese Keyboard
-  sed -i -e 's@XKBMODEL="pc105"@XKBMODEL="jp106"@' "${ROOTFS}/etc/default/keyboard"
-  sed -i -e 's@XKBLAYOUT="us"@XKBLAYOUT="jp"@'     "${ROOTFS}/etc/default/keyboard"
+  sed -i -e 's@^XKBLAYOUT=.*$@XKBLAYOUT="jp"@'  "${WORKDIR}/etc/default/keyboard"
 fi
 
 # CapsLock to Ctrl
-sed -i -e 's@XKBOPTIONS=""@XKBOPTIONS="ctrl:nocaps"@' "${ROOTFS}/etc/default/keyboard"
+sed -i -e 's@XKBOPTIONS=.*@XKBOPTIONS="ctrl:nocaps"@' "${WORKDIR}/etc/default/keyboard"
 
 ################################################################################
 # Admin User
