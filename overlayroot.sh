@@ -7,11 +7,13 @@ set -eu
 # Load Environment
 ################################################################################
 
-if [ -n "$1" -a -r "$1" ]; then
+if [ -n "$1" ] && [ -r "$1" ]; then
+	# shellcheck source=/dev/null
 	. "$1"
 fi
 
-if [ -n "$2" -a -r "$2" ]; then
+if [ -n "$2" ] && [ -r "$2" ]; then
+	# shellcheck source=/dev/null
 	. "$2"
 fi
 
@@ -284,7 +286,7 @@ case "${RELEASE}-${KERNEL}" in
 	# Bionic Part
 	bionic-*-hwe )
 		# Require Packages
-		XORG_HWE_REQUIRE_PACKAGES=''
+		declare -a XORG_HWE_REQUIRE_PACKAGES=()
 		# HWE Xorg Package
 		XORG_HWE_PACKAGE=''
 	;;
@@ -456,7 +458,7 @@ sed -i -e 's@XKBOPTIONS=.*@XKBOPTIONS="ctrl:nocaps"@' "${WORKDIR}/etc/default/ke
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'minimal' -o "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
+if [ "${PROFILE}" = 'minimal' ] || [ "${PROFILE}" = 'server' ] || [ "${PROFILE}" = 'server-nvidia' ]; then
 	# Root Login
 	mkdir -p "${WORKDIR}/etc/systemd/system/getty@tty1.service.d"
 	cat > "${WORKDIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" <<- '__EOF__'
@@ -651,7 +653,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'server' -o "${PROFILE}" = 'server-nvidia' ]; then
+if [ "${PROFILE}" = 'server' ] || [ "${PROFILE}" = 'server-nvidia' ]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
 fi
@@ -661,7 +663,7 @@ fi
 ################################################################################
 
 # Check Release Version
-if [ "${RELEASE}" = 'xenial' -o "${RELEASE}" = 'bionic' ]; then
+if [ "${RELEASE}" = 'xenial' ] || [ "${RELEASE}" = 'bionic' ]; then
 	# NetPlan
 	chroot "${WORKDIR}" apt-get -y install nplan
 fi
@@ -674,7 +676,7 @@ fi
 chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
 
 # Check Release Version
-if [ "${RELEASE}" = 'trusty' -o "${RELEASE}" = 'xenial' ]; then
+if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 	# Workaround initramfs dns
 	cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns" <<- '__EOF__'
 	#!/bin/sh -e
@@ -738,12 +740,12 @@ chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'desktop' -o "${PROFILE}" = 'desktop-nvidia' ]; then
+if [ "${PROFILE}" = 'desktop' ] || [ "${PROFILE}" = 'desktop-nvidia' ]; then
 	# Check Kernel Version
 	case "${KERNEL}" in
 		*-hwe )
 			# Check Package List
-			if [ -n "${XORG_HWE_REQUIRE_PACKAGES[*]}" ]; then
+			if [ ${#XORG_HWE_REQUIRE_PACKAGES[*]} -gt 0 ]; then
 				# Install Require Packages
 				chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[@]}"
 			fi
@@ -790,7 +792,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'server-nvidia' -o "${PROFILE}" = 'desktop-nvidia' ]; then
+if [ "${PROFILE}" = 'server-nvidia' ] || [ "${PROFILE}" = 'desktop-nvidia' ]; then
 	# NVIDIA Apt Public Key
 	cp "${CACHEDIR}/nvidia-keyring.gpg" "${WORKDIR}/tmp/nvidia-keyring.gpg"
 	chroot "${WORKDIR}" apt-key add /tmp/nvidia-keyring.gpg
@@ -895,7 +897,7 @@ intel_lan_driver_ixgbe_dkms ()
 }
 
 # Check Profile&Kernel
-if [ "${PROFILE}" != 'minimal' -a "${KERNEL}" = 'generic' -o "${KERNEL}" = 'generic-hwe' ]; then
+if [ "${PROFILE}" != 'minimal' ] && [ "${KERNEL}" = 'generic' ] || [ "${KERNEL}" = 'generic-hwe' ]; then
 	# Kernel Header
 	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
 
@@ -983,6 +985,6 @@ find "${WORKDIR}/boot" -type f -name "initrd.img-*-generic" -exec cp {} "${DESTD
 find "${DESTDIR}" -type f -print0 | xargs -0 chmod 0644
 
 # Owner/Group Files
-if [ -n "${SUDO_UID}" -a -n "${SUDO_GID}" ]; then
+if [ -n "${SUDO_UID}" ] && [ -n "${SUDO_GID}" ]; then
 	chown -R "${SUDO_UID}:${SUDO_GID}" "${DESTDIR}"
 fi
