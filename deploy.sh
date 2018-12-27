@@ -347,7 +347,7 @@ chroot "${ROOTFS}" update-grub
 # Addon
 ################################################################################
 
-if [ "$(type deploy_addon)" = 'deploy_addon is a shell function' ]; then
+if [ "$(type -t deploy_addon)" = 'function' ]; then
   deploy_addon
 fi
 
