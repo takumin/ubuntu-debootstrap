@@ -89,10 +89,6 @@ fi
 # shellcheck disable=SC2086
 : ${NO_PROXY:=''}
 
-# Proxy - Apt Proxy
-# shellcheck disable=SC2086
-: ${APT_PROXY:=''}
-
 # Proxy - FTP Proxy
 # shellcheck disable=SC2086
 : ${FTP_PROXY:=''}
@@ -104,6 +100,14 @@ fi
 # Proxy - HTTPS Proxy
 # shellcheck disable=SC2086
 : ${HTTPS_PROXY:=''}
+
+# Proxy - Apt Proxy Host
+# shellcheck disable=SC2086
+: ${APT_PROXY_HOST:=''}
+
+# Proxy - Apt Proxy Port
+# shellcheck disable=SC2086
+: ${APT_PROXY_PORT:=''}
 
 ################################################################################
 # Check Environment
@@ -211,9 +215,12 @@ if ldconfig -p | grep -qs 'libeatmydata.so'; then
 fi
 
 # Check APT Proxy
-if [ "x${APT_PROXY}" != "x" ]; then
-	# Proxy Environment
-	DEBOOTSTRAP_ENVIRONMENT=("${DEBOOTSTRAP_ENVIRONMENT[*]}" "http_proxy=${APT_PROXY}" "https_proxy=${APT_PROXY}")
+if [ "x${APT_PROXY_HOST}" != "x" ] && [ "x${APT_PROXY_PORT}" != "x" ]; then
+	# HTTP Proxy Environment
+	DEBOOTSTRAP_ENVIRONMENT=("${DEBOOTSTRAP_ENVIRONMENT[*]}" "http_proxy=http://${APT_PROXY_HOST}:${APT_PROXY_PORT}")
+
+	# HTTPS Proxy Environment
+	DEBOOTSTRAP_ENVIRONMENT=("${DEBOOTSTRAP_ENVIRONMENT[*]}" "https_proxy=http://${APT_PROXY_HOST}:${APT_PROXY_PORT}")
 fi
 
 # Check Debootstrap Environment
