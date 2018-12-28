@@ -224,10 +224,6 @@ case "${RELEASE}-${KERNEL}" in
 	"trusty-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
 	"xenial-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
 	"bionic-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
-	* )
-		echo "Unknown Release Codename & Kernel Type..."
-		exit 1
-	;;
 esac
 
 # Select Kernel Header Package
@@ -244,10 +240,6 @@ case "${RELEASE}-${KERNEL}" in
 	"trusty-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-lts-xenial" ;;
 	"xenial-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-hwe-16.04" ;;
 	"bionic-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
-	* )
-		echo "Unknown Release Codename & Kernel Type..."
-		exit 1
-	;;
 esac
 
 # HWE Xorg Package
@@ -311,6 +303,12 @@ INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.
 
 # Glib Schemas Directory
 GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
+
+# NVIDIA CUDA Install Option
+case "${PROFILE}" in
+	"server-nvidia"  ) NVIDIA_CUDA_INSTALL_OPTION='--no-install-recommends' ;;
+	"desktop-nvidia" ) NVIDIA_CUDA_INSTALL_OPTION='' ;;
+esac
 
 ################################################################################
 # Cleanup
@@ -808,7 +806,7 @@ if [ "${PROFILE}" = 'server-nvidia' ] || [ "${PROFILE}" = 'desktop-nvidia' ]; th
 	chroot "${WORKDIR}" apt-get -y dist-upgrade
 
 	# Install Driver
-	chroot "${WORKDIR}" apt-get -y install cuda-drivers
+	chroot "${WORKDIR}" apt-get -y "${NVIDIA_CUDA_INSTALL_OPTION}" install cuda-drivers
 fi
 
 ################################################################################
