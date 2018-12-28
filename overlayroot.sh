@@ -201,13 +201,25 @@ DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 # Debootstrap Include Packages
 DEBOOTSTRAP_INCLUDES="--include=tzdata,locales,console-setup,gnupg,eatmydata"
 
+# Debootstrap Environment
+declare -a DEBOOTSTRAP_ENVIRONMENT=()
+
+# Check libeatmydata
+if ldconfig -p | grep -qs 'libeatmydata.so'; then
+	# Disable System Call fsync()
+	DEBOOTSTRAP_ENVIRONMENT=("LD_PRELOAD=libeatmydata.so")
+fi
+
 # Check APT Proxy
 if [ "x${APT_PROXY}" != "x" ]; then
-	# Debootstrap Proxy Command
-	declare -a DEBOOTSTRAP_PROXY=( "env" "http_proxy=${APT_PROXY}" "https_proxy=${APT_PROXY}" "${DEBOOTSTRAP_COMMAND}" )
+	# Proxy Environment
+	DEBOOTSTRAP_ENVIRONMENT=("${DEBOOTSTRAP_ENVIRONMENT[*]}" "http_proxy=${APT_PROXY}" "https_proxy=${APT_PROXY}")
+fi
 
+# Check Debootstrap Environment
+if [ ${#DEBOOTSTRAP_ENVIRONMENT[*]} -gt 0 ]; then
 	# Debootstrap Override Command
-	DEBOOTSTRAP_COMMAND="${DEBOOTSTRAP_PROXY[*]}"
+	DEBOOTSTRAP_COMMAND="env ${DEBOOTSTRAP_ENVIRONMENT[*]} ${DEBOOTSTRAP_COMMAND}"
 fi
 
 # Select Kernel Image Package
