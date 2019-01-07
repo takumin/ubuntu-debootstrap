@@ -262,11 +262,28 @@ case "${RELEASE}-${KERNEL}" in
 esac
 
 # HWE Xorg Package
-case "${RELEASE}-${KERNEL}" in
-	# Trusty Part
-	trusty-*-hwe )
-		# Require Packages
-		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+case "${RELEASE}-${KERNEL}-${PROFILE}" in
+	# Trusty Server Part
+	trusty-*-hwe-server-nvidia )
+		# Recommend Packages
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
+			'xserver-xorg-core-lts-xenial'
+			'libegl1-mesa-lts-xenial'
+			'libgbm1-lts-xenial'
+			'libgl1-mesa-dri-lts-xenial'
+			'libgl1-mesa-glx-lts-xenial'
+			'libgles1-mesa-lts-xenial'
+			'libgles2-mesa-lts-xenial'
+			'libwayland-egl1-mesa-lts-xenial'
+		)
+		# HWE Xorg Package
+		declare -a XORG_HWE_SERVER_PACKAGES=()
+	;;
+
+	# Trusty Desktop Part
+	trusty-*-hwe-desktop-nvidia )
+		# Recommend Packages
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
 			'xserver-xorg-core-lts-xenial'
 			'xserver-xorg-input-all-lts-xenial'
 			'xserver-xorg-video-all-lts-xenial'
@@ -279,27 +296,43 @@ case "${RELEASE}-${KERNEL}" in
 			'libwayland-egl1-mesa-lts-xenial'
 		)
 		# HWE Xorg Package
-		XORG_HWE_PACKAGE='xserver-xorg-lts-xenial'
+		declare -a XORG_HWE_SERVER_PACKAGES=(
+			'xserver-xorg-lts-xenial'
+		)
 	;;
-	# Xenial Part
-	xenial-*-hwe )
-		# Require Packages
-		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+
+	# Xenial Server Part
+	xenial-*-hwe-server-nvidia )
+		# Recommend Packages
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
+			'xserver-xorg-core-hwe-16.04'
+			'xserver-xorg-legacy-hwe-16.04'
+		)
+		# HWE Xorg Package
+		declare -a XORG_HWE_SERVER_PACKAGES=()
+	;;
+
+	# Xenial Desktop Part
+	xenial-*-hwe-desktop-nvidia )
+		# Recommend Packages
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
 			'xserver-xorg-core-hwe-16.04'
 			'xserver-xorg-input-all-hwe-16.04'
 			'xserver-xorg-video-all-hwe-16.04'
 			'xserver-xorg-legacy-hwe-16.04'
-			'libgl1-mesa-dri'
 		)
 		# HWE Xorg Package
-		XORG_HWE_PACKAGE='xserver-xorg-hwe-16.04'
+		declare -a XORG_HWE_SERVER_PACKAGES=(
+			'xserver-xorg-hwe-16.04'
+		)
 	;;
-	# Bionic Part
-	bionic-*-hwe )
-		# Require Packages
-		declare -a XORG_HWE_REQUIRE_PACKAGES=()
+
+	# Default
+	* )
+		# Recommend Packages
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=()
 		# HWE Xorg Package
-		XORG_HWE_PACKAGE=''
+		declare -a XORG_HWE_SERVER_PACKAGES=()
 	;;
 esac
 
@@ -753,28 +786,27 @@ __EOF__
 chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 
 ################################################################################
+# Xorg
+################################################################################
+
+# Check Recommend Package List
+if [ ${#XORG_HWE_RECOMMEND_PACKAGES[*]} -gt 0 ]; then
+	# HWE Version Recommend Packages
+	chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_RECOMMEND_PACKAGES[@]}"
+fi
+
+# Check Xorg Server Package List
+if [ ${#XORG_HWE_SERVER_PACKAGES[*]} -gt 0 ]; then
+	# HWE Version Xorg Server
+	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${XORG_HWE_SERVER_PACKAGES[@]}"
+fi
+
+################################################################################
 # Desktop
 ################################################################################
 
 # Check Environment Variable
 if [ "${PROFILE}" = 'desktop' ] || [ "${PROFILE}" = 'desktop-nvidia' ]; then
-	# Check Kernel Version
-	case "${KERNEL}" in
-		*-hwe )
-			# Check Package List
-			if [ ${#XORG_HWE_REQUIRE_PACKAGES[*]} -gt 0 ]; then
-				# Install Require Packages
-				chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[@]}"
-			fi
-
-			# Check Package List
-			if [ -n "${XORG_HWE_PACKAGE}" ]; then
-				# HWE Version Xorg Server
-				chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${XORG_HWE_PACKAGE}"
-			fi
-		;;
-	esac
-
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
