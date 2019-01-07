@@ -265,8 +265,7 @@ esac
 case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	# Trusty Server Part
 	trusty-*-hwe-server-nvidia )
-		# Recommend Packages
-		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
+		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-lts-xenial'
 			'libegl1-mesa-lts-xenial'
 			'libgbm1-lts-xenial'
@@ -276,63 +275,33 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 			'libgles2-mesa-lts-xenial'
 			'libwayland-egl1-mesa-lts-xenial'
 		)
-		# HWE Xorg Package
-		declare -a XORG_HWE_SERVER_PACKAGES=()
 	;;
 
 	# Trusty Desktop Part
-	trusty-*-hwe-desktop-nvidia )
-		# Recommend Packages
-		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
-			'xserver-xorg-core-lts-xenial'
-			'xserver-xorg-input-all-lts-xenial'
-			'xserver-xorg-video-all-lts-xenial'
-			'libegl1-mesa-lts-xenial'
-			'libgbm1-lts-xenial'
-			'libgl1-mesa-dri-lts-xenial'
-			'libgl1-mesa-glx-lts-xenial'
-			'libgles1-mesa-lts-xenial'
-			'libgles2-mesa-lts-xenial'
-			'libwayland-egl1-mesa-lts-xenial'
-		)
-		# HWE Xorg Package
-		declare -a XORG_HWE_SERVER_PACKAGES=(
+	trusty-*-hwe-desktop* )
+		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-lts-xenial'
 		)
 	;;
 
 	# Xenial Server Part
 	xenial-*-hwe-server-nvidia )
-		# Recommend Packages
-		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
+		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-hwe-16.04'
 			'xserver-xorg-legacy-hwe-16.04'
 		)
-		# HWE Xorg Package
-		declare -a XORG_HWE_SERVER_PACKAGES=()
 	;;
 
 	# Xenial Desktop Part
-	xenial-*-hwe-desktop-nvidia )
-		# Recommend Packages
-		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
-			'xserver-xorg-core-hwe-16.04'
-			'xserver-xorg-input-all-hwe-16.04'
-			'xserver-xorg-video-all-hwe-16.04'
-			'xserver-xorg-legacy-hwe-16.04'
-		)
-		# HWE Xorg Package
-		declare -a XORG_HWE_SERVER_PACKAGES=(
+	xenial-*-hwe-desktop* )
+		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-hwe-16.04'
 		)
 	;;
 
 	# Default
 	* )
-		# Recommend Packages
-		declare -a XORG_HWE_RECOMMEND_PACKAGES=()
-		# HWE Xorg Package
-		declare -a XORG_HWE_SERVER_PACKAGES=()
+		declare -a XORG_HWE_PACKAGES=()
 	;;
 esac
 
@@ -789,16 +758,10 @@ chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 # Xorg
 ################################################################################
 
-# Check Recommend Package List
-if [ ${#XORG_HWE_RECOMMEND_PACKAGES[*]} -gt 0 ]; then
-	# HWE Version Recommend Packages
-	chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_RECOMMEND_PACKAGES[@]}"
-fi
-
-# Check Xorg Server Package List
-if [ ${#XORG_HWE_SERVER_PACKAGES[*]} -gt 0 ]; then
-	# HWE Version Xorg Server
-	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${XORG_HWE_SERVER_PACKAGES[@]}"
+# Check Xorg Package List
+if [ ${#XORG_HWE_PACKAGES[*]} -gt 0 ]; then
+	# Install HWE Version Xorg
+	chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_PACKAGES[@]}"
 fi
 
 ################################################################################
