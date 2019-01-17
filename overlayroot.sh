@@ -143,7 +143,9 @@ case "${PROFILE}" in
 	'server' ) ;;
 	'server-nvidia' ) ;;
 	'desktop' ) ;;
+	'desktop-ubiquity' ) ;;
 	'desktop-nvidia' ) ;;
+	'desktop-nvidia-ubiquity' ) ;;
 	* )
 		echo "PROFILE: minimal or standard or server or server-nvidia or desktop or desktop-nvidia"
 		exit 1
