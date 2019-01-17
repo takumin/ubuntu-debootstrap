@@ -808,7 +808,7 @@ fi
 # Check Environment Variable
 if [[ "${PROFILE}" =~ ^.*ubiquity$ ]]; then
 	# Install Package
-	chroot "${WORKDIR}" apt-get -y install ubiquity ubiquity-frontend-gtk
+	chroot "${WORKDIR}" apt-get -y install ubiquity-frontend-gtk
 fi
 
 ################################################################################
