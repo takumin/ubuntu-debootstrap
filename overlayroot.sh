@@ -771,7 +771,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [[ "${PROFILE}" =~ ^desktop.* ]]; then
+if [[ "${PROFILE}" =~ ^desktop.*$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
@@ -997,7 +997,7 @@ awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}/" | sort -r | xargs --no-run
 mksquashfs "${WORKDIR}" "${DESTDIR}/rootfs.squashfs" -comp xz
 
 # Create TarBall Image
-tar -I pixz -p --acls --xattrs --one-file-system -cf "${DESTDIR}/rootfs.tar.xz" -C "${WORKDIR}" .
+tar -p --acls --xattrs --one-file-system -cf - -C "${WORKDIR}" . | pv -s "$(du -sb ${WORKDIR} | awk '{print $1}')" | pixz > "${DESTDIR}/rootfs.tar.xz"
 
 # Copy Kernel
 find "${WORKDIR}/boot" -type f -name "vmlinuz-*-generic" -exec cp {} "${DESTDIR}/kernel.img" \;
