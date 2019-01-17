@@ -40,7 +40,7 @@ fi
 : ${KERNEL:='generic'}
 
 # Package Selection
-# Value: [minimal|standard|server|server-nvidia|desktop|desktop-nvidia]
+# Value: [minimal|standard|server|server-nvidia|desktop|desktop-ubiquity|desktop-nvidia|desktop-nvidia-ubiquity]
 # shellcheck disable=SC2086
 : ${PROFILE:='server'}
 
@@ -672,7 +672,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'server' ] || [ "${PROFILE}" = 'server-nvidia' ]; then
+if [[ "${PROFILE}" =~ ^server.* ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
 fi
@@ -769,7 +769,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'desktop' ] || [ "${PROFILE}" = 'desktop-nvidia' ]; then
+if [[ "${PROFILE}" =~ ^desktop.* ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
@@ -804,7 +804,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'server-nvidia' ] || [ "${PROFILE}" = 'desktop-nvidia' ]; then
+if [[ "${PROFILE}" =~ .*nvidia.* ]]; then
 	# NVIDIA Apt Public Key
 	cp "${CACHEDIR}/nvidia-keyring.gpg" "${WORKDIR}/tmp/nvidia-keyring.gpg"
 	chroot "${WORKDIR}" apt-key add /tmp/nvidia-keyring.gpg
