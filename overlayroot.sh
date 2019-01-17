@@ -804,7 +804,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [[ "${PROFILE}" =~ .*ubiquity.* ]]; then
+if [[ "${PROFILE}" =~ ^.*ubiquity$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubiquity
 fi
@@ -814,7 +814,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [[ "${PROFILE}" =~ .*nvidia.* ]]; then
+if [[ "${PROFILE}" =~ ^.*nvidia.*$ ]]; then
 	# NVIDIA Apt Public Key
 	cp "${CACHEDIR}/nvidia-keyring.gpg" "${WORKDIR}/tmp/nvidia-keyring.gpg"
 	chroot "${WORKDIR}" apt-key add /tmp/nvidia-keyring.gpg
