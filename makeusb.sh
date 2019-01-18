@@ -1,9 +1,47 @@
 #!/bin/sh
+# vim: set noet :
 
-set -e
+set -eu
 
-: ${USB_PATH:=""}
-: ${ESP_DIR:="/mnt/esp"}
+################################################################################
+# Load Environment
+################################################################################
+
+if [ -n "$1" ] && [ -r "$1" ]; then
+	# shellcheck source=/dev/null
+	. "$1"
+fi
+
+################################################################################
+# Default Variables
+################################################################################
+
+# USB Device ID
+# shellcheck disable=SC2086
+: ${USB_NAME:=""}
+
+# Root File System Mount Point
+# shellcheck disable=SC2086
+: ${WORKDIR:='/run/liveusb'}
+
+# Destination Directory
+# shellcheck disable=SC2086
+: ${DESTDIR:="$(cd "$(dirname "$0")"; pwd)/release"}
+
+# Release Codename
+# Value: [trusty|xenial|bionic]
+# shellcheck disable=SC2086
+: ${RELEASE:='bionic'}
+
+# Kernel Package
+# Value: [generic|generic-hwe|signed-generic|signed-generic-hwe]
+# shellcheck disable=SC2086
+: ${KERNEL:='generic'}
+
+# Package Selection
+# Value: [minimal|standard|server|server-nvidia|desktop|desktop-ubiquity|desktop-nvidia|desktop-nvidia-ubiquity]
+# shellcheck disable=SC2086
+: ${PROFILE:='server'}
 
 ################################################################################
 # Require
@@ -26,10 +64,13 @@ if [ "x${USB_NAME}" = "x" ]; then
 fi
 
 # Check Variable
-if [ "x${ESP_DIR}" = "x" ]; then
+if [ "x${WORKDIR}" = "x" ]; then
   # Error...
   exit 1
 fi
+
+# Destination Directory
+DESTDIR="${DESTDIR}/${RELEASE}/${KERNEL}/${PROFILE}"
 
 # Get Real Disk Path
 USB_PATH="`realpath /dev/disk/by-id/${USB_NAME}`"
@@ -38,11 +79,11 @@ USB_PATH="`realpath /dev/disk/by-id/${USB_NAME}`"
 awk '{print $1}' /proc/mounts | grep -s "${USB_PATH}" | sort -r | xargs --no-run-if-empty umount
 
 # Unmount Working Directory
-awk '{print $2}' /proc/mounts | grep -s "${ESP_DIR}" | sort -r | xargs --no-run-if-empty umount
+awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}" | sort -r | xargs --no-run-if-empty umount
 
 # Create Working Directory
-if [ ! -d "${ESP_DIR}" ]; then
-  mkdir -p ${ESP_DIR}
+if [ ! -d "${WORKDIR}" ]; then
+  mkdir -p ${WORKDIR}
 fi
 
 ################################################################################
@@ -52,9 +93,9 @@ fi
 # MBR Partition Table
 parted -s ${USB_PATH} 'mklabel msdos'
 # EFI System Partition
-parted -s ${USB_PATH} 'mkpart primary 1MiB 1GiB'
+parted -s ${USB_PATH} 'mkpart primary 1MiB 2GiB'
 # USB Data Partition
-parted -s ${USB_PATH} 'mkpart primary 1GiB -0'
+parted -s ${USB_PATH} 'mkpart primary 2GiB -0'
 # Set Hidden Flag
 parted -s ${USB_PATH} 'set 1 hidden on'
 # Set Boot Flag
@@ -77,29 +118,29 @@ mkfs.vfat -F 32 -n 'USB' -v ${USB_PATH}2
 ################################################################################
 
 # Mount Partition
-mount -t vfat -o codepage=932,iocharset=utf8 ${USB_PATH}1 ${ESP_DIR}
+mount -t vfat -o codepage=932,iocharset=utf8 ${USB_PATH}1 ${WORKDIR}
 
 ################################################################################
 # Directory
 ################################################################################
 
 # Require Directory
-mkdir -p ${ESP_DIR}/boot
-mkdir -p ${ESP_DIR}/casper
-mkdir -p ${ESP_DIR}/efi/boot
+mkdir -p ${WORKDIR}/boot
+mkdir -p ${WORKDIR}/casper
+mkdir -p ${WORKDIR}/efi/boot
 
 ################################################################################
 # Files
 ################################################################################
 
 # Kernel
-cp ./vmlinuz ${ESP_DIR}/casper/vmlinuz
+cp "${DESTDIR}/kernel.img" ${WORKDIR}/casper/vmlinuz
 
 # Initramfs
-cp ./initrd.img ${ESP_DIR}/casper/initrd.img
+cp "${DESTDIR}/initrd.img" ${WORKDIR}/casper/initrd.img
 
 # Rootfs
-cp ./root.squashfs ${ESP_DIR}/casper/filesystem.squashfs
+cp "${DESTDIR}/rootfs.squashfs" ${WORKDIR}/casper/filesystem.squashfs
 
 ################################################################################
 # Grub
@@ -109,11 +150,11 @@ cp ./root.squashfs ${ESP_DIR}/casper/filesystem.squashfs
 UUID="`blkid -s UUID -o value ${USB_PATH}1`"
 
 # Grub Install
-grub-install --target=i386-pc --recheck --boot-directory=${ESP_DIR}/boot ${USB_PATH}
-grub-install --target=x86_64-efi --recheck --boot-directory=${ESP_DIR}/boot --efi-directory=${ESP_DIR} --removable
+grub-install --target=i386-pc --recheck --boot-directory=${WORKDIR}/boot ${USB_PATH}
+grub-install --target=x86_64-efi --recheck --boot-directory=${WORKDIR}/boot --efi-directory=${WORKDIR} --removable
 
 # Grub Config
-cat << __EOF__ > ${ESP_DIR}/boot/grub/grub.cfg
+cat << __EOF__ > ${WORKDIR}/boot/grub/grub.cfg
 set default=0
 set timeout=0
 
@@ -123,7 +164,7 @@ if [ \${grub_platform} == "efi" ]; then
 fi
 
 insmod font
-if loadfont \${prefix}/unicode.pf2 ; then
+if loadfont \${prefix}/fonts/unicode.pf2 ; then
 	insmod gfxterm
 	set gfxmode=auto
 	set gfxpayload=keep
@@ -146,10 +187,10 @@ __EOF__
 ################################################################################
 
 # Unmount Working Directory
-awk '{print $2}' /proc/mounts | grep -s "${ESP_DIR}" | sort -r | xargs --no-run-if-empty umount
+awk '{print $2}' /proc/mounts | grep -s "${WORKDIR}" | sort -r | xargs --no-run-if-empty umount
 
 # Cleanup Working Directory
-rmdir ${ESP_DIR}
+rmdir ${WORKDIR}
 
 # Disk Sync
 sync;sync;sync
