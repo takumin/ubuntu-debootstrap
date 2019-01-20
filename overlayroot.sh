@@ -808,7 +808,7 @@ fi
 # Check Environment Variable
 if [[ "${PROFILE}" =~ ^.*ubiquity$ ]]; then
 	# Install Package
-	chroot "${WORKDIR}" apt-get -y --no-install-recommends install ubiquity-frontend-gtk
+	chroot "${WORKDIR}" apt-get -y --no-install-recommends install casper ubiquity-frontend-gtk
 fi
 
 ################################################################################
