@@ -30,4 +30,4 @@ build:
 
 .PHONY: clean
 clean:
-	@rm -fr release/*
+	@sudo rm -fr release/*
