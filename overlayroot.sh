@@ -40,9 +40,13 @@ fi
 : ${KERNEL:='generic'}
 
 # Package Selection
-# Value: [minimal|standard|server|server-nvidia|desktop|desktop-ubiquity|desktop-nvidia|desktop-nvidia-ubiquity]
+# Value: [minimal|standard|server|server-nvidia|desktop|desktop-ubiquity|desktop-nvidia|desktop-nvidia-ubiquity|cloud-server|cloud-desktop]
 # shellcheck disable=SC2086
 : ${PROFILE:='server'}
+
+# Cloud-Init Datasources
+# shellcheck disable=SC2086
+: ${DATASOURCES:='NoCloud'}
 
 # Keyboard Type
 # Value: [JP|US]
@@ -146,6 +150,8 @@ case "${PROFILE}" in
 	'desktop-ubiquity' ) ;;
 	'desktop-nvidia' ) ;;
 	'desktop-nvidia-ubiquity' ) ;;
+	'cloud-server' ) ;;
+	'cloud-desktop' ) ;;
 	* )
 		echo "PROFILE: minimal or standard or server or server-nvidia or desktop or desktop-nvidia"
 		exit 1
@@ -539,68 +545,71 @@ fi
 # Admin User
 ################################################################################
 
-# Add Group
-chroot "${WORKDIR}" addgroup --system admin
-chroot "${WORKDIR}" addgroup --system lpadmin
-chroot "${WORKDIR}" addgroup --system sambashare
-chroot "${WORKDIR}" addgroup --system netdev
+# Check Environment Variable
+if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+	# Add Group
+	chroot "${WORKDIR}" addgroup --system admin
+	chroot "${WORKDIR}" addgroup --system lpadmin
+	chroot "${WORKDIR}" addgroup --system sambashare
+	chroot "${WORKDIR}" addgroup --system netdev
 
-# Add User
-chroot "${WORKDIR}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
-chroot "${WORKDIR}" adduser "${USER_NAME}" adm
-chroot "${WORKDIR}" adduser "${USER_NAME}" admin
-chroot "${WORKDIR}" adduser "${USER_NAME}" audio
-chroot "${WORKDIR}" adduser "${USER_NAME}" cdrom
-chroot "${WORKDIR}" adduser "${USER_NAME}" dialout
-chroot "${WORKDIR}" adduser "${USER_NAME}" dip
-chroot "${WORKDIR}" adduser "${USER_NAME}" lpadmin
-chroot "${WORKDIR}" adduser "${USER_NAME}" plugdev
-chroot "${WORKDIR}" adduser "${USER_NAME}" sambashare
-chroot "${WORKDIR}" adduser "${USER_NAME}" staff
-chroot "${WORKDIR}" adduser "${USER_NAME}" sudo
-chroot "${WORKDIR}" adduser "${USER_NAME}" users
-chroot "${WORKDIR}" adduser "${USER_NAME}" video
-chroot "${WORKDIR}" adduser "${USER_NAME}" netdev
+	# Add User
+	chroot "${WORKDIR}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
+	chroot "${WORKDIR}" adduser "${USER_NAME}" adm
+	chroot "${WORKDIR}" adduser "${USER_NAME}" admin
+	chroot "${WORKDIR}" adduser "${USER_NAME}" audio
+	chroot "${WORKDIR}" adduser "${USER_NAME}" cdrom
+	chroot "${WORKDIR}" adduser "${USER_NAME}" dialout
+	chroot "${WORKDIR}" adduser "${USER_NAME}" dip
+	chroot "${WORKDIR}" adduser "${USER_NAME}" lpadmin
+	chroot "${WORKDIR}" adduser "${USER_NAME}" plugdev
+	chroot "${WORKDIR}" adduser "${USER_NAME}" sambashare
+	chroot "${WORKDIR}" adduser "${USER_NAME}" staff
+	chroot "${WORKDIR}" adduser "${USER_NAME}" sudo
+	chroot "${WORKDIR}" adduser "${USER_NAME}" users
+	chroot "${WORKDIR}" adduser "${USER_NAME}" video
+	chroot "${WORKDIR}" adduser "${USER_NAME}" netdev
 
-# Change Password
-chroot "${WORKDIR}" sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
+	# Change Password
+	chroot "${WORKDIR}" sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
 
-# SSH Public Key
-if [ "x${USER_KEYS}" != "x" ]; then
-	mkdir -p "${WORKDIR}/home/${USER_NAME}/.ssh"
-	chmod 0700 "${WORKDIR}/home/${USER_NAME}/.ssh"
-	echo "${USER_KEYS}" > "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
-	chmod 0644 "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
-fi
+	# SSH Public Key
+	if [ "x${USER_KEYS}" != "x" ]; then
+		mkdir -p "${WORKDIR}/home/${USER_NAME}/.ssh"
+		chmod 0700 "${WORKDIR}/home/${USER_NAME}/.ssh"
+		echo "${USER_KEYS}" > "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
+		chmod 0644 "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
+	fi
 
-# Proxy Configuration
-if [ "x${NO_PROXY}" != "x" ]; then
-	{
-		echo "export no_proxy=\"${NO_PROXY}\""
-		echo "export NO_PROXY=\"${NO_PROXY}\""
-	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
-fi
-if [ "x${FTP_PROXY}" != "x" ]; then
-	{
-		echo "export ftp_proxy=\"${FTP_PROXY}\""
-		echo "export FTP_PROXY=\"${FTP_PROXY}\""
-	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
-fi
-if [ "x${HTTP_PROXY}" != "x" ]; then
-	{
-		echo "export http_proxy=\"${HTTP_PROXY}\""
-		echo "export HTTP_PROXY=\"${HTTP_PROXY}\""
-	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
-fi
-if [ "x${HTTPS_PROXY}" != "x" ]; then
-	{
-		echo "export https_proxy=\"${HTTPS_PROXY}\""
-		echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\""
-	} >> "${WORKDIR}/home/${USER_NAME}/.profile"
-fi
+	# Proxy Configuration
+	if [ "x${NO_PROXY}" != "x" ]; then
+		{
+			echo "export no_proxy=\"${NO_PROXY}\""
+			echo "export NO_PROXY=\"${NO_PROXY}\""
+		} >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	fi
+	if [ "x${FTP_PROXY}" != "x" ]; then
+		{
+			echo "export ftp_proxy=\"${FTP_PROXY}\""
+			echo "export FTP_PROXY=\"${FTP_PROXY}\""
+		} >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	fi
+	if [ "x${HTTP_PROXY}" != "x" ]; then
+		{
+			echo "export http_proxy=\"${HTTP_PROXY}\""
+			echo "export HTTP_PROXY=\"${HTTP_PROXY}\""
+		} >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	fi
+	if [ "x${HTTPS_PROXY}" != "x" ]; then
+		{
+			echo "export https_proxy=\"${HTTPS_PROXY}\""
+			echo "export HTTPS_PROXY=\"${HTTPS_PROXY}\""
+		} >> "${WORKDIR}/home/${USER_NAME}/.profile"
+	fi
 
-# User Dir Permission
-chroot "${WORKDIR}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
+	# User Dir Permission
+	chroot "${WORKDIR}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
+fi
 
 ################################################################################
 # Repository
@@ -674,7 +683,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [[ "${PROFILE}" =~ ^server.* ]]; then
+if [[ "${PROFILE}" =~ ^.*server.*$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
 fi
@@ -694,7 +703,7 @@ fi
 ################################################################################
 
 # Require Package
-chroot "${WORKDIR}" apt-get -y install cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+chroot "${WORKDIR}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
 
 # Check Release Version
 if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
@@ -717,6 +726,19 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 
 	# Execute Permission
 	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
+fi
+
+################################################################################
+# Cloud
+################################################################################
+
+# Check Environment Variable
+if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+	# Select Datasources
+	chroot "${WORKDIR}" sh -c "echo 'cloud-init cloud-init/datasources multiselect ${DATASOURCES}' | debconf-set-selections"
+
+	# Require Package
+	chroot "${WORKDIR}" apt-get -y install cloud-init
 fi
 
 ################################################################################
@@ -771,7 +793,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [[ "${PROFILE}" =~ ^desktop.*$ ]]; then
+if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
@@ -806,7 +828,7 @@ fi
 ################################################################################
 
 # Check Environment Variable
-if [[ "${PROFILE}" =~ ^.*ubiquity$ ]]; then
+if [[ "${PROFILE}" =~ ^.*ubiquity.*$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y --no-install-recommends install casper ubiquity-frontend-gtk
 fi
