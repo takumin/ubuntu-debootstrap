@@ -799,9 +799,12 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
-	# User Directory
-	chroot "${WORKDIR}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
-	rm "${WORKDIR}/home/${USER_NAME}/.config/user-dirs.locale"
+	# Check Environment Variable
+	if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+		# User Directory
+		chroot "${WORKDIR}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
+		rm "${WORKDIR}/home/${USER_NAME}/.config/user-dirs.locale"
+	fi
 
 	# Check Release Version
 	if [ "${RELEASE}" = 'bionic' ]; then
@@ -821,8 +824,11 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 		chroot "${WORKDIR}" glib-compile-schemas "${GLIB_SCHEMAS_DIR}"
 	fi
 
-	# Input Method
-	chroot "${WORKDIR}" su -c "im-config -n fcitx" "${USER_NAME}"
+	# Check Environment Variable
+	if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+		# Input Method
+		chroot "${WORKDIR}" su -c "im-config -n fcitx" "${USER_NAME}"
+	fi
 fi
 
 ################################################################################
