@@ -373,15 +373,6 @@ INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s
 INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^igb-@@; s@\.tar\.gz$@@;')"
 INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
 
-# Glib Schemas Directory
-GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
-
-# NVIDIA CUDA Install Option
-case "${PROFILE}" in
-	*server*  ) NVIDIA_CUDA_INSTALL_OPTION='--no-install-recommends' ;;
-	*         ) NVIDIA_CUDA_INSTALL_OPTION='' ;;
-esac
-
 ################################################################################
 # Cleanup
 ################################################################################
@@ -856,13 +847,13 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 		chroot "${WORKDIR}" apt-get -y install fcitx fcitx-mozc
 
 		# Default Input Method for Fcitx
-		cat > "${WORKDIR}/${GLIB_SCHEMAS_DIR}/99_japanese-input-method.gschema.override" <<- __EOF__
+		cat > "${WORKDIR}/usr/share/glib-2.0/schemas/99_japanese-input-method.gschema.override" <<- __EOF__
 		[org.gnome.settings-daemon.plugins.keyboard]
 		active=false
 		__EOF__
 
 		# Compile Glib Schemas
-		chroot "${WORKDIR}" glib-compile-schemas "${GLIB_SCHEMAS_DIR}"
+		chroot "${WORKDIR}" glib-compile-schemas "/usr/share/glib-2.0/schemas"
 	fi
 
 	# Check Environment Variable
@@ -903,7 +894,11 @@ if [[ "${PROFILE}" =~ ^.*nvidia.*$ ]]; then
 	chroot "${WORKDIR}" apt-get -y dist-upgrade
 
 	# Install Driver
-	chroot "${WORKDIR}" apt-get -y "${NVIDIA_CUDA_INSTALL_OPTION}" install cuda-drivers
+	if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
+		chroot "${WORKDIR}" apt-get -y install cuda-drivers
+	else
+		chroot "${WORKDIR}" apt-get -y --no-install-recommends install cuda-drivers
+	fi
 fi
 
 ################################################################################
