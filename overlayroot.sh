@@ -22,94 +22,135 @@ fi
 ################################################################################
 
 # Root File System Mount Point
+# Values: String
 # shellcheck disable=SC2086
 : ${WORKDIR:='/run/rootfs'}
 
 # Destination Directory
+# Values: String
 # shellcheck disable=SC2086
 : ${DESTDIR:="$(cd "$(dirname "$0")"; pwd)/release"}
 
 # Release Codename
-# Value: [trusty|xenial|bionic]
+# Value:
+#   - trusty
+#   - xenial
+#   - bionic
 # shellcheck disable=SC2086
 : ${RELEASE:='bionic'}
 
 # Kernel Package
-# Value: [generic|generic-hwe|signed-generic|signed-generic-hwe]
+# Values:
+#   - generic
+#   - generic-hwe
+#   - signed-generic
+#   - signed-generic-hwe
 # shellcheck disable=SC2086
 : ${KERNEL:='generic'}
 
 # Package Selection
-# Value: [minimal|standard|server|server-nvidia|desktop|desktop-ubiquity|desktop-nvidia|desktop-nvidia-ubiquity|cloud-server|cloud-desktop]
+# Values:
+#   - minimal
+#   - standard
+#   - server
+#   - server-nvidia
+#   - desktop
+#   - desktop-ubiquity
+#   - desktop-nvidia
+#   - desktop-nvidia-ubiquity
+#   - cloud-server
+#   - cloud-server-nvidia
+#   - cloud-desktop
+#   - cloud-desktop-nvidia
 # shellcheck disable=SC2086
 : ${PROFILE:='server'}
 
 # Cloud-Init Datasources
+# Values:
+#   - NoCloud
+#   - None
 # shellcheck disable=SC2086
 : ${DATASOURCES:='NoCloud'}
 
 # Keyboard Type
-# Value: [JP|US]
+# Values:
+#   - JP
+#   - US
 # shellcheck disable=SC2086
 : ${KEYBOARD:='JP'}
 
 # User - Name
+# Values: String
 # shellcheck disable=SC2086
 : ${USER_NAME:='ubuntu'}
 
 # User - Password
+# Values: String
 # shellcheck disable=SC2086
 : ${USER_PASS:='ubuntu'}
 
 # User - Full Name
+# Values: String
 # shellcheck disable=SC2086
 : ${USER_FULL:='Ubuntu User'}
 
 # User - SSH Public Key
+# Values: String
 # shellcheck disable=SC2086
 : ${USER_KEYS:=''}
 
 # Apt Repository - Official
+# Values: String
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu'}
 
 # Apt Repository URL - Canonical Partner
+# Values: String
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_PARTNER:='http://archive.canonical.com'}
 
 # Apt Repository URL - Japanese Team
+# Values: String
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu'}
 
 # Apt Repository URL - Japanese Team
+# Values: String
 # shellcheck disable=SC2086
 : ${MIRROR_UBUNTU_JA_NONFREE:='http://ftp.jaist.ac.jp/pub/Linux/ubuntu-jp-archive/ubuntu-ja-non-free'}
 
 # Apt Repository URL - NVIDIA CUDA
+# Values: String
 # shellcheck disable=SC2016,SC2086
 : ${MIRROR_NVIDIA_CUDA:='http://developer.download.nvidia.com/compute/cuda/repos/ubuntu${RELEASE_MAJOR}${RELEASE_MINOR}/x86_64'}
 
 # Proxy - No Proxy List
+# Values: String
 # shellcheck disable=SC2086
 : ${NO_PROXY:=''}
 
 # Proxy - FTP Proxy
+# Values: String
 # shellcheck disable=SC2086
 : ${FTP_PROXY:=''}
 
 # Proxy - HTTP Proxy
+# Values: String
 # shellcheck disable=SC2086
 : ${HTTP_PROXY:=''}
 
 # Proxy - HTTPS Proxy
+# Values: String
 # shellcheck disable=SC2086
 : ${HTTPS_PROXY:=''}
 
 # Proxy - Apt Proxy Host
+# Values: String
 # shellcheck disable=SC2086
 : ${APT_PROXY_HOST:=''}
 
 # Proxy - Apt Proxy Port
+# Values: String
 # shellcheck disable=SC2086
 : ${APT_PROXY_PORT:=''}
 
@@ -338,7 +379,7 @@ GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 # NVIDIA CUDA Install Option
 case "${PROFILE}" in
 	*server*  ) NVIDIA_CUDA_INSTALL_OPTION='--no-install-recommends' ;;
-	*desktop* ) NVIDIA_CUDA_INSTALL_OPTION='' ;;
+	*         ) NVIDIA_CUDA_INSTALL_OPTION='' ;;
 esac
 
 ################################################################################
