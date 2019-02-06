@@ -151,7 +151,9 @@ case "${PROFILE}" in
 	'desktop-nvidia' ) ;;
 	'desktop-nvidia-ubiquity' ) ;;
 	'cloud-server' ) ;;
+	'cloud-server-nvidia' ) ;;
 	'cloud-desktop' ) ;;
+	'cloud-desktop-nvidia' ) ;;
 	* )
 		echo "PROFILE: minimal or standard or server or server-nvidia or desktop or desktop-nvidia"
 		exit 1
@@ -272,7 +274,7 @@ esac
 # HWE Xorg Package
 case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	# Trusty Server Part
-	trusty-*-hwe-server-nvidia )
+	trusty*hwe*server-nvidia )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-lts-xenial'
 			'libegl1-mesa-lts-xenial'
@@ -286,14 +288,14 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	;;
 
 	# Trusty Desktop Part
-	trusty-*-hwe-desktop* )
+	trusty*hwe*desktop* )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-lts-xenial'
 		)
 	;;
 
 	# Xenial Server Part
-	xenial-*-hwe-server-nvidia )
+	xenial*hwe*server-nvidia )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-hwe-16.04'
 			'xserver-xorg-legacy-hwe-16.04'
@@ -301,7 +303,7 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	;;
 
 	# Xenial Desktop Part
-	xenial-*-hwe-desktop* )
+	xenial*hwe*desktop* )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-hwe-16.04'
 		)
@@ -335,8 +337,8 @@ GLIB_SCHEMAS_DIR='/usr/share/glib-2.0/schemas'
 
 # NVIDIA CUDA Install Option
 case "${PROFILE}" in
-	"server-nvidia"  ) NVIDIA_CUDA_INSTALL_OPTION='--no-install-recommends' ;;
-	"desktop-nvidia" ) NVIDIA_CUDA_INSTALL_OPTION='' ;;
+	*server*  ) NVIDIA_CUDA_INSTALL_OPTION='--no-install-recommends' ;;
+	*desktop* ) NVIDIA_CUDA_INSTALL_OPTION='' ;;
 esac
 
 ################################################################################
