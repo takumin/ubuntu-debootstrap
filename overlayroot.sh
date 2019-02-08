@@ -773,6 +773,10 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 
 	# Require Package
 	chroot "${WORKDIR}" apt-get -y install cloud-init
+
+	# Generate Network Config from MetaData Server
+	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config" <<- __EOF__
+	__EOF__
 fi
 
 ################################################################################
