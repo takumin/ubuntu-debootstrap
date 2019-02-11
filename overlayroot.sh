@@ -796,7 +796,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	{
 		local IFS param datasource
 		IFS=" "
-		for param in $(< /proc/cmdline); do
+		for param in $(cat /proc/cmdline); do
 			case "${param}" in
 				ds=*)
 					datasource="${param#*=}"
@@ -807,6 +807,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 					;;
 			esac
 		done
+		log_warn "Skip Cloud-Init NoCloud-Net"
+		return 1
 	}
 
 	seedfrom_datasource()
@@ -822,6 +824,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 				esac
 			done
 		fi
+		log_warn "Skip Cloud-Init NoCloud-Net SeedFrom"
+		return 1
 	}
 
 	network_config_seedfrom()
