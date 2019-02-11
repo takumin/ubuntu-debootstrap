@@ -775,7 +775,77 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	chroot "${WORKDIR}" apt-get -y install cloud-init
 
 	# Generate Network Config from MetaData Server
-	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config" <<- __EOF__
+	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config" <<- '__EOF__'
+	#!/bin/sh
+
+	PREREQ=""
+
+	prereqs()
+	{
+		echo "$PREREQ"
+	}
+
+	case "$1" in
+	prereqs)
+		prereqs
+		exit 0
+		;;
+	esac
+
+	. /scripts/functions
+
+	datasource_cmdline()
+	{
+		local IFS param datasource
+		IFS=" "
+		for param in $(< /proc/cmdline); do
+			case "${param}" in
+				ds=*)
+					datasource="${param#*=}"
+					if [ "${datasource%;*}" = "nocloud-net" ]; then
+						echo "${param#*=}"
+						return 0
+					fi
+					;;
+			esac
+		done
+	}
+
+	seedfrom_datasource()
+	{
+		local IFS param datasource
+		datasource="$(datasource_cmdline)"
+		if [ -n "${datasource}" ]; then
+			IFS=";"
+			for param in ${datasource}; do
+				case "${param}" in
+					seedfrom=*) echo "${param#*=}" ; return 0 ;;
+					s=*)        echo "${param#*=}" ; return 0 ;;
+				esac
+			done
+		fi
+	}
+
+	network_config_seedfrom()
+	{
+		local seedfrom rt
+		seedfrom="$(seedfrom_datasource)"
+		if [ -n "${seedfrom}" ]; then
+			wget "${seedfrom}network-config" -O "/tmp/network-config.cfg"
+			rf=$?
+			if [ $rt -eq 0 ]; then
+				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
+					cp "/tmp/network-config.cfg" "${rootmnt}/etc/cloud/cloud.cfg.d/99-network-config.cfg"
+				else
+					panic "Not found ${rootmnt}/etc/cloud/cloud.cfg.d"
+				fi
+			else
+				panic "Download failed ${seedfrom}network-config"
+			fi
+		fi
+	}
+
+	network_config_seedfrom
 	__EOF__
 
 	# Execute Permission
