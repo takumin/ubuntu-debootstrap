@@ -777,6 +777,9 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	# Generate Network Config from MetaData Server
 	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config" <<- __EOF__
 	__EOF__
+
+	# Execute Permission
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config"
 fi
 
 ################################################################################
