@@ -835,7 +835,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 			rf=$?
 			if [ $rt -eq 0 ]; then
 				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
-					cp "/tmp/network-config.cfg" "${rootmnt}/etc/cloud/cloud.cfg.d/99-network-config.cfg"
+					cp "/tmp/network-config.cfg" "${rootmnt}/etc/cloud/cloud.cfg.d/99-network.cfg"
 				else
 					panic "Not found ${rootmnt}/etc/cloud/cloud.cfg.d"
 				fi
