@@ -792,8 +792,6 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		;;
 	esac
 
-	. /scripts/functions
-
 	datasource_cmdline()
 	{
 		local IFS param datasource
@@ -844,6 +842,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 			fi
 		fi
 	}
+
+	. /scripts/functions
 
 	network_config_seedfrom
 	__EOF__
