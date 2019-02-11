@@ -830,12 +830,11 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 
 	network_config_seedfrom()
 	{
-		local seedfrom rt
+		local seedfrom
 		seedfrom="$(seedfrom_datasource)"
 		if [ -n "${seedfrom}" ]; then
 			wget "${seedfrom}network-config" -O "/tmp/network-config.cfg"
-			rf=$?
-			if [ $rt -eq 0 ]; then
+			if [ $? -eq 0 ]; then
 				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
 					cp "/tmp/network-config.cfg" "${rootmnt}/etc/cloud/cloud.cfg.d/99-network.cfg"
 				else
