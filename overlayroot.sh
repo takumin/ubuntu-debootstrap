@@ -519,7 +519,7 @@ sed -i -e 's@XKBOPTIONS=.*@XKBOPTIONS="ctrl:nocaps"@' "${WORKDIR}/etc/default/ke
 ################################################################################
 
 # Check Environment Variable
-if [ "${PROFILE}" = 'minimal' ] || [ "${PROFILE}" = 'server' ] || [ "${PROFILE}" = 'server-nvidia' ]; then
+if [ "${PROFILE}" = 'minimal' ] || [ "${PROFILE}" = 'standard' ] || [[ "${PROFILE}" =~ ^.*server.*$ ]]; then
 	# Root Login
 	mkdir -p "${WORKDIR}/etc/systemd/system/getty@tty1.service.d"
 	cat > "${WORKDIR}/etc/systemd/system/getty@tty1.service.d/autologin.conf" <<- '__EOF__'
