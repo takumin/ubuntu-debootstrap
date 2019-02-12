@@ -842,7 +842,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 			wget "${seedfrom}network-config" -O "/tmp/network-config"
 			if [ $? -eq 0 ]; then
 				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
-					cp "/tmp/network-config" "${rootmnt}/etc/cloud/cloud.cfg.d/50-cloud-init.yaml"
+					cp "/tmp/network-config" "${rootmnt}/etc/cloud/cloud.cfg.d/99_network.cfg"
 				else
 					panic "Not found ${rootmnt}/etc/cloud/cloud.cfg.d"
 				fi
