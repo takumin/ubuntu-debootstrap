@@ -841,10 +841,10 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		if [ -n "${seedfrom}" ]; then
 			wget "${seedfrom}network-config" -O "/tmp/network-config"
 			if [ $? -eq 0 ]; then
-				if [ -d "${rootmnt}/etc/netplan" ]; then
-					cp "/tmp/network-config" "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
+					cp "/tmp/network-config" "${rootmnt}/etc/cloud/cloud.cfg.d/50-cloud-init.yaml"
 				else
-					panic "Not found ${rootmnt}/etc/netplan"
+					panic "Not found ${rootmnt}/etc/cloud/cloud.cfg.d"
 				fi
 			else
 				panic "Download failed ${seedfrom}network-config"
