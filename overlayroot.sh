@@ -727,8 +727,14 @@ fi
 ################################################################################
 
 # Check Release Version
+if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
+	# Install Package
+	chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
+fi
+
+# Check Release Version
 if [ "${RELEASE}" = 'xenial' ] || [ "${RELEASE}" = 'bionic' ]; then
-	# NetPlan
+	# Install Package
 	chroot "${WORKDIR}" apt-get -y install nplan
 fi
 
