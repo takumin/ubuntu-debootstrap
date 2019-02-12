@@ -839,15 +839,52 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		local seedfrom
 		seedfrom="$(seedfrom_datasource)"
 		if [ -n "${seedfrom}" ]; then
-			wget "${seedfrom}network-config" -O "/tmp/network-config"
+			wget "${seedfrom}network/network-config" -O "/tmp/network-config"
 			if [ $? -eq 0 ]; then
-				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
-					cp "/tmp/network-config" "${rootmnt}/etc/cloud/cloud.cfg.d/99_network.cfg"
+				if [ -d "${rootmnt}/var/lib" ]; then
+					mkdir -p "${rootmnt}/var/lib/cloud/seed/nocloud-net"
+					cp "/tmp/network-config" "${rootmnt}/var/lib/cloud/seed/nocloud-net/network-config"
 				else
-					panic "Not found ${rootmnt}/etc/cloud/cloud.cfg.d"
+					panic "Not found ${rootmnt}/var/lib"
 				fi
 			else
-				panic "Download failed ${seedfrom}network-config"
+				panic "Download failed ${seedfrom}network/network-config"
+			fi
+		fi
+	}
+
+	ifupdown_seedfrom()
+	{
+		local seedfrom
+		seedfrom="$(seedfrom_datasource)"
+		if [ -n "${seedfrom}" ]; then
+			wget "${seedfrom}network/ifupdown" -O "/tmp/ifupdown"
+			if [ $? -eq 0 ]; then
+				if [ -d "${rootmnt}/etc/network/interfaces.d" ]; then
+					cp "/tmp/ifupdown" "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
+				else
+					panic "Not found ${rootmnt}/etc/network/interfaces.d"
+				fi
+			else
+				panic "Download failed ${seedfrom}network/ifupdown"
+			fi
+		fi
+	}
+
+	netplan_seedfrom()
+	{
+		local seedfrom
+		seedfrom="$(seedfrom_datasource)"
+		if [ -n "${seedfrom}" ]; then
+			wget "${seedfrom}network/netplan" -O "/tmp/netplan"
+			if [ $? -eq 0 ]; then
+				if [ -d "${rootmnt}/etc/netplan" ]; then
+					cp "/tmp/ifupdown" "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+				else
+					panic "Not found ${rootmnt}/etc/netplan"
+				fi
+			else
+				panic "Download failed ${seedfrom}network/netplan"
 			fi
 		fi
 	}
@@ -864,7 +901,9 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	. /scripts/functions
 
 	network_config_seedfrom
-	clear_network_interfaces
+	#ifupdown_seedfrom
+	#netplan_seedfrom
+	#clear_network_interfaces
 	__EOF__
 
 	# Execute Permission
