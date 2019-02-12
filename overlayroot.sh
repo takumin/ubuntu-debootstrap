@@ -850,10 +850,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	{
 		local intf
 		for intf in $(ls /sys/class/net/); do
-			case "${intf}" in
-				"lo" ) continue ;;
-				* )    ip addr flush dev "${intf}" ;;
-			esac
+			ip addr flush dev "${intf}"
+			ip link set "${intf}" down
 		done
 	}
 
