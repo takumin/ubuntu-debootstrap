@@ -846,9 +846,21 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		fi
 	}
 
+	clear_network_interfaces()
+	{
+		local intf
+		for intf in $(ls /sys/class/net/); do
+			case "${intf}" in
+				"lo" ) continue ;;
+				* )    ip addr flush dev "${intf}" ;;
+			esac
+		done
+	}
+
 	. /scripts/functions
 
 	network_config_seedfrom
+	clear_network_interfaces
 	__EOF__
 
 	# Execute Permission
