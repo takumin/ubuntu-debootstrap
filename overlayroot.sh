@@ -775,7 +775,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	chroot "${WORKDIR}" apt-get -y install cloud-init
 
 	# Generate Network Config from MetaData Server
-	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config" <<- '__EOF__'
+	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config" <<- '__EOF__'
 	#!/bin/sh
 
 	PREREQ=""
@@ -833,12 +833,12 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		local seedfrom
 		seedfrom="$(seedfrom_datasource)"
 		if [ -n "${seedfrom}" ]; then
-			wget "${seedfrom}network-config" -O "/tmp/network-config.cfg"
+			wget "${seedfrom}network-config" -O "/tmp/network-config"
 			if [ $? -eq 0 ]; then
-				if [ -d "${rootmnt}/etc/cloud/cloud.cfg.d" ]; then
-					cp "/tmp/network-config.cfg" "${rootmnt}/etc/cloud/cloud.cfg.d/99_network.cfg"
+				if [ -d "${rootmnt}/etc/netplan" ]; then
+					cp "/tmp/network-config" "${rootmnt}/etc/netplan/50-cloud-init.yaml"
 				else
-					panic "Not found ${rootmnt}/etc/cloud/cloud.cfg.d"
+					panic "Not found ${rootmnt}/etc/netplan"
 				fi
 			else
 				panic "Download failed ${seedfrom}network-config"
@@ -862,7 +862,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	__EOF__
 
 	# Execute Permission
-	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-clount-init-network-config"
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config"
 fi
 
 ################################################################################
