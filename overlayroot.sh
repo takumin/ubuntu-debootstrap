@@ -730,6 +730,9 @@ fi
 if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
+
+	# Managed Interface
+	sed -i -e 's/managed=.*/managed=true/;' "${WORKDIR}/etc/NetworkManager/NetworkManager.conf"
 fi
 
 # Check Release Version
@@ -853,42 +856,6 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		fi
 	}
 
-	ifupdown_seedfrom()
-	{
-		local seedfrom
-		seedfrom="$(seedfrom_datasource)"
-		if [ -n "${seedfrom}" ]; then
-			wget "${seedfrom}network/ifupdown" -O "/tmp/ifupdown"
-			if [ $? -eq 0 ]; then
-				if [ -d "${rootmnt}/etc/network/interfaces.d" ]; then
-					cp "/tmp/ifupdown" "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
-				else
-					panic "Not found ${rootmnt}/etc/network/interfaces.d"
-				fi
-			else
-				panic "Download failed ${seedfrom}network/ifupdown"
-			fi
-		fi
-	}
-
-	netplan_seedfrom()
-	{
-		local seedfrom
-		seedfrom="$(seedfrom_datasource)"
-		if [ -n "${seedfrom}" ]; then
-			wget "${seedfrom}network/netplan" -O "/tmp/netplan"
-			if [ $? -eq 0 ]; then
-				if [ -d "${rootmnt}/etc/netplan" ]; then
-					cp "/tmp/ifupdown" "${rootmnt}/etc/netplan/50-cloud-init.yaml"
-				else
-					panic "Not found ${rootmnt}/etc/netplan"
-				fi
-			else
-				panic "Download failed ${seedfrom}network/netplan"
-			fi
-		fi
-	}
-
 	clear_network_interfaces()
 	{
 		local intf
@@ -900,10 +867,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 
 	. /scripts/functions
 
-	network_config_seedfrom
-	#ifupdown_seedfrom
-	#netplan_seedfrom
-	#clear_network_interfaces
+	clear_network_interfaces
 	__EOF__
 
 	# Execute Permission
