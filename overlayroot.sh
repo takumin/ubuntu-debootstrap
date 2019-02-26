@@ -45,6 +45,8 @@ fi
 #   - generic-hwe
 #   - signed-generic
 #   - signed-generic-hwe
+#   - virtual
+#   - virtual-hwe
 # shellcheck disable=SC2086
 : ${KERNEL:='generic'}
 
@@ -153,49 +155,75 @@ fi
 : ${APT_PROXY_PORT:=''}
 
 ################################################################################
-# Check Environment
+# Available Environment
 ################################################################################
 
 # Release
-case "${RELEASE}" in
-	'trusty' ) ;;
-	'xenial' ) ;;
-	'bionic' ) ;;
-	* )
-		echo "RELEASE: trusty or xenial or bionic"
-		exit 1
-	;;
-esac
+declare -a AVAILABLE_RELEASE=(
+	'trusty'
+	'xenial'
+	'bionic'
+)
 
 # Kernel
-case "${KERNEL}" in
-	'generic' ) ;;
-	'generic-hwe' ) ;;
-	'signed-generic' ) ;;
-	'signed-generic-hwe' ) ;;
-	* )
-		echo "KERNEL: generic or generic-hwe or signed-generic or signed-generic-hwe"
-		exit 1
-	;;
-esac
+declare -a AVAILABLE_KERNEL=(
+	'generic'
+	'generic-hwe'
+	'signed-generic'
+	'signed-generic-hwe'
+	'virtual'
+	'virtual-hwe'
+)
 
 # Profile
-case "${PROFILE}" in
-	'minimal' ) ;;
-	'standard' ) ;;
-	'server' ) ;;
-	'server-nvidia' ) ;;
-	'desktop' ) ;;
-	'desktop-nvidia' ) ;;
-	'cloud-server' ) ;;
-	'cloud-server-nvidia' ) ;;
-	'cloud-desktop' ) ;;
-	'cloud-desktop-nvidia' ) ;;
-	* )
-		echo "PROFILE: minimal or standard or server or server-nvidia or desktop or desktop-nvidia"
-		exit 1
-	;;
-esac
+declare -a AVAILABLE_PROFILE=(
+	'minimal'
+	'standard'
+	'server'
+	'server-nvidia'
+	'desktop'
+	'desktop-nvidia'
+	'cloud-server'
+	'cloud-server-nvidia'
+	'cloud-desktop'
+	'cloud-desktop-nvidia'
+)
+
+################################################################################
+# Check Environment
+################################################################################
+
+# Array Util
+containsElement () {
+	local e match="$1"
+	shift
+	for e; do [[ "$e" == "$match" ]] && return 0; done
+	return 1
+}
+
+# Release
+containsElement "${RELEASE}" "${AVAILABLE_RELEASE[@]}"
+RETVAL=$?
+if [ "${RETVAL}" != 0 ]; then
+	echo "RELEASE: ${AVAILABLE_RELEASE[*]}"
+	exit 1
+fi
+
+# Kernel
+containsElement "${KERNEL}" "${AVAILABLE_KERNEL[@]}"
+RETVAL=$?
+if [ "${RETVAL}" != 0 ]; then
+	echo "KERNEL: ${AVAILABLE_KERNEL[*]}"
+	exit 1
+fi
+
+# Profile
+containsElement "${PROFILE}" "${AVAILABLE_PROFILE[@]}"
+RETVAL=$?
+if [ "${RETVAL}" != 0 ]; then
+	echo "PROFILE: ${AVAILABLE_PROFILE[*]}"
+	exit 1
+fi
 
 ################################################################################
 # Normalization Environment
@@ -205,6 +233,7 @@ esac
 case "${RELEASE}-${KERNEL}" in
 	"bionic-generic-hwe"        ) KERNEL="generic" ;;
 	"bionic-signed-generic-hwe" ) KERNEL="signed-generic" ;;
+	"bionic-virtual-hwe"        ) KERNEL="virtual" ;;
 	*                           ) ;;
 esac
 
@@ -290,6 +319,12 @@ case "${RELEASE}-${KERNEL}" in
 	"trusty-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
 	"xenial-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
 	"bionic-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
+	"trusty-virtual"            ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
+	"xenial-virtual"            ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
+	"bionic-virtual"            ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
+	"trusty-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual-lts-xenial" ;;
+	"xenial-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual-hwe-16.04" ;;
+	"bionic-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
 esac
 
 # Select Kernel Header Package
@@ -306,6 +341,12 @@ case "${RELEASE}-${KERNEL}" in
 	"trusty-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-lts-xenial" ;;
 	"xenial-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-hwe-16.04" ;;
 	"bionic-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
+	"trusty-virtual"            ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
+	"xenial-virtual"            ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
+	"bionic-virtual"            ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
+	"trusty-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual-lts-xenial" ;;
+	"xenial-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual-hwe-16.04" ;;
+	"bionic-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
 esac
 
 # HWE Xorg Package
