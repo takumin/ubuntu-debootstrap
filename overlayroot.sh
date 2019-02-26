@@ -55,9 +55,7 @@ fi
 #   - server
 #   - server-nvidia
 #   - desktop
-#   - desktop-ubiquity
 #   - desktop-nvidia
-#   - desktop-nvidia-ubiquity
 #   - cloud-server
 #   - cloud-server-nvidia
 #   - cloud-desktop
@@ -188,9 +186,7 @@ case "${PROFILE}" in
 	'server' ) ;;
 	'server-nvidia' ) ;;
 	'desktop' ) ;;
-	'desktop-ubiquity' ) ;;
 	'desktop-nvidia' ) ;;
-	'desktop-nvidia-ubiquity' ) ;;
 	'cloud-server' ) ;;
 	'cloud-server-nvidia' ) ;;
 	'cloud-desktop' ) ;;
@@ -961,16 +957,6 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 		# Input Method
 		chroot "${WORKDIR}" su -c "im-config -n fcitx" "${USER_NAME}"
 	fi
-fi
-
-################################################################################
-# Ubiquity
-################################################################################
-
-# Check Environment Variable
-if [[ "${PROFILE}" =~ ^.*ubiquity.*$ ]]; then
-	# Install Package
-	chroot "${WORKDIR}" apt-get -y --no-install-recommends install casper ubiquity-frontend-gtk
 fi
 
 ################################################################################
