@@ -282,6 +282,17 @@ tmpfs           /var/tmp   tmpfs  defaults  0      0
 tmpfs           /tmp       tmpfs  defaults  0      0
 __EOF__
 
+# Check Hostname & Domain
+if [ -n "${SITENAME}" ]; then
+  echo "${SITENAME}" > "${ROOTFS}/etc/hostname"
+
+  if [ -n "${DOMAIN}" ]; then
+    echo "127.0.1.1	${SITENAME}.${DOMAIN} ${SITENAME}" >> "${ROOTFS}/etc/hosts"
+  else
+    echo "127.0.1.1	${SITENAME}" >> "${ROOTFS}/etc/hosts"
+  fi
+fi
+
 ################################################################################
 # Upgrade
 ################################################################################
