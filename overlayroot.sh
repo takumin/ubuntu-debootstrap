@@ -821,23 +821,36 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	# Require Package
 	chroot "${WORKDIR}" apt-get -y install cloud-init
 
+	# Generate Reset Network Interface for Initramfs
+	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-reset-network-interfaces" <<- '__EOF__'
+	#!/bin/sh
+
+	PREREQ=""
+	if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+
+	reset_network_interfaces()
+	{
+		local intf
+		for intf in $(ls /sys/class/net/); do
+			ip addr flush dev "${intf}"
+			ip link set "${intf}" down
+		done
+	}
+
+	. /scripts/functions
+
+	reset_network_interfaces
+	__EOF__
+
+	# Execute Permission
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-reset-network-interfaces"
+
 	# Generate Network Config from MetaData Server
 	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config" <<- '__EOF__'
 	#!/bin/sh
 
 	PREREQ=""
-
-	prereqs()
-	{
-		echo "$PREREQ"
-	}
-
-	case "$1" in
-	prereqs)
-		prereqs
-		exit 0
-		;;
-	esac
+	if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
 
 	datasource_cmdline()
 	{
@@ -894,18 +907,9 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		fi
 	}
 
-	clear_network_interfaces()
-	{
-		local intf
-		for intf in $(ls /sys/class/net/); do
-			ip addr flush dev "${intf}"
-			ip link set "${intf}" down
-		done
-	}
-
 	. /scripts/functions
 
-	clear_network_interfaces
+	# network_config_seedfrom
 	__EOF__
 
 	# Execute Permission
