@@ -151,32 +151,34 @@ awk '{print $2}' /proc/mounts | grep -s "${ROOTFS}" | sort -r | xargs --no-run-i
 ################################################################################
 
 # Check Disk Type
-if [ "x${ROOT_DISK_TYPE}" = 'xSSD' ]; then
-  # Check SSD Frozen
-  if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null 2>&1; then
-    # Suspend-to-RAM (ACPI State S3)
-    rtcwake -m mem -s 10
+case "${ROOT_DISK_TYPE}" in
+  'SSD' )
+    # Check SSD Frozen
+    if hdparm -I "${ROOT_DISK_PATH}" | grep 'frozen' | grep -qsv 'not' > /dev/null 2>&1; then
+      # Suspend-to-RAM (ACPI State S3)
+      rtcwake -m mem -s 10
 
-    # Wait
-    sleep 10
-  fi
+      # Wait
+      sleep 10
+    fi
 
-  # Set Password
-  hdparm --user-master u --security-set-pass P@ssW0rd "${ROOT_DISK_PATH}"
+    # Set Password
+    hdparm --user-master u --security-set-pass P@ssW0rd "${ROOT_DISK_PATH}"
 
-  # Secure Erase
-  hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
-# Check Disk Type
-elif [ "x${ROOT_DISK_TYPE}" = 'xNVME' ]; then
-  # Suspend-to-RAM (ACPI State S3)
-  rtcwake -m mem -s 10
-
-  # Wait
-  sleep 10
-
-  # Secure Erase
-  nvme format -s 1 "${ROOT_DISK_PATH}" || echo 'Not Secure Erase...'
-fi
+    # Secure Erase
+    hdparm --user-master u --security-erase P@ssW0rd "${ROOT_DISK_PATH}"
+    ;;
+  # 'NVME' )
+  #   # Suspend-to-RAM (ACPI State S3)
+  #   rtcwake -m mem -s 10
+  #
+  #   # Wait
+  #   sleep 10
+  #
+  #   # Secure Erase
+  #   nvme format -s 1 "${ROOT_DISK_PATH}" || echo 'Not Secure Erase...'
+  #   ;;
+esac
 
 # Wait Probe
 sleep 1
@@ -270,35 +272,34 @@ if [ -d "/sys/firmware/efi" ]; then
   mount --bind /sys/firmware/efi/efivars "${ROOTFS}/sys/firmware/efi/efivars"
 fi
 
-# Resolve Configuration - resolvconf
-if [ -f "/run/resolvconf/resolv.conf" ]; then
-  # Create Resolv Configuration Directory
-  mkdir -p "${ROOTFS}/run/resolvconf"
+# # Resolve Configuration - resolvconf
+# if [ -f "/run/resolvconf/resolv.conf" ]; then
+#   # Create Resolv Configuration Directory
+#   mkdir -p "${ROOTFS}/run/resolvconf"
+#
+#   # Copy Resolv Configuration
+#   cp /run/resolvconf/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
+# fi
 
-  # Copy Resolv Configuration
-  cp /run/resolvconf/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
-fi
-
-# Resolve Configuration - systemd-resolved
-if [ -f "/run/systemd/resolve/resolv.conf" ]; then
-  # Create Resolv Configuration Directory
-  mkdir -p "${ROOTFS}/run/systemd/resolve"
-
-  # Copy Resolv Configuration
-  cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/systemd/resolve/resolv.conf"
-  cp /run/systemd/resolve/stub-resolv.conf "${ROOTFS}/run/systemd/resolve/stub-resolv.conf"
-fi
+# # Resolve Configuration - systemd-resolved
+# if [ -f "/run/systemd/resolve/resolv.conf" ]; then
+#   # Create Resolv Configuration Directory
+#   mkdir -p "${ROOTFS}/run/systemd/resolve"
+#
+#   # Copy Resolv Configuration
+#   cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/systemd/resolve/resolv.conf"
+#   cp /run/systemd/resolve/stub-resolv.conf "${ROOTFS}/run/systemd/resolve/stub-resolv.conf"
+# fi
 
 # Create Mount Point
-touch "${ROOTFS}/etc/fstab"
-{
-  echo '# <file system> <dir>      <type> <options>          <dump> <pass>'
-  echo "${ROOTPT}       /          xfs    defaults           0      1"
-  echo "${UEFIPT}       /boot/efi  vfat   defaults           0      2"
-  echo "${SWAPPT}       none       swap   defaults           0      0"
-  echo "tmpfs           /var/tmp   tmpfs  defaults,size=100% 0      0"
-  echo "tmpfs           /tmp       tmpfs  defaults,size=100% 0      0"
-} >> "${ROOTFS}/etc/fstab"
+cat > "${ROOTFS}/etc/fstab" << __EOF__
+# <file system> <dir>      <type> <options> <dump> <pass>
+${ROOTPT}       /          xfs    defaults  0      1
+${UEFIPT}       /boot/efi  vfat   defaults  0      2
+${SWAPPT}       none       swap   defaults  0      0
+tmpfs           /var/tmp   tmpfs  defaults  0      0
+tmpfs           /tmp       tmpfs  defaults  0      0
+__EOF__
 
 ################################################################################
 # Upgrade
@@ -322,16 +323,14 @@ if [ -d "/sys/firmware/efi" ]; then
   # Grub Boot Loader
   chroot "${ROOTFS}" apt-get -y install grub-efi
 
-  # Generate UEFI Boot Entry
+  # Install UEFI Boot Recode
   chroot "${ROOTFS}" grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Ubuntu --recheck
-  chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
 else
   # Grub Boot Loader
   chroot "${ROOTFS}" apt-get -y install grub-pc
 
-  # Generate UEFI Boot Entry
+  # Install BIOS Boot Recode
   chroot "${ROOTFS}" grub-install --target=i386-pc --recheck "${ROOT_DISK_PATH}"
-  chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
 # Check Profile
@@ -340,8 +339,8 @@ if [ "${DEPLOY_PROFILE}" = 'server' ]; then
   sed -i -e 's@^GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"$@GRUB_CMDLINE_LINUX_DEFAULT="quiet"@' "${ROOTFS}/etc/default/grub"
 fi
 
-# Update Grub
-chroot "${ROOTFS}" update-grub
+# Generate UEFI Boot Entry
+chroot "${ROOTFS}" grub-mkconfig -o /boot/grub/grub.cfg
 
 ################################################################################
 # Addon
