@@ -34,6 +34,14 @@ set -eu
 # shellcheck disable=SC2086
 : ${SWAP_PART_SIZE:="+16G"}
 
+# Host Name
+# shellcheck disable=SC2086
+: ${SITENAME:=""}
+
+# Domain Name
+# shellcheck disable=SC2086
+: ${DOMAIN:=""}
+
 ################################################################################
 # Check Environment
 ################################################################################
@@ -51,55 +59,27 @@ if [ ! -e "/dev/disk/by-id/${ROOT_DISK_NAME}" ]; then
   exit 1
 fi
 
-# Deploy RootFs Url
+# Kernel Parameter
 DEPLOY_DISTRIBUTION=''
 DEPLOY_RELEASE=''
 DEPLOY_KERNEL=''
 DEPLOY_PROFILE=''
 DEPLOY_ROOTFS=''
 
-# Default Result Code
-RESULT=1
-
 # Parse Boot Parameter
 for param in $(< /proc/cmdline); do
   case "${param}" in
-    distribution=*)
-      if [ -n "${param#*=}" ]; then
-        DEPLOY_DISTRIBUTION="${param#*=}"
-        RESULT=0
-      fi
-      ;;
-    release=*)
-      if [ -n "${param#*=}" ]; then
-        DEPLOY_RELEASE="${param#*=}"
-        RESULT=0
-      fi
-      ;;
-    kernel=*)
-      if [ -n "${param#*=}" ]; then
-        DEPLOY_KERNEL="${param#*=}"
-        RESULT=0
-      fi
-      ;;
-    profile=*)
-      if [ -n "${param#*=}" ]; then
-        DEPLOY_PROFILE="${param#*=}"
-        RESULT=0
-      fi
-      ;;
-    rootfs=*)
-      if [[ "${param#*=}" =~ ^http:// || "${param#*=}" =~ ^https:// ]]; then
-        DEPLOY_ROOTFS="${param#*=}"
-        RESULT=0
-      fi
-      ;;
+    distribution=*) DEPLOY_DISTRIBUTION="${param#*=}" ;;
+    release=*)      DEPLOY_RELEASE="${param#*=}" ;;
+    kernel=*)       DEPLOY_KERNEL="${param#*=}" ;;
+    profile=*)      DEPLOY_PROFILE="${param#*=}" ;;
+    rootfs=*)       DEPLOY_ROOTFS="${param#*=}" ;;
   esac
 done
 
-# Check Result Code
-if [ "${RESULT}" -gt 0 ]; then
-  echo 'Unknown Boot Parameter'
+# Check RootFs Url
+if [[ ! "${DEPLOY_ROOTFS}" =~ ^https?://.*$ ]]; then
+  echo "Unknown DEPLOY_ROOTFS"
   echo "DEPLOY_DISTRIBUTION: ${DEPLOY_DISTRIBUTION}"
   echo "DEPLOY_RELEASE:      ${DEPLOY_RELEASE}"
   echo "DEPLOY_KERNEL:       ${DEPLOY_KERNEL}"
