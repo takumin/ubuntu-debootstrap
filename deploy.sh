@@ -272,24 +272,25 @@ if [ -d "/sys/firmware/efi" ]; then
   mount --bind /sys/firmware/efi/efivars "${ROOTFS}/sys/firmware/efi/efivars"
 fi
 
-# # Resolve Configuration - resolvconf
-# if [ -f "/run/resolvconf/resolv.conf" ]; then
-#   # Create Resolv Configuration Directory
-#   mkdir -p "${ROOTFS}/run/resolvconf"
-#
-#   # Copy Resolv Configuration
-#   cp /run/resolvconf/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
-# fi
+# Create Resolv Configuration Directory
+mkdir -p "${ROOTFS}/run/resolvconf"
+mkdir -p "${ROOTFS}/run/systemd/resolve"
 
-# # Resolve Configuration - systemd-resolved
-# if [ -f "/run/systemd/resolve/resolv.conf" ]; then
-#   # Create Resolv Configuration Directory
-#   mkdir -p "${ROOTFS}/run/systemd/resolve"
-#
-#   # Copy Resolv Configuration
-#   cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/systemd/resolve/resolv.conf"
-#   cp /run/systemd/resolve/stub-resolv.conf "${ROOTFS}/run/systemd/resolve/stub-resolv.conf"
-# fi
+# Resolve Configuration - resolvconf
+if [ -f "/run/resolvconf/resolv.conf" ]; then
+  # Copy Resolv Configuration
+  cp /run/resolvconf/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
+  cp /run/resolvconf/resolv.conf "${ROOTFS}/run/systemd/resolve/resolv.conf"
+  cp /run/resolvconf/resolv.conf "${ROOTFS}/run/systemd/resolve/stub-resolv.conf"
+elif [ -f "/run/systemd/resolve/resolv.conf" ]; then
+  # Copy Resolv Configuration
+  cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/resolvconf/resolv.conf"
+  cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/systemd/resolve/resolv.conf"
+  cp /run/systemd/resolve/resolv.conf "${ROOTFS}/run/systemd/resolve/stub-resolv.conf"
+else
+  echo "Not found resolv.conf"
+  exit 1
+fi
 
 # Create Mount Point
 cat > "${ROOTFS}/etc/fstab" << __EOF__
