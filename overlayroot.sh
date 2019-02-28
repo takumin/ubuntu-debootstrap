@@ -807,22 +807,9 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 
 	# Execute Permission
 	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
-fi
-
-################################################################################
-# Cloud
-################################################################################
-
-# Check Environment Variable
-if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
-	# Select Datasources
-	chroot "${WORKDIR}" sh -c "echo 'cloud-init cloud-init/datasources multiselect ${DATASOURCES}' | debconf-set-selections"
-
-	# Require Package
-	chroot "${WORKDIR}" apt-get -y install cloud-init
 
 	# Generate Reset Network Interface for Initramfs
-	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-reset-network-interfaces" <<- '__EOF__'
+	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces" <<- '__EOF__'
 	#!/bin/sh
 
 	PREREQ=""
@@ -843,7 +830,20 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	__EOF__
 
 	# Execute Permission
-	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-reset-network-interfaces"
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces"
+fi
+
+################################################################################
+# Cloud
+################################################################################
+
+# Check Environment Variable
+if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+	# Select Datasources
+	chroot "${WORKDIR}" sh -c "echo 'cloud-init cloud-init/datasources multiselect ${DATASOURCES}' | debconf-set-selections"
+
+	# Require Package
+	chroot "${WORKDIR}" apt-get -y install cloud-init
 
 	# Generate Network Config from MetaData Server
 	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config" <<- '__EOF__'
