@@ -165,7 +165,7 @@ cp "${DESTDIR}/kernel.img" "${WORKDIR}/casper/kernel.img"
 cp "${DESTDIR}/initrd.img" "${WORKDIR}/casper/initrd.img"
 
 # Rootfs
-cp "${DESTDIR}/rootfs.squashfs" "${WORKDIR}/casper/rootfs.squashfs"
+cp "${DESTDIR}/rootfs.squashfs" "${WORKDIR}/casper/filesystem.squashfs"
 
 ################################################################################
 # Grub
@@ -173,7 +173,7 @@ cp "${DESTDIR}/rootfs.squashfs" "${WORKDIR}/casper/rootfs.squashfs"
 
 # Grub Install
 grub-install --target=i386-pc --recheck --boot-directory="${WORKDIR}/boot" "${USB_PATH}"
-grub-install --target=x86_64-efi --recheck --boot-directory="${WORKDIR}/boot" --efi-directory="${WORKDIR}/boot" --removable
+grub-install --target=x86_64-efi --recheck --boot-directory="${WORKDIR}/boot" --efi-directory="${WORKDIR}" --removable
 
 # Grub Config
 cat > "${WORKDIR}/boot/grub/grub.cfg" << __EOF__
