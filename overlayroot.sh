@@ -384,6 +384,21 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 		)
 	;;
 
+	# Bionic Server Part
+	bionic*hwe*server-nvidia )
+		declare -a XORG_HWE_PACKAGES=(
+			'xserver-xorg-core-hwe-18.04'
+			'xserver-xorg-legacy-hwe-18.04'
+		)
+	;;
+
+	# Bionic Desktop Part
+	bionic*hwe*desktop* )
+		declare -a XORG_HWE_PACKAGES=(
+			'xserver-xorg-hwe-18.04'
+		)
+	;;
+
 	# Default
 	* )
 		declare -a XORG_HWE_PACKAGES=()
