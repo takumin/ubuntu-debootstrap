@@ -490,7 +490,7 @@ fi
 
 # Mount Root File System Partition
 mkdir -p "${WORKDIR}"
-mount -t tmpfs -o 'size=90%,mode=0755' tmpfs "${WORKDIR}"
+mount -t tmpfs -o 'size=4g,mode=0755' tmpfs "${WORKDIR}"
 
 ################################################################################
 # Debootstrap
