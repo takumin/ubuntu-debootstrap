@@ -172,29 +172,37 @@ grub-install --target=x86_64-efi --recheck --boot-directory="${WORKDIR}/boot" --
 
 # Grub Config
 cat > "${WORKDIR}/boot/grub/grub.cfg" << __EOF__
-set default=0
-set timeout=0
+if [ x\$grub_platform = xpc ]; then
+	insmod vbe
+fi
 
-if [ \${grub_platform} == "efi" ]; then
+if [ x\$grub_platform = xefi ]; then
 	insmod efi_gop
 	insmod efi_uga
 fi
 
+insmod gzio
+
 insmod font
-if loadfont \${prefix}/fonts/unicode.pf2 ; then
+
+if loadfont \${prefix}/fonts/unicode.pf2; then
 	insmod gfxterm
 	set gfxmode=auto
 	set gfxpayload=keep
 	terminal_output gfxterm
 fi
 
-insmod gzio
+insmod part_gpt
 insmod part_msdos
+
 insmod fat
 
-menuentry "Ubuntu" {
-	search --fs-uuid --set --no-floppy ${UUID}
-	linux /live/kernel.img quiet splash ---
+set default=0
+set timeout=0
+
+menuentry 'ubuntu' {
+	search --no-floppy --fs-uuid --set=root ${UUID}
+	linux /live/kernel.img root= ro quiet splash overlayroot=tmpfs ---
 	initrd /live/initrd.img
 }
 __EOF__
