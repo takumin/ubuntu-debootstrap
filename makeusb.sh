@@ -154,7 +154,7 @@ mkdir -p "${WORKDIR}/live"
 ################################################################################
 
 # Kernel
-cp "${DESTDIR}/kernel.img" "${WORKDIR}/live/vmlinuz"
+cp "${DESTDIR}/kernel.img" "${WORKDIR}/live/kernel.img"
 
 # Initramfs
 cp "${DESTDIR}/initrd.img" "${WORKDIR}/live/initrd.img"
@@ -168,10 +168,10 @@ cp "${DESTDIR}/rootfs.squashfs" "${WORKDIR}/live/rootfs.squashfs"
 
 # Grub Install
 grub-install --target=i386-pc --recheck --boot-directory="${WORKDIR}/boot" "${USB_PATH}"
-grub-install --target=x86_64-efi --recheck --boot-directory="${WORKDIR}/boot" --efi-directory="${WORKDIR}" --removable
+grub-install --target=x86_64-efi --recheck --boot-directory="${WORKDIR}/boot" --efi-directory="${WORKDIR}/boot" --removable
 
 # Grub Config
-cat << __EOF__ > ${WORKDIR}/boot/grub/grub.cfg
+cat > "${WORKDIR}/boot/grub/grub.cfg" << __EOF__
 set default=0
 set timeout=0
 
@@ -194,8 +194,8 @@ insmod fat
 
 menuentry "Ubuntu" {
 	search --fs-uuid --set --no-floppy ${UUID}
-	linux /casper/vmlinuz video=efifb boot=casper toram noprompt nomodeset quiet splash
-	initrd /casper/initrd.img
+	linux /live/kernel.img quiet splash ---
+	initrd /live/initrd.img
 }
 __EOF__
 
