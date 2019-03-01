@@ -231,7 +231,7 @@ fi
 
 # Select Kernel Package
 case "${RELEASE}-${KERNEL}" in
-	*                           ) ;;
+	* ) ;;
 esac
 
 ################################################################################
@@ -421,6 +421,12 @@ INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.5.3.tar.gz'
 INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s@\.tar\.gz$@@;')"
 INTEL_IGB_VERSION="$(basename "${INTEL_IGB_URL}" | sed -e 's@^igb-@@; s@\.tar\.gz$@@;')"
 INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.tar\.gz$@@;')"
+
+# NVIDIA CUDA Install Option
+case "${RELEASE}-${KERNEL}-${PROFILE}" in
+	*server*nvidia* ) NVIDIA_CUDA_INSTALL_OPTIONS="-y --no-install-recommends" ;;
+	* )               NVIDIA_CUDA_INSTALL_OPTIONS="-y" ;;
+esac
 
 ################################################################################
 # Cleanup
@@ -1056,11 +1062,7 @@ if [[ "${PROFILE}" =~ ^.*nvidia.*$ ]]; then
 	chroot "${WORKDIR}" apt-get -y dist-upgrade
 
 	# Install Driver
-	if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
-		chroot "${WORKDIR}" apt-get -y install cuda-drivers
-	else
-		chroot "${WORKDIR}" apt-get -y --no-install-recommends install cuda-drivers
-	fi
+	chroot "${WORKDIR}" apt-get "${NVIDIA_CUDA_INSTALL_OPTIONS}" install cuda-drivers
 fi
 
 ################################################################################
