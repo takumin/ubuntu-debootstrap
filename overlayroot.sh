@@ -768,7 +768,7 @@ fi
 # Check Release Version
 if [ "${RELEASE}" = 'trusty' ]; then
 	# Install Package
-	chroot "${TMPFS_DIR}" apt-get -y install systemd
+	chroot "${WORKDIR}" apt-get -y install systemd
 fi
 
 ################################################################################
@@ -778,7 +778,7 @@ fi
 # Check Release Version
 if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 	# Install Require Packages
-	chroot "${TMPFS_DIR}" apt-get -qq install ethtool ifenslave
+	chroot "${WORKDIR}" apt-get -y install ethtool ifenslave
 
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
@@ -793,6 +793,9 @@ if [ "${RELEASE}" = 'xenial' ] || [ "${RELEASE}" = 'bionic' ]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install nplan
 fi
+
+# Resolv Local Hostname
+echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
 
 ################################################################################
 # Netboot
@@ -939,7 +942,7 @@ fi
 chroot "${WORKDIR}" apt-get -y install ssh
 
 # Disable DNS Lookup
-sed -i -e 's@^#?UseDNS.*$@UseDNS no@'
+sed -i -e 's@^#?UseDNS.*$@UseDNS no@' "${WORKDIR}/etc/ssh/sshd_config"
 
 # Remove Temporary SSH Host Keys
 find "${WORKDIR}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
