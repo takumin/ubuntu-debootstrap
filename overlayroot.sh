@@ -231,9 +231,6 @@ fi
 
 # Select Kernel Package
 case "${RELEASE}-${KERNEL}" in
-	"bionic-generic-hwe"        ) KERNEL="generic" ;;
-	"bionic-signed-generic-hwe" ) KERNEL="signed-generic" ;;
-	"bionic-virtual-hwe"        ) KERNEL="virtual" ;;
 	*                           ) ;;
 esac
 
@@ -312,19 +309,19 @@ case "${RELEASE}-${KERNEL}" in
 	"bionic-generic"            ) KERNEL_IMAGE_PACKAGE="linux-image-generic" ;;
 	"trusty-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic-lts-xenial" ;;
 	"xenial-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic-hwe-16.04" ;;
-	"bionic-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic" ;;
+	"bionic-generic-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-generic-hwe-18.04" ;;
 	"trusty-signed-generic"     ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
 	"xenial-signed-generic"     ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
 	"bionic-signed-generic"     ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
 	"trusty-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-lts-xenial" ;;
 	"xenial-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-hwe-16.04" ;;
-	"bionic-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic" ;;
+	"bionic-signed-generic-hwe" ) KERNEL_IMAGE_PACKAGE="linux-signed-image-generic-hwe-18.04" ;;
 	"trusty-virtual"            ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
 	"xenial-virtual"            ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
 	"bionic-virtual"            ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
 	"trusty-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual-lts-xenial" ;;
 	"xenial-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual-hwe-16.04" ;;
-	"bionic-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual" ;;
+	"bionic-virtual-hwe"        ) KERNEL_IMAGE_PACKAGE="linux-image-virtual-hwe-18.04" ;;
 esac
 
 # Select Kernel Header Package
@@ -334,19 +331,19 @@ case "${RELEASE}-${KERNEL}" in
 	"bionic-generic"            ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
 	"trusty-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic-lts-xenial" ;;
 	"xenial-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic-hwe-16.04" ;;
-	"bionic-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
-	"trusty-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
-	"xenial-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
-	"bionic-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
-	"trusty-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-lts-xenial" ;;
-	"xenial-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic-hwe-16.04" ;;
-	"bionic-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-signed-headers-generic" ;;
+	"bionic-generic-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-generic-hwe-18.04" ;;
+	"trusty-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+	"xenial-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+	"bionic-signed-generic"     ) KERNEL_HEADER_PACKAGE="linux-headers-generic" ;;
+	"trusty-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-headers-generic-lts-xenial" ;;
+	"xenial-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-headers-generic-hwe-16.04" ;;
+	"bionic-signed-generic-hwe" ) KERNEL_HEADER_PACKAGE="linux-headers-generic-hwe-18.04" ;;
 	"trusty-virtual"            ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
 	"xenial-virtual"            ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
 	"bionic-virtual"            ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
 	"trusty-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual-lts-xenial" ;;
 	"xenial-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual-hwe-16.04" ;;
-	"bionic-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual" ;;
+	"bionic-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual-hwe-18.04" ;;
 esac
 
 # HWE Xorg Package
