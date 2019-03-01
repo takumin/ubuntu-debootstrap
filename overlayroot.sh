@@ -758,17 +758,17 @@ chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 # Check Environment Variable
 if [ "${PROFILE}" != 'minimal' ]; then
 	# Install Package
-	chroot "${WORKDIR}" apt-get -y install ubuntu-standard
+	chroot "${WORKDIR}" apt-get -y install ubuntu-standard language-pack-ja
 fi
 
 ################################################################################
-# Server
+# Systemd
 ################################################################################
 
-# Check Environment Variable
-if [[ "${PROFILE}" =~ ^.*server.*$ ]]; then
+# Check Release Version
+if [ "${RELEASE}" = 'trusty' ]; then
 	# Install Package
-	chroot "${WORKDIR}" apt-get -y install ubuntu-server language-pack-ja
+	chroot "${TMPFS_DIR}" apt-get -y install systemd
 fi
 
 ################################################################################
@@ -777,6 +777,9 @@ fi
 
 # Check Release Version
 if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
+	# Install Require Packages
+	chroot "${TMPFS_DIR}" apt-get -qq install ethtool ifenslave
+
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
 
@@ -934,6 +937,9 @@ fi
 
 # Require Package
 chroot "${WORKDIR}" apt-get -y install ssh
+
+# Disable DNS Lookup
+sed -i -e 's@^#?UseDNS.*$@UseDNS no@'
 
 # Remove Temporary SSH Host Keys
 find "${WORKDIR}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
