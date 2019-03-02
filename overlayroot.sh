@@ -1069,21 +1069,27 @@ fi
 # Intel LAN Driver
 ################################################################################
 
-intel_lan_driver_e1000e_dkms ()
+intel_lan_driver_dkms ()
 {
-	# Copy Archive
-	cp "${CACHEDIR}/e1000e-${INTEL_E1000E_VERSION}.tar.gz" "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz"
+	if [ $# -ne 2 ]; then
+		"intel_lan_driver_dkms driver_name driver_version"
+		exit 1
+	fi
+
+	# Local Variables
+	local readonly driver_name="$1"
+	local readonly driver_version="$2"
 
 	# Extract Archive
-	tar -xf "${WORKDIR}/tmp/e1000e-${INTEL_E1000E_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
+	tar -xf "${CACHEDIR}/${driver_name}-${driver_version}.tar.gz" -C "${WORKDIR}/usr/src"
 
 	# DKMS Configuration
-	cat > "${WORKDIR}/usr/src/e1000e-${INTEL_E1000E_VERSION}/dkms.conf" <<- __EOF__
-	PACKAGE_NAME="e1000e"
-	PACKAGE_VERSION="${INTEL_E1000E_VERSION}"
+	cat > "${WORKDIR}/usr/src/${driver_name}-${driver_version}/dkms.conf" <<- __EOF__
+	PACKAGE_NAME="${driver_name}"
+	PACKAGE_VERSION="${driver_version}"
 	BUILT_MODULE_LOCATION="src"
-	BUILT_MODULE_NAME[0]="e1000e"
-	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/e1000e/"
+	BUILT_MODULE_NAME[0]="${driver_name}"
+	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/${driver_name}/"
 	MAKE[0]="BUILD_KERNEL=\${kernelver} make -C src"
 	CLEAN[0]="BUILD_KERNEL=\${kernelver} make -C src clean"
 	AUTOINSTALL="yes"
@@ -1091,67 +1097,13 @@ intel_lan_driver_e1000e_dkms ()
 	__EOF__
 
 	# DKMS Installation
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" add
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" build
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m e1000e -v "${INTEL_E1000E_VERSION}" install
-}
-
-intel_lan_driver_igb_dkms ()
-{
-	# Copy Archive
-	cp "${CACHEDIR}/igb-${INTEL_IGB_VERSION}.tar.gz" "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz"
-
-	# Extract Archive
-	tar -xf "${WORKDIR}/tmp/igb-${INTEL_IGB_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
-
-	# DKMS Configuration
-	cat > "${WORKDIR}/usr/src/igb-${INTEL_IGB_VERSION}/dkms.conf" <<- __EOF__
-	PACKAGE_NAME="igb"
-	PACKAGE_VERSION="${INTEL_IGB_VERSION}"
-	BUILT_MODULE_LOCATION="src"
-	BUILT_MODULE_NAME[0]="igb"
-	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/igb/"
-	MAKE[0]="BUILD_KERNEL=\${kernelver} make -C src"
-	CLEAN[0]="BUILD_KERNEL=\${kernelver} make -C src clean"
-	AUTOINSTALL="yes"
-	REMAKE_INITRD="yes"
-	__EOF__
-
-	# DKMS Installation
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" add
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" build
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m igb -v "${INTEL_IGB_VERSION}" install
-}
-
-intel_lan_driver_ixgbe_dkms ()
-{
-	# Copy Archive
-	cp "${CACHEDIR}/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz"
-
-	# Extract Archive
-	tar -xf "${WORKDIR}/tmp/ixgbe-${INTEL_IXGBE_VERSION}.tar.gz" -C "${WORKDIR}/usr/src"
-
-	# DKMS Configuration
-	cat > "${WORKDIR}/usr/src/ixgbe-${INTEL_IXGBE_VERSION}/dkms.conf" <<- __EOF__
-	PACKAGE_NAME="ixgbe"
-	PACKAGE_VERSION="${INTEL_IXGBE_VERSION}"
-	BUILT_MODULE_LOCATION="src"
-	BUILT_MODULE_NAME[0]="ixgbe"
-	DEST_MODULE_LOCATION[0]="/kernel/drivers/net/ixgbe/"
-	MAKE[0]="BUILD_KERNEL=\${kernelver} make -C src"
-	CLEAN[0]="BUILD_KERNEL=\${kernelver} make -C src clean"
-	AUTOINSTALL="yes"
-	REMAKE_INITRD="yes"
-	__EOF__
-
-	# DKMS Installation
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" add
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" build
-	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m ixgbe -v "${INTEL_IXGBE_VERSION}" install
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m "${driver_name}" -v "${driver_version}" add
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m "${driver_name}" -v "${driver_version}" build
+	chroot "${WORKDIR}" dkms -k "${KERNEL_VERSION}" -m "${driver_name}" -v "${driver_version}" install
 }
 
 # Check Profile&Kernel
-if [ "${PROFILE}" != 'minimal' ] && [ "${KERNEL}" = 'generic' ] || [ "${KERNEL}" = 'generic-hwe' ]; then
+if [[ "${KERNEL}" =~ ^generic.*$ ]] && [ "${PROFILE}" != 'minimal' ]; then
 	# Kernel Header
 	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_HEADER_PACKAGE}"
 
@@ -1161,22 +1113,22 @@ if [ "${PROFILE}" != 'minimal' ] && [ "${KERNEL}" = 'generic' ] || [ "${KERNEL}"
 	# Check Release&Kernel Version
 	case "${RELEASE}-${KERNEL}" in
 		trusty*)
-			intel_lan_driver_e1000e_dkms
-			intel_lan_driver_igb_dkms
-			intel_lan_driver_ixgbe_dkms
+			intel_lan_driver_dkms 'e1000e' "${INTEL_E1000E_VERSION}"
+			intel_lan_driver_dkms 'igb'    "${INTEL_IGB_VERSION}"
+			intel_lan_driver_dkms 'ixgbe'  "${INTEL_IXGBE_VERSION}"
 			;;
 		xenial-generic)
-			intel_lan_driver_e1000e_dkms
-			intel_lan_driver_igb_dkms
-			intel_lan_driver_ixgbe_dkms
+			intel_lan_driver_dkms 'e1000e' "${INTEL_E1000E_VERSION}"
+			intel_lan_driver_dkms 'igb'    "${INTEL_IGB_VERSION}"
+			intel_lan_driver_dkms 'ixgbe'  "${INTEL_IXGBE_VERSION}"
 			;;
 		xenial-generic-hwe)
-			intel_lan_driver_e1000e_dkms
-			intel_lan_driver_ixgbe_dkms
+			intel_lan_driver_dkms 'e1000e' "${INTEL_E1000E_VERSION}"
+			intel_lan_driver_dkms 'ixgbe'  "${INTEL_IXGBE_VERSION}"
 			;;
 		bionic*)
-			intel_lan_driver_e1000e_dkms
-			intel_lan_driver_ixgbe_dkms
+			intel_lan_driver_dkms 'e1000e' "${INTEL_E1000E_VERSION}"
+			intel_lan_driver_dkms 'ixgbe'  "${INTEL_IXGBE_VERSION}"
 			;;
 	esac
 
