@@ -807,11 +807,35 @@ echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
 # LiveBoot
 ################################################################################
 
-# Check Environment Variable
-if [[ ! "${KERNEL}" =~ ^.*virtual.*$ ]] && [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
-	# Require Package
-	chroot "${WORKDIR}" apt-get -y install casper
-fi
+# Generate Reset Network Interface for Initramfs
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/liveboot" << '__EOF__'
+#!/bin/sh
+
+PREREQ=""
+if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+
+liveboot()
+{
+	local param
+	for param in $(cat /proc/cmdline); do
+		case "${param}" in
+			livefs=*)
+				LIVEFS="${param#*=}"
+				;;
+			liveuuid=*)
+				LIVEUUID="${param#*=}"
+				;;
+		esac
+	done
+}
+
+. /scripts/functions
+
+liveboot
+__EOF__
+
+# Execute Permission
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/liveboot"
 
 ################################################################################
 # Netboot
