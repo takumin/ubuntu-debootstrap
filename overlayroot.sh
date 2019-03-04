@@ -24,7 +24,7 @@ fi
 # Root File System Mount Point
 # Values: String
 # shellcheck disable=SC2086
-: ${WORKDIR:='/run/rootfs'}
+: ${WORKDIR:='/tmp/rootfs'}
 
 # Destination Directory
 # Values: String
