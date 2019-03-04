@@ -538,6 +538,27 @@ mount -t tmpfs                      tmpfs    "${WORKDIR}/var/tmp"
 chmod 1777 "${WORKDIR}/dev/shm"
 
 ################################################################################
+# Workaround
+################################################################################
+
+# Apt Speed Up
+echo 'force-unsafe-io' > "${WORKDIR}/etc/dpkg/dpkg.cfg.d/02apt-speedup"
+
+# Check Release Version
+if [ "${RELEASE}" = 'trusty' ]; then
+	# Workaround policy-rc.d
+	echo $'#!/bin/sh\nexit 101' > "${WORKDIR}/usr/sbin/policy-rc.d"
+	chmod +x "${WORKDIR}/usr/sbin/policy-rc.d"
+
+	# Workaround initctl
+	chroot "${WORKDIR}" dpkg-divert --local --rename --add /sbin/initctl
+	chroot "${WORKDIR}" ln -fs /bin/true /sbin/initctl
+
+	# Workaround utmp
+	chroot "${WORKDIR}" touch /var/run/utmp
+fi
+
+################################################################################
 # System
 ################################################################################
 
@@ -1166,6 +1187,23 @@ chroot "${WORKDIR}" update-initramfs -d -k all
 
 # Create Initramfs
 chroot "${WORKDIR}" update-initramfs -c -k "${KERNEL_VERSION}"
+
+################################################################################
+# Workaround
+################################################################################
+
+# Remote Apt Speed Up
+rm -f "${WORKDIR}/etc/dpkg/dpkg.cfg.d/02apt-speedup"
+
+# Check Release Version
+if [ "${RELEASE}" = 'trusty' ]; then
+	# Workaround policy-rc.d
+	rm -f "${WORKDIR}/usr/sbin/policy-rc.d"
+
+	# Workaround initctl
+	rm -f "${WORKDIR}/sbin/initctl"
+	chroot "${WORKDIR}" dpkg-divert --rename --remove /sbin/initctl
+fi
 
 ################################################################################
 # Cleanup
