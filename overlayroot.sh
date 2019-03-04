@@ -851,12 +851,12 @@ liveroot()
 		esac
 	done
 	# check variables
-	if [ -z "${uuid}"] && [ -z "${partuuid}" ]; then
+	if [ -z "${uuid}" ] && [ -z "${partuuid}" ]; then
 		log_warning_msg "liveroot-uuid or liveroot-partuuid kernel parameter but not specified"
 		return 0
 	fi
 	# get mount device
-	if [ -n "${uuid}"] && [ -e "/dev/disk/by-uuid/${uuid}" ]; then
+	if [ -n "${uuid}" ] && [ -e "/dev/disk/by-uuid/${uuid}" ]; then
 		device="$(readlink -fn "/dev/disk/by-uuid/${uuid}")"
 	elif [ -n "${partuuid}" ] && [ -e "/dev/disk/by-partuuid/${partuuid}" ]; then
 		device="$(readlink -fn "/dev/disk/by-partuuid/${partuuid}")"
