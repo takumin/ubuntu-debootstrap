@@ -889,21 +889,8 @@ liveroot()
 liveroot
 __EOF__
 
-cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/liveroot" << '__EOF__'
-#!/bin/sh
-
-PREREQ=""
-if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
-
-. /usr/share/initramfs-tools/hook-functions
-
-manual_add_modules loop
-manual_add_modules squashfs
-__EOF__
-
 # Execute Permission
 chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/liveroot"
-chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/liveroot"
 
 ################################################################################
 # Netboot
