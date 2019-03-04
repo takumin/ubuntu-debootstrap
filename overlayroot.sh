@@ -276,7 +276,7 @@ DEBOOTSTRAP_VARIANT="--variant=minbase"
 DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-DEBOOTSTRAP_INCLUDES="--include=tzdata,locales,console-setup,gnupg,eatmydata"
+DEBOOTSTRAP_INCLUDES="--include=gnupg,eatmydata"
 
 # Debootstrap Environment
 declare -a DEBOOTSTRAP_ENVIRONMENT=()
@@ -517,6 +517,7 @@ declare -x LANG="C"
 declare -x DEBIAN_FRONTEND="noninteractive"
 declare -x DEBIAN_PRIORITY="critical"
 declare -x DEBCONF_NONINTERACTIVE_SEEN="true"
+declare -x LD_PRELOAD="libeatmydata.so"
 
 # Cleanup Files
 find "${WORKDIR}/dev"     -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
@@ -542,6 +543,73 @@ chmod 1777 "${WORKDIR}/dev/shm"
 
 # Default Hostname
 echo 'localhost' > "${WORKDIR}/etc/hostname"
+
+################################################################################
+# Repository
+################################################################################
+
+# Official Repository
+cat > "${WORKDIR}/etc/apt/sources.list" << __EOF__
+# Official Repository
+deb ${MIRROR_UBUNTU} ${RELEASE}           main restricted universe multiverse
+deb ${MIRROR_UBUNTU} ${RELEASE}-updates   main restricted universe multiverse
+deb ${MIRROR_UBUNTU} ${RELEASE}-backports main restricted universe multiverse
+deb ${MIRROR_UBUNTU} ${RELEASE}-security  main restricted universe multiverse
+__EOF__
+
+# Partner Repository
+cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-partner.list" << __EOF__
+# Partner Repository
+deb ${MIRROR_UBUNTU_PARTNER} ${RELEASE} partner
+__EOF__
+
+# Japanese Team Repository
+cp "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" "${WORKDIR}/tmp/ubuntu-ja-archive-keyring.gpg"
+cp "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" "${WORKDIR}/tmp/ubuntu-jp-ppa-keyring.gpg"
+chroot "${WORKDIR}" apt-key add /tmp/ubuntu-ja-archive-keyring.gpg
+chroot "${WORKDIR}" apt-key add /tmp/ubuntu-jp-ppa-keyring.gpg
+cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
+# Japanese Team Repository
+deb ${MIRROR_UBUNTU_JA} ${RELEASE} main
+deb ${MIRROR_UBUNTU_JA_NONFREE} ${RELEASE} multiverse
+__EOF__
+
+################################################################################
+# Upgrade
+################################################################################
+
+# Update Repository
+chroot "${WORKDIR}" apt-get -y update
+
+# Upgrade System
+chroot "${WORKDIR}" apt-get -y dist-upgrade
+
+################################################################################
+# Kernel
+################################################################################
+
+# Install Kernel
+chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_IMAGE_PACKAGE}"
+
+# Get Kernel Version
+KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-[0-9\.-]+-generic' | sed -E 's/linux-image-//')"
+
+################################################################################
+# Minimal
+################################################################################
+
+# Minimal Package
+chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
+
+################################################################################
+# Systemd
+################################################################################
+
+# Check Release Version
+if [ "${RELEASE}" = 'trusty' ]; then
+	# Install Package
+	chroot "${WORKDIR}" apt-get -y install systemd
+fi
 
 ################################################################################
 # Localize
@@ -701,63 +769,6 @@ if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 fi
 
 ################################################################################
-# Repository
-################################################################################
-
-# Official Repository
-cat > "${WORKDIR}/etc/apt/sources.list" << __EOF__
-# Official Repository
-deb ${MIRROR_UBUNTU} ${RELEASE}           main restricted universe multiverse
-deb ${MIRROR_UBUNTU} ${RELEASE}-updates   main restricted universe multiverse
-deb ${MIRROR_UBUNTU} ${RELEASE}-backports main restricted universe multiverse
-deb ${MIRROR_UBUNTU} ${RELEASE}-security  main restricted universe multiverse
-__EOF__
-
-# Partner Repository
-cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-partner.list" << __EOF__
-# Partner Repository
-deb ${MIRROR_UBUNTU_PARTNER} ${RELEASE} partner
-__EOF__
-
-# Japanese Team Repository
-cp "${CACHEDIR}/ubuntu-ja-archive-keyring.gpg" "${WORKDIR}/tmp/ubuntu-ja-archive-keyring.gpg"
-cp "${CACHEDIR}/ubuntu-jp-ppa-keyring.gpg" "${WORKDIR}/tmp/ubuntu-jp-ppa-keyring.gpg"
-chroot "${WORKDIR}" apt-key add /tmp/ubuntu-ja-archive-keyring.gpg
-chroot "${WORKDIR}" apt-key add /tmp/ubuntu-jp-ppa-keyring.gpg
-cat > "${WORKDIR}/etc/apt/sources.list.d/ubuntu-ja.list" << __EOF__
-# Japanese Team Repository
-deb ${MIRROR_UBUNTU_JA} ${RELEASE} main
-deb ${MIRROR_UBUNTU_JA_NONFREE} ${RELEASE} multiverse
-__EOF__
-
-################################################################################
-# Upgrade
-################################################################################
-
-# Update Repository
-chroot "${WORKDIR}" apt-get -y update
-
-# Upgrade System
-chroot "${WORKDIR}" apt-get -y dist-upgrade
-
-################################################################################
-# Kernel
-################################################################################
-
-# Install Kernel
-chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${KERNEL_IMAGE_PACKAGE}"
-
-# Get Kernel Version
-KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linux-image-[0-9\.-]+-generic' | sed -E 's/linux-image-//')"
-
-################################################################################
-# Minimal
-################################################################################
-
-# Minimal Package
-chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
-
-################################################################################
 # Standard
 ################################################################################
 
@@ -765,16 +776,6 @@ chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 if [ "${PROFILE}" != 'minimal' ]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-standard language-pack-ja
-fi
-
-################################################################################
-# Systemd
-################################################################################
-
-# Check Release Version
-if [ "${RELEASE}" = 'trusty' ]; then
-	# Install Package
-	chroot "${WORKDIR}" apt-get -y install systemd
 fi
 
 ################################################################################
