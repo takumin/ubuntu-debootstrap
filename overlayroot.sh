@@ -816,15 +816,11 @@ if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
 
 liveboot()
 {
-	local param
+	local param livefs liveuuid
 	for param in $(cat /proc/cmdline); do
 		case "${param}" in
-			livefs=*)
-				LIVEFS="${param#*=}"
-				;;
-			liveuuid=*)
-				LIVEUUID="${param#*=}"
-				;;
+			livefs=*)   livefs="${param#*=}" ;;
+			liveuuid=*) liveuuid="${param#*=}" ;;
 		esac
 	done
 }
