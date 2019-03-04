@@ -851,7 +851,7 @@ liveroot()
 		esac
 	done
 	# check variables
-	if [ -z "${uuid}"] && [ -z "${partuuid}" ];
+	if [ -z "${uuid}"] && [ -z "${partuuid}" ]; then
 		log_warning_msg "liveroot-uuid or liveroot-partuuid kernel parameter but not specified"
 		return 0
 	fi
