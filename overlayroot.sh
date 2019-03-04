@@ -695,8 +695,8 @@ if [ "${PROFILE}" = 'minimal' ] || [ "${PROFILE}" = 'standard' ] || [[ "${PROFIL
 	{
 		local script rt
 		script="$(script_cmdline)"
-		if [[ -n "${script}" && ! -x /tmp/startup_script ]]; then
-			if [[ "${script}" =~ ^http:// || "${script}" =~ ^ftp:// ]]; then
+		if [ -n "${script}" ] && [ ! -x /tmp/startup_script ]; then
+			if [[ "${script}" =~ ^https?:// ]]; then
 				wget "${script}" --retry-connrefused -q -O /tmp/startup_script >/dev/null
 				rt=$?
 			else
