@@ -840,6 +840,8 @@ liveroot()
 {
 	# local variables
 	local param path uuid partuuid device
+	# default variables
+	path="/boot/rootfs.squashfs"
 	# parse kernel parameter
 	for param in $(cat /proc/cmdline); do
 		case "${param}" in
