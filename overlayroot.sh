@@ -920,31 +920,31 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 
 	# Execute Permission
 	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
-
-	# Generate Reset Network Interface for Initramfs
-	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces" <<- '__EOF__'
-	#!/bin/sh
-
-	PREREQ=""
-	if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
-
-	reset_network_interfaces()
-	{
-		local intf
-		for intf in $(ls /sys/class/net/); do
-			ip addr flush dev "${intf}"
-			ip link set "${intf}" down
-		done
-	}
-
-	. /scripts/functions
-
-	reset_network_interfaces
-	__EOF__
-
-	# Execute Permission
-	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces"
 fi
+
+# Generate Reset Network Interface for Initramfs
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces" << '__EOF__'
+#!/bin/sh
+
+PREREQ=""
+if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+
+reset_network_interfaces()
+{
+	local intf
+	for intf in $(ls /sys/class/net/); do
+		ip addr flush dev "${intf}"
+		ip link set "${intf}" down
+	done
+}
+
+. /scripts/functions
+
+reset_network_interfaces
+__EOF__
+
+# Execute Permission
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces"
 
 ################################################################################
 # Cloud
