@@ -830,67 +830,69 @@ echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
 ################################################################################
 
 # Generate Reset Network Interface for Initramfs
-cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/liveroot" << '__EOF__'
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
 #!/bin/sh
 
 PREREQ=""
 if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
 
+# mount_squash() {
+# 	local target="$1" url="$2"
+# 	if [ $# -gt 2 ]; then
+# 		log_warn "too many arguments to mount_squash: $*"
+# 		return 1
+# 	fi
+# 	debug 1 "mount_squash downloading $url to $target.img"
+# 	wget "$url" -O "$target.img"
+# 	debug 1 "mount -t squashfs -o loop ${ROOTFLAGS}" \
+# 		"'$target.img' '$target'"
+# 	mount -t squashfs -o loop ${ROOTFLAGS} \
+# 		"$target.img" "$target" || return
+# }
+
+get_fstype() {
+	local FSTYPE
+	local FSSIZE
+	eval $(fstype < $1)
+	if [ "$FSTYPE" != "unknown" ]; then
+		echo $FSTYPE
+		return 0
+	fi
+	/sbin/blkid -s TYPE -o value $1 2>/dev/null
+}
+
 liveroot()
 {
 	# local variables
-	local param path uuid partuuid device
-	# default variables
-	path="/boot/rootfs.squashfs"
-	# parse kernel parameter
-	for param in $(cat /proc/cmdline); do
-		case "${param}" in
-			liveroot-path=*)     path="${param#*=}" ;;
-			liveroot-uuid=*)     uuid="${param#*=}" ;;
-			liveroot-partuuid=*) partuuid="${param#*=}" ;;
-		esac
+	local readonly target="${1}" path="${2#file://}"
+	local dev
+
+	for dev in /dev/disk/by-id/*; do
+		if [ "$(get_fstype ${dev})" = 'iso9660' ]; then
+		fi
 	done
-	# check variables
-	if [ -z "${uuid}" ] && [ -z "${partuuid}" ]; then
-		log_warning_msg "liveroot-uuid or liveroot-partuuid kernel parameter but not specified"
-		return 0
-	fi
-	# get mount device
-	if [ -n "${uuid}" ] && [ -e "/dev/disk/by-uuid/${uuid}" ]; then
-		device="$(readlink -fn "/dev/disk/by-uuid/${uuid}")"
-	elif [ -n "${partuuid}" ] && [ -e "/dev/disk/by-partuuid/${partuuid}" ]; then
-		device="$(readlink -fn "/dev/disk/by-partuuid/${partuuid}")"
-	else
-		panic "not found partition"
-		return 1
-	fi
-	# mount rootfs device
-	mkdir -p /run/liveroot
-	chmod 0755 /run/liveroot
-	mount "${device}" /run/liveroot
-	# check rootfs image
-	if [ ! -f "/run/liveroot/${path}" ]; then
-		panic "not found root file system image file"
-		return 1
-	fi
-	# load kernel module
-	modprobe loop
-	modprobe squashfs
-	# mount rootfs image
-	losetup /dev/loop0 "/run/liveroot/${path}"
-	mount -t squashfs -o ro /dev/loop0 "${rootmnt}"
-	# success
-	log_success_msg "mount root file system"
-	return 0
 }
 
 . /scripts/functions
 
-liveroot
+case "${ROOT}" in
+	file://*squashfs) :;;
+	file://*squash) :;;
+	file://*sfs) :;;
+	*) exit 0
+esac
+
+liveroot "${rootmnt}.live" "${ROOT}" || exit 1
+
+{
+	echo 'ROOTFSTYPE="liveroot"'
+	echo "ROOTFLAGS=\"-o move\""
+	echo "ROOT=\"${rootmnt}.live\""
+} > /conf/param.conf
 __EOF__
 
 # Execute Permission
-chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/liveroot"
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot"
 
 ################################################################################
 # Netboot
