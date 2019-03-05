@@ -829,6 +829,9 @@ echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
 # LiveBoot
 ################################################################################
 
+# Create Initramfs Directory
+mkdir -p "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top"
+
 # Generate Reset Network Interface for Initramfs
 cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
 #!/bin/sh
@@ -836,39 +839,46 @@ cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EO
 PREREQ=""
 if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
 
-# mount_squash() {
-# 	local target="$1" url="$2"
-# 	if [ $# -gt 2 ]; then
-# 		log_warn "too many arguments to mount_squash: $*"
-# 		return 1
-# 	fi
-# 	debug 1 "mount_squash downloading $url to $target.img"
-# 	wget "$url" -O "$target.img"
-# 	debug 1 "mount -t squashfs -o loop ${ROOTFLAGS}" \
-# 		"'$target.img' '$target'"
-# 	mount -t squashfs -o loop ${ROOTFLAGS} \
-# 		"$target.img" "$target" || return
-# }
-
 get_fstype() {
-	local FSTYPE
-	local FSSIZE
+	local FSTYPE FSSIZE
 	eval $(fstype < $1)
-	if [ "$FSTYPE" != "unknown" ]; then
-		echo $FSTYPE
-		return 0
-	fi
-	/sbin/blkid -s TYPE -o value $1 2>/dev/null
+	case "${FSTYPE}" in
+		iso9660) echo 'iso9660'; return 0 ;;
+		*)       echo 'unknown'; return 0 ;;
+	esac
 }
 
 liveroot()
 {
-	# local variables
-	local readonly target="${1}" path="${2#file://}"
-	local dev
+	local readonly target="$1" uri="$2"
+	local path="${uri#file://}" disk dev
 
-	for dev in /dev/disk/by-id/*; do
+	for disk in /dev/disk/by-id/*; do
+		dev="$(readlink -fv ${disk})"
+
 		if [ "$(get_fstype ${dev})" = 'iso9660' ]; then
+			mkdir -p "/run/liveroot"
+
+			if ! mount -t iso9660 -o loop "${dev}" "/run/liveroot"; then
+				panic "mount -t iso9660 -o loop ${dev} /run/liveroot"
+				return 1
+			fi
+
+			if [ -f "${path}" ]; then
+				mkdir -p "${target}"
+
+				if mount -t squashfs -o loop "${ROOTFLAGS}" "${path}" "${target}"; then
+					return 0
+				else
+					panic "mount -t squashfs -o loop ${ROOTFLAGS} ${path} ${target}"
+					return 1
+				fi
+			else
+				if ! umount "/run/liveroot"; then
+					panic "umount /run/liveroot"
+					return 1
+				fi
+			fi
 		fi
 	done
 }
