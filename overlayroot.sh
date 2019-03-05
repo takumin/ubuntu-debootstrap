@@ -754,6 +754,7 @@ interfaces_config() {
 		if [ "${intf##*/}" = 'lo' ]; then
 			continue
 		fi
+		echo ""                            >> "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
 		echo "auto ${intf##*/}"            >> "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
 		echo "iface ${intf##*/} inet dhcp" >> "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
 	done
