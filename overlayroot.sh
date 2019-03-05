@@ -904,8 +904,8 @@ reset_network_interfaces()
 {
 	local intf
 	for intf in /sys/class/net/*; do
-		ip addr flush dev "${intf}"
-		ip link set "${intf}" down
+		ip addr flush dev "${intf##*/}"
+		ip link set "${intf##*/}" down
 	done
 }
 
