@@ -682,7 +682,7 @@ mount_squashfs() {
 	local readonly device="$1" fstype="$2" option="$3" image="$4" target="$5"
 
 	mkdir -p "/run/liveroot"
-	mount -t "${fstype}" "${option}" "${device}" "/run/liveroot"
+	mount -t "${fstype}" -o "${option}" "${device}" "/run/liveroot"
 
 	if [ -f "/run/liveroot${image}" ]; then
 		mkdir -p "${target}"
@@ -703,7 +703,7 @@ liveroot() {
 		fstype="$(get_fstype "${device}")"
 
 		case "${fstype}" in
-			iso9660) mount_squashfs "${device}" "${fstype}" '-o loop' "${image}" "${target}" && break ;;
+			iso9660) mount_squashfs "${device}" "${fstype}" "loop" "${image}" "${target}" && break ;;
 			*)       exit 1 ;;
 		esac
 	done
