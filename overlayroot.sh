@@ -989,8 +989,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 
 	[ "$1" = 'prereqs' ] && { exit 0; }
 
-	datasource_cmdline()
-	{
+	datasource_cmdline() {
 		local IFS param datasource
 		IFS=" "
 		for param in $(cat /proc/cmdline); do
@@ -1008,8 +1007,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		return 1
 	}
 
-	seedfrom_datasource()
-	{
+	seedfrom_datasource() {
 		local IFS param datasource
 		datasource="$(datasource_cmdline)"
 		if [ -n "${datasource}" ]; then
@@ -1025,8 +1023,20 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		return 1
 	}
 
-	network_config_seedfrom()
-	{
+	download_seedfrom() {
+		local url="$1" ret
+		wget "${url}" -O "/tmp/${url##*/}"
+		ret=$?
+		if [ $ret -eq 0 ]; then
+			mkdir -p "/run/nocloud-net"
+			cp "/tmp/${url##*/}" "/run/nocloud-net/${url##*/}"
+			log_success_msg "Cloud-Init/NoCloud-Net: Download ${url}"
+		else
+			log_failure_msg "Cloud-Init/NoCloud-Net: Download ${url}"
+		fi
+	}
+
+	nocloud_download_seed() {
 		local seedfrom
 		seedfrom="$(seedfrom_datasource)"
 		if [ -n "${seedfrom}" ]; then
@@ -1034,20 +1044,15 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 				log_failure_msg "Cloud-Init/NoCloud-Net: configure_networking()"
 				return 1
 			fi
-			wget "${seedfrom}network/network-config" -O "/tmp/network-config"
-			if [ $? -eq 0 ]; then
-				mkdir -p "/run/nocloud-net"
-				cp "/tmp/network-config" "/run/nocloud-net/network-config"
-				log_success_msg "Cloud-Init/NoCloud-Net: Download ${seedfrom}network/network-config"
-			else
-				log_failure_msg "Cloud-Init/NoCloud-Net: Download ${seedfrom}network/network-config"
-			fi
+			download_seedfrom "${seedfrom}user-data"
+			download_seedfrom "${seedfrom}meta-data"
+			download_seedfrom "${seedfrom}network-config"
 		fi
 	}
 
 	. /scripts/functions
 
-	network_config_seedfrom
+	nocloud_download_seed
 	__EOF__
 
 	# Execute Permission
