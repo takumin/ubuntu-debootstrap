@@ -136,7 +136,6 @@ set timeout=0
 
 menuentry 'ubuntu' {
 	search --no-floppy --set=root --file /UBUNTU_LIVE
-	probe -u $root --set=uuid
 	linux /live/kernel.img root=file:///live/rootfs.squashfs overlayroot=tmpfs nouveau.modeset=0 nvidia-drm.modeset=1 cgroup_enable=memory swapaccount=1 quiet ---
 	initrd /live/initrd.img
 }
@@ -147,10 +146,8 @@ touch "${WORKDIR}/img/UBUNTU_LIVE"
 
 # UEFI Grub Image
 grub-mkstandalone \
-	--format=x86_64-efi \
-	--output="${WORKDIR}/iso/bootx64.efi" \
-	--locales="" \
-	--fonts="" \
+	-O x86_64-efi \
+	-o "${WORKDIR}/iso/bootx64.efi" \
 	"boot/grub/grub.cfg=${WORKDIR}/iso/grub.cfg"
 
 # UEFI Disk Image
@@ -161,10 +158,10 @@ mcopy -i "${WORKDIR}/iso/efiboot.img" "${WORKDIR}/iso/bootx64.efi" ::efi/boot/
 
 # BIOS Grub Image
 grub-mkstandalone \
-	--format=i386-pc \
-	--output="${WORKDIR}/iso/core.img" \
-	--install-modules="linux normal iso9660 biosdisk memdisk search tar test probe ls" \
-	--modules="linux normal iso9660 biosdisk search test probe" \
+	-O i386-pc \
+	-o "${WORKDIR}/iso/core.img" \
+	--install-modules="linux normal iso9660 biosdisk memdisk search test vbe" \
+	--modules="linux normal iso9660 biosdisk search" \
 	--locales="" \
 	--fonts="" \
 	"boot/grub/grub.cfg=${WORKDIR}/iso/grub.cfg"
