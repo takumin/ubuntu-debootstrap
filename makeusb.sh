@@ -152,20 +152,20 @@ mount -t vfat -o codepage=932,iocharset=utf8 "${ESPPT}" "${WORKDIR}"
 
 # Require Directory
 mkdir -p "${WORKDIR}/boot"
-mkdir -p "${WORKDIR}/casper"
+mkdir -p "${WORKDIR}/live"
 
 ################################################################################
 # Files
 ################################################################################
 
 # Kernel
-cp "${DESTDIR}/kernel.img" "${WORKDIR}/casper/kernel.img"
+cp "${DESTDIR}/kernel.img" "${WORKDIR}/live/kernel.img"
 
 # Initramfs
-cp "${DESTDIR}/initrd.img" "${WORKDIR}/casper/initrd.img"
+cp "${DESTDIR}/initrd.img" "${WORKDIR}/live/initrd.img"
 
 # Rootfs
-cp "${DESTDIR}/rootfs.squashfs" "${WORKDIR}/casper/filesystem.squashfs"
+cp "${DESTDIR}/rootfs.squashfs" "${WORKDIR}/live/rootfs.squashfs"
 
 ################################################################################
 # Grub
@@ -207,7 +207,7 @@ set timeout=0
 
 menuentry 'ubuntu' {
 	search --no-floppy --fs-uuid --set=root ${UUID}
-	linux /casper/kernel.img boot=casper toram noprompt nopersistent nouveau.modeset=0 nvidia-drm.modeset=1 quiet splash ---
+	linux /casper/kernel.img root=file:///live/rootfs.squashfs overlayroot=tmpfs nouveau.modeset=0 nvidia-drm.modeset=1 cgroup_enable=memory swapaccount=1 quiet ---
 	initrd /casper/initrd.img
 }
 __EOF__
