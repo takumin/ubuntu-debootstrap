@@ -639,8 +639,29 @@ fi
 # LiveBoot
 ################################################################################
 
-# Create Initramfs Directory
-mkdir -p "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top"
+# Require Package
+chroot "${WORKDIR}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+
+# Check Release Version
+if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
+	# Workaround initramfs dns
+	cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns" <<- '__EOF__'
+	#!/bin/sh -e
+
+	[ "$1" = 'prereqs' ] && { exit 0; }
+
+	. /usr/share/initramfs-tools/hook-functions
+
+	for libnss_dns in /lib/x86_64-linux-gnu/libnss_dns*; do
+		if [ -e "${libnss_dns}" ]; then
+			copy_exec "${libnss_dns}" /lib
+		fi
+	done
+	__EOF__
+
+	# Execute Permission
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
+fi
 
 # Generate Reset Network Interface for Initramfs
 cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
@@ -708,6 +729,28 @@ __EOF__
 
 # Execute Permission
 chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot"
+
+# Generate Reset Network Interface for Initramfs
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces" << '__EOF__'
+#!/bin/sh
+
+[ "$1" = 'prereqs' ] && { exit 0; }
+
+reset_network_interfaces() {
+	local intf
+	for intf in /sys/class/net/*; do
+		ip addr flush dev "${intf##*/}"
+		ip link set "${intf##*/}" down
+	done
+}
+
+. /scripts/functions
+
+reset_network_interfaces
+__EOF__
+
+# Execute Permission
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces"
 
 ################################################################################
 # Localize
@@ -865,54 +908,44 @@ fi
 echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
 
 ################################################################################
-# Netboot
+# SSH
 ################################################################################
 
 # Require Package
-chroot "${WORKDIR}" apt-get -y install cloud-initramfs-copymods cloud-initramfs-dyn-netconf cloud-initramfs-rooturl overlayroot
+chroot "${WORKDIR}" apt-get -y install ssh
 
-# Check Release Version
-if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
-	# Workaround initramfs dns
-	cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns" <<- '__EOF__'
-	#!/bin/sh -e
+# Disable DNS Lookup
+sed -i -e 's@^#?UseDNS.*$@UseDNS no@' "${WORKDIR}/etc/ssh/sshd_config"
 
-	[ "$1" = 'prereqs' ] && { exit 0; }
+# Remove Temporary SSH Host Keys
+find "${WORKDIR}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
 
-	. /usr/share/initramfs-tools/hook-functions
+# Generate SSH Host Keys for System Boot
+cat > "${WORKDIR}/etc/systemd/system/ssh-keygen.service" << __EOF__
+[Unit]
+Description=Generate SSH Host Keys During Boot
+Before=ssh.service
+After=local-fs.target
+ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key
+ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key.pub
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key
+ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key.pub
 
-	for libnss_dns in /lib/x86_64-linux-gnu/libnss_dns*; do
-		if [ -e "${libnss_dns}" ]; then
-			copy_exec "${libnss_dns}" /lib
-		fi
-	done
-	__EOF__
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/dpkg-reconfigure --frontend noninteractive openssh-server
 
-	# Execute Permission
-	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
-fi
-
-# Generate Reset Network Interface for Initramfs
-cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces" << '__EOF__'
-#!/bin/sh
-
-[ "$1" = 'prereqs' ] && { exit 0; }
-
-reset_network_interfaces() {
-	local intf
-	for intf in /sys/class/net/*; do
-		ip addr flush dev "${intf##*/}"
-		ip link set "${intf##*/}" down
-	done
-}
-
-. /scripts/functions
-
-reset_network_interfaces
+[Install]
+WantedBy=multi-user.target
 __EOF__
 
-# Execute Permission
-chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces"
+# Enabled Systemd Service
+chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 
 ################################################################################
 # Cloud
@@ -983,46 +1016,6 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	- power-state-change
 	__EOF__
 fi
-
-################################################################################
-# SSH
-################################################################################
-
-# Require Package
-chroot "${WORKDIR}" apt-get -y install ssh
-
-# Disable DNS Lookup
-sed -i -e 's@^#?UseDNS.*$@UseDNS no@' "${WORKDIR}/etc/ssh/sshd_config"
-
-# Remove Temporary SSH Host Keys
-find "${WORKDIR}/etc/ssh" -type f -name '*_host_*' -exec rm {} \;
-
-# Generate SSH Host Keys for System Boot
-cat > "${WORKDIR}/etc/systemd/system/ssh-keygen.service" << __EOF__
-[Unit]
-Description=Generate SSH Host Keys During Boot
-Before=ssh.service
-After=local-fs.target
-ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key
-ConditionPathExists=|!/etc/ssh/ssh_host_dsa_key.pub
-ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key
-ConditionPathExists=|!/etc/ssh/ssh_host_ecdsa_key.pub
-ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key
-ConditionPathExists=|!/etc/ssh/ssh_host_ed25519_key.pub
-ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key
-ConditionPathExists=|!/etc/ssh/ssh_host_rsa_key.pub
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/sbin/dpkg-reconfigure --frontend noninteractive openssh-server
-
-[Install]
-WantedBy=multi-user.target
-__EOF__
-
-# Enabled Systemd Service
-chroot "${WORKDIR}" systemctl enable ssh-keygen.service
 
 ################################################################################
 # Xorg
