@@ -11,6 +11,14 @@ all: build
 
 .PHONY: build
 build:
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/cloud-desktop-nvidia.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/cloud-desktop.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/cloud-server-nvidia.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/cloud-server.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/desktop-nvidia.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/desktop.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/server-nvidia.sh
+	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic-hwe/server.sh
 	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic/cloud-desktop-nvidia.sh
 	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic/cloud-desktop.sh
 	@sudo eatmydata $(CURDIR)/overlayroot.sh $(CURDIR)/common.sh $(CURDIR)/profile/bionic/generic/cloud-server-nvidia.sh
