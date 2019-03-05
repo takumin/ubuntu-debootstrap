@@ -748,12 +748,14 @@ parse_cmdline() {
 
 interfaces_config() {
 	local intf
+	echo 'auto lo'                >  "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
+	echo 'iface lo inet loopback' >> "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
 	for intf in /sys/class/net/*; do
 		if [ "${intf##*/}" = 'lo' ]; then
 			continue
 		fi
-		echo "auto ${intf##*/}"            >  "${rootmnt}/etc/network/interfaces.d/${intf##*/}"
-		echo "iface ${intf##*/} inet dhcp" >> "${rootmnt}/etc/network/interfaces.d/${intf##*/}"
+		echo "auto ${intf##*/}"            >> "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
+		echo "iface ${intf##*/} inet dhcp" >> "${rootmnt}/etc/network/interfaces.d/50-cloud-init.cfg"
 	done
 }
 
@@ -968,7 +970,7 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 fi
 
 # Check Release Version
-if [ "${RELEASE}" = 'xenial' ] || [ "${RELEASE}" = 'bionic' ]; then
+if [ "${RELEASE}" = 'bionic' ]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install nplan
 fi
