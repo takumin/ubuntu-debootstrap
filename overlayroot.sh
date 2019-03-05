@@ -626,6 +626,87 @@ if [ "${RELEASE}" = 'trusty' ]; then
 fi
 
 ################################################################################
+# Standard
+################################################################################
+
+# Check Environment Variable
+if [ "${PROFILE}" != 'minimal' ]; then
+	# Install Package
+	chroot "${WORKDIR}" apt-get -y install ubuntu-standard language-pack-ja
+fi
+
+################################################################################
+# LiveBoot
+################################################################################
+
+# Create Initramfs Directory
+mkdir -p "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top"
+
+# Generate Reset Network Interface for Initramfs
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
+#!/bin/sh
+
+PREREQ=""
+if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+
+get_fstype() {
+	local FSTYPE FSSIZE
+	eval $(fstype < $1)
+	case "${FSTYPE}" in
+		iso9660) echo 'iso9660'; return 0 ;;
+		*)       echo 'unknown'; return 0 ;;
+	esac
+}
+
+liveroot() {
+	local readonly target="$1" image="${2#file://}"
+	local disk dev fstype
+
+	for disk in /dev/disk/by-id/*; do
+		dev="$(readlink -fv ${disk})"
+		fstype="$(get_fstype ${dev})"
+
+		case "${fstype}" in
+			iso9660) break ;;
+			*)       return 1 ;;
+		esac
+	done
+
+	mkdir -p "/run/liveroot"
+	mount -t "${fstype}" -o loop "${dev}" "/run/liveroot"
+
+	if [ -f "/run/liveroot${image}" ]; then
+		mkdir -p "${target}"
+		mount -t squashfs -o loop "/run/liveroot${image}" "${target}"
+		return 0
+	else
+		umount "/run/liveroot"
+		return 1
+	fi
+}
+
+. /scripts/functions
+
+case "${ROOT}" in
+	file://*squashfs) : ;;
+	file://*squash)   : ;;
+	file://*sfs)      : ;;
+	*)                exit 0 ;;
+esac
+
+liveroot "${rootmnt}.live" "${ROOT}" || exit 1
+
+{
+	echo 'ROOTFSTYPE="liveroot"'
+	echo "ROOTFLAGS=\"-o move\""
+	echo "ROOT=\"${rootmnt}.live\""
+} > /conf/param.conf
+__EOF__
+
+# Execute Permission
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot"
+
+################################################################################
 # Localize
 ################################################################################
 
@@ -783,16 +864,6 @@ if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 fi
 
 ################################################################################
-# Standard
-################################################################################
-
-# Check Environment Variable
-if [ "${PROFILE}" != 'minimal' ]; then
-	# Install Package
-	chroot "${WORKDIR}" apt-get -y install ubuntu-standard language-pack-ja
-fi
-
-################################################################################
 # Network
 ################################################################################
 
@@ -817,77 +888,6 @@ fi
 
 # Resolv Local Hostname
 echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
-
-################################################################################
-# LiveBoot
-################################################################################
-
-# Create Initramfs Directory
-mkdir -p "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top"
-
-# Generate Reset Network Interface for Initramfs
-cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
-#!/bin/sh
-
-PREREQ=""
-if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
-
-get_fstype() {
-	local FSTYPE FSSIZE
-	eval $(fstype < $1)
-	case "${FSTYPE}" in
-		iso9660) echo 'iso9660'; return 0 ;;
-		*)       echo 'unknown'; return 0 ;;
-	esac
-}
-
-liveroot() {
-	local readonly target="$1" image="${2#file://}"
-	local disk dev fstype
-
-	for disk in /dev/disk/by-id/*; do
-		dev="$(readlink -fv ${disk})"
-		fstype="$(get_fstype ${dev})"
-
-		case "${fstype}" in
-			iso9660) break ;;
-			*)       return 1 ;;
-		esac
-	done
-
-	mkdir -p "/run/liveroot"
-	mount -t "${fstype}" -o loop "${dev}" "/run/liveroot"
-
-	if [ -f "/run/liveroot${image}" ]; then
-		mkdir -p "${target}"
-		mount -t squashfs -o loop "/run/liveroot${image}" "${target}"
-		return 0
-	else
-		umount "/run/liveroot"
-		return 1
-	fi
-}
-
-. /scripts/functions
-
-case "${ROOT}" in
-	file://*squashfs) : ;;
-	file://*squash)   : ;;
-	file://*sfs)      : ;;
-	*)                exit 0 ;;
-esac
-
-liveroot "${rootmnt}.live" "${ROOT}" || exit 1
-
-{
-	echo 'ROOTFSTYPE="liveroot"'
-	echo "ROOTFLAGS=\"-o move\""
-	echo "ROOT=\"${rootmnt}.live\""
-} > /conf/param.conf
-__EOF__
-
-# Execute Permission
-chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot"
 
 ################################################################################
 # Netboot
