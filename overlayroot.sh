@@ -615,15 +615,23 @@ KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linu
 # Minimal Package
 chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 
-################################################################################
-# Systemd
-################################################################################
-
 # Check Release Version
 if [ "${RELEASE}" = 'trusty' ]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install systemd
 fi
+
+# Keep Proxy Environment Variables
+cat > "${WORKDIR}/etc/sudoers.d/keep_proxy" << '__EOF__'
+Defaults env_keep+="no_proxy"
+Defaults env_keep+="NO_PROXY"
+Defaults env_keep+="ftp_proxy"
+Defaults env_keep+="FTP_PROXY"
+Defaults env_keep+="http_proxy"
+Defaults env_keep+="HTTP_PROXY"
+Defaults env_keep+="https_proxy"
+Defaults env_keep+="HTTPS_PROXY"
+__EOF__
 
 ################################################################################
 # Standard
@@ -949,6 +957,9 @@ if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		echo "${USER_KEYS}" > "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
 		chmod 0644 "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
 	fi
+
+	# Sudo No Password
+	echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" > "${WORKDIR}/etc/sudoers.d/${USER_NAME}"
 
 	# User Dir Permission
 	chroot "${WORKDIR}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
