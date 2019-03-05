@@ -929,7 +929,7 @@ if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
 reset_network_interfaces()
 {
 	local intf
-	for intf in $(ls /sys/class/net/); do
+	for intf in /sys/class/net/*; do
 		ip addr flush dev "${intf}"
 		ip link set "${intf}" down
 	done
@@ -954,6 +954,63 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 
 	# Require Package
 	chroot "${WORKDIR}" apt-get -y install cloud-init
+
+	# Initialize Cloud-Init
+	cat > "${WORKDIR}/etc/cloud.cfg" <<- '__EOF__'
+	cloud_init_modules:
+	 - migrator
+	 - seed_random
+	 - bootcmd
+	 - write-files
+	 - growpart
+	 - resizefs
+	 - disk_setup
+	 - mounts
+	 - set_hostname
+	 - update_hostname
+	 - update_etc_hosts
+	 - ca-certs
+	 - rsyslog
+	 - users-groups
+	 - ssh
+
+	cloud_config_modules:
+	 - emit_upstart
+	 - snap
+	 - ssh-import-id
+	 - locale
+	 - set-passwords
+	 - grub-dpkg
+	 - apt-pipelining
+	 - apt-configure
+	 - ubuntu-advantage
+	 - ntp
+	 - timezone
+	 - disable-ec2-metadata
+	 - runcmd
+	 - byobu
+
+	cloud_final_modules:
+	 - package-update-upgrade-install
+	 - fan
+	 - landscape
+	 - lxd
+	 - puppet
+	 - chef
+	 - mcollective
+	 - salt-minion
+	 - rightscale_userdata
+	 - scripts-vendor
+	 - scripts-per-once
+	 - scripts-per-boot
+	 - scripts-per-instance
+	 - scripts-user
+	 - ssh-authkey-fingerprints
+	 - keys-to-console
+	 - phone-home
+	 - final-message
+	 - power-state-change
+	__EOF__
 
 	# Generate Network Config from MetaData Server
 	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config" <<- '__EOF__'
