@@ -631,7 +631,12 @@ Defaults env_keep+="http_proxy"
 Defaults env_keep+="HTTP_PROXY"
 Defaults env_keep+="https_proxy"
 Defaults env_keep+="HTTPS_PROXY"
+Defaults env_keep+="rsync_proxy"
+Defaults env_keep+="RSYNC_PROXY"
 __EOF__
+
+# No Password
+echo '%sudo ALL=(ALL) NOPASSWD: ALL' > "${WORKDIR}/etc/sudoers.d/no_passwd"
 
 ################################################################################
 # Standard
@@ -957,9 +962,6 @@ if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		echo "${USER_KEYS}" > "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
 		chmod 0644 "${WORKDIR}/home/${USER_NAME}/.ssh/authorized_keys"
 	fi
-
-	# Sudo No Password
-	echo "${USER_NAME} ALL=(ALL) NOPASSWD: ALL" > "${WORKDIR}/etc/sudoers.d/${USER_NAME}"
 
 	# User Dir Permission
 	chroot "${WORKDIR}" chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}"
