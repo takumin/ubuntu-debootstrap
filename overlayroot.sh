@@ -730,6 +730,67 @@ __EOF__
 # Execute Permission
 chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot"
 
+# Generate Default Network Configuration
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/network-config" << '__EOF__'
+#!/bin/sh
+
+[ "$1" = 'prereqs' ] && { echo 'overlayroot'; exit 0; }
+
+parse_cmdline() {
+	local param
+	for param in $(cat /proc/cmdline); do
+		case "${param}" in
+			ds=*) return 1 ;;
+		esac
+	done
+	return 0
+}
+
+interfaces_config() {
+	local intf
+	for intf in /sys/class/net/*; do
+		echo "auto ${intf##*/}"            >  "${rootmnt}/etc/network/interfaces.d/${intf##*/}"
+		echo "iface ${intf##*/} inet dhcp" >> "${rootmnt}/etc/network/interfaces.d/${intf##*/}"
+	done
+}
+
+netplan_config() {
+	local readonly cfgs="$(find ${rootmnt}/etc/netplan -type f | wc -l)"
+	if [ "${cfgs}" -gt 0 ]; then
+		return 1
+	fi
+	echo "network:"     >  "${rootmnt}/etc/netplan/01-netcfg.yaml"
+	echo "  version: 2" >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+	echo "  ethernets:" >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+	local intf addr
+	for intf in /sys/class/net/*; do
+		addr="$(cat ${intf}/address)"
+		echo "    ${intf##*/}:"     >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+		echo "      dhcp4: yes"     >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+		echo "      optional: true" >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+	done
+}
+
+. /scripts/functions
+
+case "${ROOTFSTYPE}" in
+	liveroot) : ;;
+	root_url) : ;;
+	*)        exit 0 ;;
+esac
+
+parse_cmdline || exit 1
+if [ -d "${rootmnt}/etc/network/interfaces.d" ]; then
+	interfaces_config
+fi
+if [ -d "${rootmnt}/etc/netplan" ]; then
+	netplan_config
+fi
+__EOF__
+
+# Execute Permission
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/network-config"
+
 # Generate Reset Network Interface for Initramfs
 cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces" << '__EOF__'
 #!/bin/sh
