@@ -881,9 +881,9 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 
 	. /usr/share/initramfs-tools/hook-functions
 
-	for _LIBRARY in /lib/x86_64-linux-gnu/libnss_dns*; do
-		if [ -e "${_LIBRARY}" ]; then
-			copy_exec ${_LIBRARY} /lib
+	for libnss_dns in /lib/x86_64-linux-gnu/libnss_dns*; do
+		if [ -e "${libnss_dns}" ]; then
+			copy_exec "${libnss_dns}" /lib
 		fi
 	done
 	__EOF__
@@ -982,81 +982,6 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	- final-message
 	- power-state-change
 	__EOF__
-
-	# Generate Network Config from MetaData Server
-	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-bottom/network-config" <<- '__EOF__'
-	#!/bin/sh
-
-	[ "$1" = 'prereqs' ] && { exit 0; }
-
-	datasource_cmdline() {
-		local IFS param datasource
-		IFS=" "
-		for param in $(cat /proc/cmdline); do
-			case "${param}" in
-				ds=*)
-					datasource="${param#*=}"
-					if [ "${datasource%;*}" = "nocloud-net" ]; then
-						echo "${param#*=}"
-						return 0
-					fi
-					;;
-			esac
-		done
-		log_warning_msg "Cloud-Init/NoCloud-Net: Skip No DataSource"
-		return 1
-	}
-
-	seedfrom_datasource() {
-		local IFS param datasource
-		datasource="$(datasource_cmdline)"
-		if [ -n "${datasource}" ]; then
-			IFS=";"
-			for param in ${datasource}; do
-				case "${param}" in
-					seedfrom=*) echo "${param#*=}" ; return 0 ;;
-					s=*)        echo "${param#*=}" ; return 0 ;;
-				esac
-			done
-		fi
-		log_warning_msg "Cloud-Init/NoCloud-Net: Skip No SeedFrom"
-		return 1
-	}
-
-	download_seedfrom() {
-		local url="$1" ret
-		wget "${url}" -O "/tmp/${url##*/}"
-		ret=$?
-		if [ $ret -eq 0 ]; then
-			mkdir -p "/run/nocloud-net"
-			cp "/tmp/${url##*/}" "/run/nocloud-net/${url##*/}"
-			log_success_msg "Cloud-Init/NoCloud-Net: Download ${url}"
-		else
-			log_failure_msg "Cloud-Init/NoCloud-Net: Download ${url}"
-		fi
-	}
-
-	nocloud_download_seed() {
-		local seedfrom
-		seedfrom="$(seedfrom_datasource)"
-		if [ -n "${seedfrom}" ]; then
-			if ! configure_networking; then
-				log_failure_msg "Cloud-Init/NoCloud-Net: configure_networking()"
-				return 1
-			fi
-			download_seedfrom "${seedfrom}user-data"
-			download_seedfrom "${seedfrom}meta-data"
-			download_seedfrom "${seedfrom}network-config"
-		fi
-	}
-
-	. /scripts/functions
-
-	nocloud_download_seed
-	__EOF__
-
-	# Execute Permission
-	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-bottom/network-config"
 fi
 
 ################################################################################
