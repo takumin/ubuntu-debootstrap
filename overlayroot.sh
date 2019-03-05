@@ -1034,9 +1034,10 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 				log_failure_msg "Cloud-Init/NoCloud-Net: configure_networking()"
 				return 1
 			fi
-			mkdir -p "/run/nocloud-net"
-			wget "${seedfrom}network/network-config" -O "/run/nocloud-net/network-config"
+			wget "${seedfrom}network/network-config" -O "/tmp/network-config"
 			if [ $? -eq 0 ]; then
+				mkdir -p "/run/nocloud-net"
+				cp "/tmp/network-config" "/run/nocloud-net/network-config"
 				log_success_msg "Cloud-Init/NoCloud-Net: Download ${seedfrom}network/network-config"
 			else
 				log_failure_msg "Cloud-Init/NoCloud-Net: Download ${seedfrom}network/network-config"
