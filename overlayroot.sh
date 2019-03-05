@@ -755,8 +755,7 @@ if [ "${PROFILE}" = 'minimal' ] || [ "${PROFILE}" = 'standard' ] || [[ "${PROFIL
 	cat > "${WORKDIR}/root/.startup.sh" <<- '__EOF__'
 	#!/bin/bash
 
-	script_cmdline ()
-	{
+	script_cmdline() {
 		local param
 		for param in $(< /proc/cmdline); do
 			case "${param}" in
@@ -765,8 +764,7 @@ if [ "${PROFILE}" = 'minimal' ] || [ "${PROFILE}" = 'standard' ] || [[ "${PROFIL
 		done
 	}
 
-	startup_script ()
-	{
+	startup_script() {
 		local script rt
 		script="$(script_cmdline)"
 		if [ -n "${script}" ] && [ ! -x /tmp/startup_script ]; then
@@ -900,8 +898,7 @@ cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-networ
 PREREQ=""
 if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
 
-reset_network_interfaces()
-{
+reset_network_interfaces() {
 	local intf
 	for intf in /sys/class/net/*; do
 		ip addr flush dev "${intf##*/}"
