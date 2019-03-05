@@ -749,6 +749,9 @@ parse_cmdline() {
 interfaces_config() {
 	local intf
 	for intf in /sys/class/net/*; do
+		if [ "${intf##*/}" = 'lo' ]; then
+			continue
+		fi
 		echo "auto ${intf##*/}"            >  "${rootmnt}/etc/network/interfaces.d/${intf##*/}"
 		echo "iface ${intf##*/} inet dhcp" >> "${rootmnt}/etc/network/interfaces.d/${intf##*/}"
 	done
@@ -759,15 +762,21 @@ netplan_config() {
 	if [ "${cfgs}" -gt 0 ]; then
 		return 1
 	fi
-	echo "network:"     >  "${rootmnt}/etc/netplan/01-netcfg.yaml"
-	echo "  version: 2" >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
-	echo "  ethernets:" >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+	echo "network:"     >  "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+	echo "  version: 2" >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+	echo "  ethernets:" >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
 	local intf addr
 	for intf in /sys/class/net/*; do
+		if [ "${intf##*/}" = 'lo' ]; then
+			continue
+		fi
 		addr="$(cat ${intf}/address)"
-		echo "    ${intf##*/}:"     >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
-		echo "      dhcp4: yes"     >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
-		echo "      optional: true" >> "${rootmnt}/etc/netplan/01-netcfg.yaml"
+		echo "    ${intf##*/}:"            >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+		echo "      match:"                >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+		echo "        macaddress: ${addr}" >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+		echo "      set-name: ${intf##*/}" >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+		echo "      dhcp4: yes"            >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
+		echo "      optional: true"        >> "${rootmnt}/etc/netplan/50-cloud-init.yaml"
 	done
 }
 
@@ -780,11 +789,10 @@ case "${ROOTFSTYPE}" in
 esac
 
 parse_cmdline || exit 1
-if [ -d "${rootmnt}/etc/network/interfaces.d" ]; then
-	interfaces_config
-fi
 if [ -d "${rootmnt}/etc/netplan" ]; then
 	netplan_config
+elif [ -d "${rootmnt}/etc/network/interfaces.d" ]; then
+	interfaces_config
 fi
 __EOF__
 
