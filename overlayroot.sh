@@ -956,7 +956,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	chroot "${WORKDIR}" apt-get -y install cloud-init
 
 	# Initialize Cloud-Init
-	cat > "${WORKDIR}/etc/cloud.cfg" <<- '__EOF__'
+	cat > "${WORKDIR}/etc/cloud/cloud.cfg" <<- '__EOF__'
 	cloud_init_modules:
 	- migrator
 	- seed_random
