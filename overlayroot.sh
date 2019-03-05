@@ -1318,3 +1318,6 @@ find "${DESTDIR}" -type f -print0 | xargs -0 chmod 0644
 if [ -n "${SUDO_UID}" ] && [ -n "${SUDO_GID}" ]; then
 	chown -R "${SUDO_UID}:${SUDO_GID}" "${DESTDIR}"
 fi
+
+# Infomation Files
+ls -lah "${DESTDIR}/"
