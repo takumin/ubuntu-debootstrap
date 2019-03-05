@@ -654,6 +654,7 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 
 	for libnss_dns in /lib/x86_64-linux-gnu/libnss_dns*; do
 		if [ -e "${libnss_dns}" ]; then
+			copy_exec "${libnss_dns}" /lib
 			copy_exec "${libnss_dns}" /lib/x86_64-linux-gnu
 		fi
 	done
