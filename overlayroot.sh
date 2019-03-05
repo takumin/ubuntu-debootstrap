@@ -841,36 +841,40 @@ get_fstype() {
 	esac
 }
 
-liveroot()
-{
-	local readonly target="$1" uri="$2"
-	local path="${uri#file://}" disk dev
+liveroot() {
+	local readonly target="$1" image="${2#file://}"
+	local disk dev fstype
 
 	for disk in /dev/disk/by-id/*; do
 		dev="$(readlink -fv ${disk})"
+		fstype="$(get_fstype ${dev})"
 
-		if [ "$(get_fstype ${dev})" = 'iso9660' ]; then
-			mkdir -p "/run/liveroot"
-			mount -t iso9660 -o loop "${dev}" "/run/liveroot"
-
-			if [ -f "/run/liveroot${path}" ]; then
-				mkdir -p "${target}"
-				mount -t squashfs -o loop "/run/liveroot${path}" "${target}"
-				return 0
-			else
-				umount "/run/liveroot"
-			fi
-		fi
+		case "${fstype}" in
+			iso9660) break ;;
+			*)       return 1 ;;
+		esac
 	done
+
+	mkdir -p "/run/liveroot"
+	mount -t "${fstype}" -o loop "${dev}" "/run/liveroot"
+
+	if [ -f "/run/liveroot${image}" ]; then
+		mkdir -p "${target}"
+		mount -t squashfs -o loop "/run/liveroot${image}" "${target}"
+		return 0
+	else
+		umount "/run/liveroot"
+		return 1
+	fi
 }
 
 . /scripts/functions
 
 case "${ROOT}" in
-	file://*squashfs) :;;
-	file://*squash) :;;
-	file://*sfs) :;;
-	*) exit 0
+	file://*squashfs) : ;;
+	file://*squash)   : ;;
+	file://*sfs)      : ;;
+	*)                exit 0 ;;
 esac
 
 liveroot "${rootmnt}.live" "${ROOT}" || exit 1
