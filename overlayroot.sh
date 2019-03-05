@@ -276,16 +276,10 @@ DEBOOTSTRAP_VARIANT="--variant=minbase"
 DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-DEBOOTSTRAP_INCLUDES="--include=gnupg,eatmydata"
+DEBOOTSTRAP_INCLUDES="--include=gnupg"
 
 # Debootstrap Environment
 declare -a DEBOOTSTRAP_ENVIRONMENT=()
-
-# Check libeatmydata
-if ldconfig -p | grep -qs 'libeatmydata.so'; then
-	# Disable System Call fsync()
-	DEBOOTSTRAP_ENVIRONMENT=("LD_PRELOAD=libeatmydata.so")
-fi
 
 # Check APT Proxy
 if [ "x${APT_PROXY_HOST}" != "x" ] && [ "x${APT_PROXY_PORT}" != "x" ]; then
@@ -517,7 +511,6 @@ declare -x LANG="C"
 declare -x DEBIAN_FRONTEND="noninteractive"
 declare -x DEBIAN_PRIORITY="critical"
 declare -x DEBCONF_NONINTERACTIVE_SEEN="true"
-declare -x LD_PRELOAD="libeatmydata.so"
 
 # Cleanup Files
 find "${WORKDIR}/dev"     -mindepth 1 -print0 | xargs -0 --no-run-if-empty rm -fr
@@ -858,26 +851,14 @@ liveroot()
 
 		if [ "$(get_fstype ${dev})" = 'iso9660' ]; then
 			mkdir -p "/run/liveroot"
+			mount -t iso9660 -o loop "${dev}" "/run/liveroot"
 
-			if ! mount -t iso9660 -o loop "${dev}" "/run/liveroot"; then
-				panic "mount -t iso9660 -o loop ${dev} /run/liveroot"
-				return 1
-			fi
-
-			if [ -f "${path}" ]; then
+			if [ -f "/run/liveroot${path}" ]; then
 				mkdir -p "${target}"
-
-				if mount -t squashfs -o loop "${ROOTFLAGS}" "${path}" "${target}"; then
-					return 0
-				else
-					panic "mount -t squashfs -o loop ${ROOTFLAGS} ${path} ${target}"
-					return 1
-				fi
+				mount -t squashfs -o loop "/run/liveroot${path}" "${target}"
+				return 0
 			else
-				if ! umount "/run/liveroot"; then
-					panic "umount /run/liveroot"
-					return 1
-				fi
+				umount "/run/liveroot"
 			fi
 		fi
 	done

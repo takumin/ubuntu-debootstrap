@@ -137,7 +137,7 @@ set timeout=0
 menuentry 'ubuntu' {
 	search --no-floppy --set=root --file /UBUNTU_LIVE
 	probe -u $root --set=uuid
-	linux /live/kernel.img liveroot-path=/live/rootfs.squashfs liveroot-uuid=$uuid overlayroot=tmpfs nouveau.modeset=0 nvidia-drm.modeset=1 cgroup_enable=memory swapaccount=1 quiet ---
+	linux /live/kernel.img root=file:///live/rootfs.squashfs liveroot-uuid=$uuid overlayroot=tmpfs nouveau.modeset=0 nvidia-drm.modeset=1 cgroup_enable=memory swapaccount=1 quiet ---
 	initrd /live/initrd.img
 }
 __EOF__
