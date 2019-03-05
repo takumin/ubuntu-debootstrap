@@ -646,8 +646,7 @@ mkdir -p "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top"
 cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
 #!/bin/sh
 
-PREREQ=""
-if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+[ "$1" = 'prereqs' ] && { exit 0; }
 
 get_fstype() {
 	local FSTYPE FSSIZE
@@ -658,22 +657,11 @@ get_fstype() {
 	esac
 }
 
-liveroot() {
-	local readonly target="$1" image="${2#file://}"
-	local disk dev fstype
-
-	for disk in /dev/disk/by-id/*; do
-		dev="$(readlink -fv ${disk})"
-		fstype="$(get_fstype ${dev})"
-
-		case "${fstype}" in
-			iso9660) break ;;
-			*)       return 1 ;;
-		esac
-	done
+mount_squashfs() {
+	local readonly device="$1" fstype="$2" option="$3" image="$4" target="$5"
 
 	mkdir -p "/run/liveroot"
-	mount -t "${fstype}" -o loop "${dev}" "/run/liveroot"
+	mount -t "${fstype}" "${option}" "${device}" "/run/liveroot"
 
 	if [ -f "/run/liveroot${image}" ]; then
 		mkdir -p "${target}"
@@ -683,6 +671,21 @@ liveroot() {
 		umount "/run/liveroot"
 		return 1
 	fi
+}
+
+liveroot() {
+	local readonly target="$1" image="${2#file://}"
+	local device fstype
+
+	for device in /dev/disk/by-id/*; do
+		device="$(readlink -fv "${device}")"
+		fstype="$(get_fstype "${device}")"
+
+		case "${fstype}" in
+			iso9660) mount_squashfs "${device}" "${fstype}" '-o loop' "${image}" "${target}" && break ;;
+			*)       exit 1 ;;
+		esac
+	done
 }
 
 . /scripts/functions
@@ -874,9 +877,7 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 	cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns" <<- '__EOF__'
 	#!/bin/sh -e
 
-	if [ "$1" = 'prereqs' ]; then
-		exit 0
-	fi
+	[ "$1" = 'prereqs' ] && { exit 0; }
 
 	. /usr/share/initramfs-tools/hook-functions
 
@@ -892,11 +893,10 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 fi
 
 # Generate Reset Network Interface for Initramfs
-cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces" << '__EOF__'
+cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces" << '__EOF__'
 #!/bin/sh
 
-PREREQ=""
-if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+[ "$1" = 'prereqs' ] && { exit 0; }
 
 reset_network_interfaces() {
 	local intf
@@ -912,7 +912,7 @@ reset_network_interfaces
 __EOF__
 
 # Execute Permission
-chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zzz-reset-network-interfaces"
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/reset-network-interfaces"
 
 ################################################################################
 # Cloud
@@ -984,11 +984,10 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	__EOF__
 
 	# Generate Network Config from MetaData Server
-	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config" <<- '__EOF__'
+	cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-bottom/network-config" <<- '__EOF__'
 	#!/bin/sh
 
-	PREREQ=""
-	if [ "$1" = 'prereqs' ]; then echo "${PREREQ}"; exit 0; fi
+	[ "$1" = 'prereqs' ] && { exit 0; }
 
 	datasource_cmdline()
 	{
@@ -1005,8 +1004,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 					;;
 			esac
 		done
-		log_warn "Skip Cloud-Init NoCloud-Net"
-		return 1
+		log_warning_msg "Cloud-Init/NoCloud-Net: Skip No DataSource"
+		exit 1
 	}
 
 	seedfrom_datasource()
@@ -1022,8 +1021,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 				esac
 			done
 		fi
-		log_warn "Skip Cloud-Init NoCloud-Net SeedFrom"
-		return 1
+		log_warning_msg "Cloud-Init/NoCloud-Net: Skip No SeedFrom"
+		exit 1
 	}
 
 	network_config_seedfrom()
@@ -1031,27 +1030,26 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		local seedfrom
 		seedfrom="$(seedfrom_datasource)"
 		if [ -n "${seedfrom}" ]; then
-			wget "${seedfrom}network/network-config" -O "/tmp/network-config"
+			if ! configure_networking; then
+				panic "Failed configure_networking()"
+			fi
+			mkdir -p "/run/nocloud-net"
+			wget "${seedfrom}network/network-config" -O "/run/nocloud-net/network-config"
 			if [ $? -eq 0 ]; then
-				if [ -d "${rootmnt}/var/lib" ]; then
-					mkdir -p "${rootmnt}/var/lib/cloud/seed/nocloud-net"
-					cp "/tmp/network-config" "${rootmnt}/var/lib/cloud/seed/nocloud-net/network-config"
-				else
-					panic "Not found ${rootmnt}/var/lib"
-				fi
+				log_success_msg "Cloud-Init/NoCloud-Net: Download ${seedfrom}network/network-config"
 			else
-				panic "Download failed ${seedfrom}network/network-config"
+				log_failure_msg "Cloud-Init/NoCloud-Net: Download ${seedfrom}network/network-config"
 			fi
 		fi
 	}
 
 	. /scripts/functions
 
-	# network_config_seedfrom
+	network_config_seedfrom
 	__EOF__
 
 	# Execute Permission
-	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/init-bottom/zz-network-config"
+	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/scripts/local-bottom/network-config"
 fi
 
 ################################################################################
