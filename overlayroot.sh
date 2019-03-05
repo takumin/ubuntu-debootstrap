@@ -755,7 +755,7 @@ interfaces_config() {
 }
 
 netplan_config() {
-	local readonly cfgs="$(find ${rootmnt}/etc/netplan -type f | wc -l)"
+	local readonly cfgs="$(find ${rootmnt}/etc/netplan -type f -name '*.yaml' | wc -l)"
 	if [ "${cfgs}" -gt 0 ]; then
 		return 1
 	fi
