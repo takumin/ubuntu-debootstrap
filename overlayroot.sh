@@ -70,7 +70,7 @@ fi
 #   - NoCloud
 #   - None
 # shellcheck disable=SC2086
-: ${DATASOURCES:='NoCloud'}
+: ${DATASOURCES:='NoCloud, None'}
 
 # Keyboard Type
 # Values:
