@@ -1005,7 +1005,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 			esac
 		done
 		log_warning_msg "Cloud-Init/NoCloud-Net: Skip No DataSource"
-		exit 1
+		return 1
 	}
 
 	seedfrom_datasource()
@@ -1022,7 +1022,7 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 			done
 		fi
 		log_warning_msg "Cloud-Init/NoCloud-Net: Skip No SeedFrom"
-		exit 1
+		return 1
 	}
 
 	network_config_seedfrom()
@@ -1031,7 +1031,8 @@ if [[ "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		seedfrom="$(seedfrom_datasource)"
 		if [ -n "${seedfrom}" ]; then
 			if ! configure_networking; then
-				panic "Failed configure_networking()"
+				log_failure_msg "Cloud-Init/NoCloud-Net: configure_networking()"
+				return 1
 			fi
 			mkdir -p "/run/nocloud-net"
 			wget "${seedfrom}network/network-config" -O "/run/nocloud-net/network-config"
