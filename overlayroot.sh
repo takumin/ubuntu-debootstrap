@@ -686,7 +686,7 @@ cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EO
 
 [ "$1" = 'prereqs' ] && { exit 0; }
 
-get_fstype() {
+liveroot_get_fstype() {
 	local FSTYPE FSSIZE
 	eval $(fstype < $1)
 	case "${FSTYPE}" in
@@ -695,7 +695,7 @@ get_fstype() {
 	esac
 }
 
-mount_squashfs() {
+liveroot_mount_squashfs() {
 	local readonly device="$1" fstype="$2" option="$3" image="$4" target="$5"
 
 	mkdir -p "/run/liveroot"
@@ -717,10 +717,10 @@ liveroot() {
 
 	for device in /dev/disk/by-id/*; do
 		device="$(readlink -fv "${device}")"
-		fstype="$(get_fstype "${device}")"
+		fstype="$(liveroot_get_fstype "${device}")"
 
 		case "${fstype}" in
-			iso9660) mount_squashfs "${device}" "${fstype}" "loop" "${image}" "${target}" && break ;;
+			iso9660) liveroot_mount_squashfs "${device}" "${fstype}" "loop" "${image}" "${target}" && break ;;
 			*)       exit 1 ;;
 		esac
 	done
