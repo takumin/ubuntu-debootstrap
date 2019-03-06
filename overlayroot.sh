@@ -690,8 +690,8 @@ cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/include_kernel_modules" <<- '_
 
 # Bonding
 manual_add_modules bonding
-# Dell TB16 Dock
-manual_add_modules r8152
+# Network Driver
+copy_modules_dir kernel/drivers/net
 __EOF__
 
 # Execute Permission
