@@ -729,10 +729,10 @@ liveroot() {
 . /scripts/functions
 
 case "${ROOT}" in
-	file://*squashfs) : ;;
-	file://*squash)   : ;;
-	file://*sfs)      : ;;
-	*)                exit 0 ;;
+	file://*.squashfs) log_warning_msg "ROOT=\"${ROOT}\"" ;;
+	file://*.squash)   log_warning_msg "ROOT=\"${ROOT}\"" ;;
+	file://*.sfs)      log_warning_msg "ROOT=\"${ROOT}\"" ;;
+	*)                 exit 0 ;;
 esac
 
 liveroot "${rootmnt}.live" "${ROOT}" || exit 1
