@@ -421,8 +421,8 @@ INTEL_IXGBE_VERSION="$(basename "${INTEL_IXGBE_URL}" | sed -e 's@^ixgbe-@@; s@\.
 
 # NVIDIA CUDA Install Option
 case "${RELEASE}-${KERNEL}-${PROFILE}" in
-	*server*nvidia* ) NVIDIA_CUDA_INSTALL_OPTIONS="-y --no-install-recommends" ;;
-	* )               NVIDIA_CUDA_INSTALL_OPTIONS="-y" ;;
+	*server*nvidia* ) NVIDIA_CUDA_INSTALL_OPTIONS='-y --no-install-recommends' ;;
+	* )               NVIDIA_CUDA_INSTALL_OPTIONS='-y' ;;
 esac
 
 ################################################################################
@@ -1121,7 +1121,7 @@ if [[ "${PROFILE}" =~ ^.*nvidia.*$ ]]; then
 	chroot "${WORKDIR}" apt-get -y dist-upgrade
 
 	# Install Driver
-	chroot "${WORKDIR}" apt-get "${NVIDIA_CUDA_INSTALL_OPTIONS}" install cuda-drivers
+	chroot "${WORKDIR}" apt-get ${NVIDIA_CUDA_INSTALL_OPTIONS} install cuda-drivers
 fi
 
 ################################################################################
