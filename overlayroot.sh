@@ -276,7 +276,7 @@ DEBOOTSTRAP_VARIANT="--variant=minbase"
 DEBOOTSTRAP_COMPONENTS="--components=main,restricted,universe,multiverse"
 
 # Debootstrap Include Packages
-DEBOOTSTRAP_INCLUDES="--include=gnupg"
+DEBOOTSTRAP_INCLUDES="--include=gnupg,eatmydata"
 
 # Debootstrap Environment
 declare -a DEBOOTSTRAP_ENVIRONMENT=()
@@ -346,6 +346,7 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	trusty*hwe*server-nvidia )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-lts-xenial'
+			'xserver-xorg-input-all-lts-xenial'
 			'libegl1-mesa-lts-xenial'
 			'libgbm1-lts-xenial'
 			'libgl1-mesa-dri-lts-xenial'
@@ -367,6 +368,7 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	xenial*hwe*server-nvidia )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-hwe-16.04'
+			'xserver-xorg-input-all-hwe-16.04'
 			'xserver-xorg-legacy-hwe-16.04'
 		)
 	;;
@@ -382,6 +384,7 @@ case "${RELEASE}-${KERNEL}-${PROFILE}" in
 	bionic*hwe*server-nvidia )
 		declare -a XORG_HWE_PACKAGES=(
 			'xserver-xorg-core-hwe-18.04'
+			'xserver-xorg-input-all-hwe-18.04'
 			'xserver-xorg-legacy-hwe-18.04'
 		)
 	;;
