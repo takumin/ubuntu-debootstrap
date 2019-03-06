@@ -680,6 +680,23 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 	chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/libnss_dns"
 fi
 
+# Include Kernel Modules
+cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/include_kernel_modules" <<- '__EOF__'
+#!/bin/sh -e
+
+[ "$1" = 'prereqs' ] && { exit 0; }
+
+. /usr/share/initramfs-tools/hook-functions
+
+# Bonding
+manual_add_modules bonding
+# Dell TB16 Dock
+manual_add_modules r8152
+__EOF__
+
+# Execute Permission
+chmod 0755 "${WORKDIR}/usr/share/initramfs-tools/hooks/include_kernel_modules"
+
 # Generate Reset Network Interface for Initramfs
 cat > "${WORKDIR}/usr/share/initramfs-tools/scripts/local-top/liveroot" << '__EOF__'
 #!/bin/sh
