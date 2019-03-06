@@ -221,15 +221,6 @@ fi
 # Normalization Environment
 ################################################################################
 
-# Select Kernel Package
-case "${RELEASE}-${KERNEL}" in
-	* ) ;;
-esac
-
-################################################################################
-# Require Environment
-################################################################################
-
 # Get Release Version
 case "${RELEASE}" in
 	'trusty' )
@@ -251,6 +242,10 @@ case "${RELEASE}" in
 		RELEASE_MINOR='04'
 	;;
 esac
+
+################################################################################
+# Require Environment
+################################################################################
 
 # Download Files Directory
 CACHEDIR="$(cd "$(dirname "$0")"; pwd)/.cache"
@@ -332,66 +327,77 @@ case "${RELEASE}-${KERNEL}" in
 	"bionic-virtual-hwe"        ) KERNEL_HEADER_PACKAGE="linux-headers-virtual-hwe-18.04" ;;
 esac
 
-# HWE Xorg Package
-case "${RELEASE}-${KERNEL}-${PROFILE}" in
-	# Trusty Server Part
-	trusty*hwe*server-nvidia )
-		declare -a XORG_HWE_PACKAGES=(
+# HWE Xorg Required Packages
+case "${RELEASE}-${KERNEL}" in
+	# Trusty Part
+	trusty*hwe* )
+		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+			'x11-xkb-utils'
+			'xkb-data'
 			'xserver-xorg-core-lts-xenial'
 			'xserver-xorg-input-all-lts-xenial'
+		)
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
 			'libegl1-mesa-lts-xenial'
 			'libgbm1-lts-xenial'
 			'libgl1-mesa-dri-lts-xenial'
 			'libgl1-mesa-glx-lts-xenial'
 			'libgles1-mesa-lts-xenial'
 			'libgles2-mesa-lts-xenial'
-			'libwayland-egl1-mesa-lts-xenial'
 		)
-	;;
-
-	# Trusty Desktop Part
-	trusty*hwe*desktop* )
-		declare -a XORG_HWE_PACKAGES=(
+		declare -a XORG_HWE_MAIN_PACKAGES=(
 			'xserver-xorg-lts-xenial'
 		)
 	;;
 
-	# Xenial Server Part
-	xenial*hwe*server-nvidia )
-		declare -a XORG_HWE_PACKAGES=(
+	# Xenial Part
+	xenial*hwe* )
+		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+			'x11-xkb-utils'
+			'xkb-data'
 			'xserver-xorg-core-hwe-16.04'
 			'xserver-xorg-input-all-hwe-16.04'
+		)
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
+			'libgl1-mesa-dri'
 			'xserver-xorg-legacy-hwe-16.04'
 		)
-	;;
-
-	# Xenial Desktop Part
-	xenial*hwe*desktop* )
-		declare -a XORG_HWE_PACKAGES=(
+		declare -a XORG_HWE_MAIN_PACKAGES=(
 			'xserver-xorg-hwe-16.04'
 		)
 	;;
 
 	# Bionic Server Part
-	bionic*hwe*server-nvidia )
-		declare -a XORG_HWE_PACKAGES=(
+	bionic*hwe* )
+		declare -a XORG_HWE_REQUIRE_PACKAGES=(
+			'python3-apport'
+			'x11-xkb-utils'
+			'xkb-data'
 			'xserver-xorg-core-hwe-18.04'
 			'xserver-xorg-input-all-hwe-18.04'
+		)
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=(
+			'libgl1-mesa-dri'
 			'xserver-xorg-legacy-hwe-18.04'
 		)
-	;;
-
-	# Bionic Desktop Part
-	bionic*hwe*desktop* )
-		declare -a XORG_HWE_PACKAGES=(
+		declare -a XORG_HWE_MAIN_PACKAGES=(
 			'xserver-xorg-hwe-18.04'
 		)
 	;;
 
 	# Default
 	* )
-		declare -a XORG_HWE_PACKAGES=()
+		declare -a XORG_HWE_REQUIRE_PACKAGES=()
+		declare -a XORG_HWE_RECOMMEND_PACKAGES=()
+		declare -a XORG_HWE_MAIN_PACKAGES=()
 	;;
+esac
+
+# HWE Xorg Desktop Packages
+case "${RELEASE}-${KERNEL}-${PROFILE}" in
+	trusty*hwe*desktop* ) XORG_HWE_RECOMMEND_PACKAGES=("${XORG_HWE_RECOMMEND_PACKAGES[@]}" 'xserver-xorg-video-all-lts-xenial') ;;
+	xenial*hwe*desktop* ) XORG_HWE_RECOMMEND_PACKAGES=("${XORG_HWE_RECOMMEND_PACKAGES[@]}" 'xserver-xorg-video-all-hwe-16.04') ;;
+	bionic*hwe*desktop* ) XORG_HWE_RECOMMEND_PACKAGES=("${XORG_HWE_RECOMMEND_PACKAGES[@]}" 'xserver-xorg-video-all-hwe-18.04') ;;
 esac
 
 # Ubuntu Japanese Team Repository Keyring URL
@@ -635,12 +641,15 @@ chroot "${WORKDIR}" apt-get -y install cloud-init
 ################################################################################
 
 # Check Xorg Package List
-if [ ${#XORG_HWE_PACKAGES[*]} -gt 0 ]; then
-	# Install HWE Version Xorg
-	chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_PACKAGES[@]}"
+if [ ${#XORG_HWE_REQUIRE_PACKAGES[*]} -gt 0 ] && [ ${#XORG_HWE_RECOMMEND_PACKAGES[*]} -gt 0 ]; then
+	# Install HWE Version Xorg Base Packages
+	chroot "${WORKDIR}" apt-get -y install "${XORG_HWE_REQUIRE_PACKAGES[@]}" "${XORG_HWE_RECOMMEND_PACKAGES[@]}"
 fi
 
-exit
+if [ ${#XORG_HWE_MAIN_PACKAGES[*]} -gt 0 ]; then
+	# Install HWE Version Xorg Main Packages
+	chroot "${WORKDIR}" apt-get -y --no-install-recommends install "${XORG_HWE_MAIN_PACKAGES[@]}"
+fi
 
 ################################################################################
 # Desktop
