@@ -723,14 +723,13 @@ liveroot() {
 	local readonly target="$1" image="${2#file://}"
 	local device fstype
 
-	for device in /dev/disk/by-id/*; do
-		device="$(readlink -fv "${device}")"
+	for device in $(blkid -o device); do
 		fstype="$(blkid -s TYPE -o value "${device}")"
 
 		case "${fstype}" in
 			iso9660) liveroot_mount_squashfs "${device}" "${fstype}" "loop" "${image}" "${target}" && break ;;
 			vfat)    liveroot_mount_squashfs "${device}" "${fstype}" "ro"   "${image}" "${target}" && break ;;
-			*)       exit 1 ;;
+			*)       continue ;;
 		esac
 	done
 }
