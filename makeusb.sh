@@ -207,8 +207,8 @@ set timeout=0
 
 menuentry 'ubuntu' {
 	search --no-floppy --fs-uuid --set=root ${UUID}
-	linux /casper/kernel.img root=file:///live/rootfs.squashfs overlayroot=tmpfs nouveau.modeset=0 nvidia-drm.modeset=1 cgroup_enable=memory swapaccount=1 quiet ---
-	initrd /casper/initrd.img
+	linux /live/kernel.img root=file:///live/rootfs.squashfs overlayroot=tmpfs nouveau.modeset=0 nvidia-drm.modeset=1 cgroup_enable=memory swapaccount=1 quiet ---
+	initrd /live/initrd.img
 }
 __EOF__
 
