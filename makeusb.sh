@@ -129,7 +129,7 @@ ESPPT="$(realpath "/dev/disk/by-id/${USB_NAME}-part2")"
 USBPT="$(realpath "/dev/disk/by-id/${USB_NAME}-part3")"
 
 # Get UUID
-UUID="$(blkid -s UUID -o value "${ESPPT}")"
+UUID="$(blkid -p -s UUID -o value "${ESPPT}")"
 
 ################################################################################
 # Format

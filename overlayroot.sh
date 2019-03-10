@@ -725,12 +725,14 @@ liveroot() {
 	local readonly target="$1" image="${2#file://}"
 	local device fstype
 
+	modprobe nls_utf8
+
 	for device in $(blkid -o device); do
-		fstype="$(blkid -s TYPE -o value "${device}")"
+		fstype="$(blkid -p -s TYPE -o value "${device}")"
 
 		case "${fstype}" in
-			iso9660) liveroot_mount_squashfs "${device}" "${fstype}" "loop"                           "${image}" "${target}" && break ;;
-			vfat)    liveroot_mount_squashfs "${device}" "${fstype}" "ro,codepage=932,iocharset=utf8" "${image}" "${target}" && break ;;
+			iso9660) liveroot_mount_squashfs "${device}" "${fstype}" "loop"              "${image}" "${target}" && break ;;
+			vfat)    liveroot_mount_squashfs "${device}" "${fstype}" "ro,iocharset=utf8" "${image}" "${target}" && break ;;
 			*)       continue ;;
 		esac
 	done
