@@ -725,6 +725,9 @@ liveroot() {
 	local readonly target="$1" image="${2#file://}"
 	local device fstype
 
+	udevadm trigger
+	udevadm settle
+
 	modprobe nls_utf8
 
 	for device in $(blkid -o device); do
