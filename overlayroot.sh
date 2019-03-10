@@ -692,6 +692,8 @@ cat > "${WORKDIR}/usr/share/initramfs-tools/hooks/include_kernel_modules" <<- '_
 manual_add_modules bonding
 # Network Driver
 copy_modules_dir kernel/drivers/net
+# Mount Encoding
+copy_modules_dir kernel/fs/nls
 __EOF__
 
 # Execute Permission
@@ -727,8 +729,8 @@ liveroot() {
 		fstype="$(blkid -s TYPE -o value "${device}")"
 
 		case "${fstype}" in
-			iso9660) liveroot_mount_squashfs "${device}" "${fstype}" "loop" "${image}" "${target}" && break ;;
-			vfat)    liveroot_mount_squashfs "${device}" "${fstype}" "ro"   "${image}" "${target}" && break ;;
+			iso9660) liveroot_mount_squashfs "${device}" "${fstype}" "loop"                           "${image}" "${target}" && break ;;
+			vfat)    liveroot_mount_squashfs "${device}" "${fstype}" "ro,codepage=932,iocharset=utf8" "${image}" "${target}" && break ;;
 			*)       continue ;;
 		esac
 	done
