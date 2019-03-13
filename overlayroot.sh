@@ -994,12 +994,14 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 	# Install Require Packages
 	chroot "${WORKDIR}" apt-get -y install ethtool ifenslave
 
-	# Install Package
-	# chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
+	if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+		# Install Package
+		chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
 
-	# Managed Interface
-	# sed -i -e 's@source-directory.*@source /etc/network/interfaces.d/\*@' "${WORKDIR}/etc/network/interfaces"
-	# sed -i -e 's/managed=.*/managed=true/;' "${WORKDIR}/etc/NetworkManager/NetworkManager.conf"
+		# Managed Interface
+		sed -i -e 's@source-directory.*@source /etc/network/interfaces.d/\*@' "${WORKDIR}/etc/network/interfaces"
+		sed -i -e 's/managed=.*/managed=true/;' "${WORKDIR}/etc/NetworkManager/NetworkManager.conf"
+	fi
 fi
 
 # Check Release Version
@@ -1083,23 +1085,6 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 	# Install Package
 	chroot "${WORKDIR}" apt-get -y install ubuntu-desktop ubuntu-defaults-ja
 
-	# Check Environment Variable
-	if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
-		# User Directory
-		chroot "${WORKDIR}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
-		rm "${WORKDIR}/home/${USER_NAME}/.config/user-dirs.locale"
-	fi
-
-	# Check Release & Profile
-	if [ "${RELEASE}" = 'bionic' ] && [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
-		# Netplan Configuration
-		{
-			echo 'network:'
-			echo '  version: 2'
-			echo '  renderer: NetworkManager'
-		} > "${WORKDIR}/etc/netplan/01-network-manager-all.yaml"
-	fi
-
 	# Check Release Version
 	if [ "${RELEASE}" = 'bionic' ]; then
 		# Workaround: Fix System Log Error Message
@@ -1120,8 +1105,22 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 
 	# Check Environment Variable
 	if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+		# User Directory
+		chroot "${WORKDIR}" su -c "LANG=C xdg-user-dirs-update" "${USER_NAME}"
+		rm "${WORKDIR}/home/${USER_NAME}/.config/user-dirs.locale"
+
 		# Input Method
 		chroot "${WORKDIR}" su -c "im-config -n fcitx" "${USER_NAME}"
+	fi
+
+	# Check Release & Profile
+	if [ "${RELEASE}" = 'bionic' ] && [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
+		# Netplan Configuration
+		{
+			echo 'network:'
+			echo '  version: 2'
+			echo '  renderer: NetworkManager'
+		} > "${WORKDIR}/etc/netplan/01-network-manager-all.yaml"
 	fi
 fi
 
