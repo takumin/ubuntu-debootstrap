@@ -999,8 +999,8 @@ if [ "${RELEASE}" = 'trusty' ] || [ "${RELEASE}" = 'xenial' ]; then
 		chroot "${WORKDIR}" apt-get -y --no-install-recommends install network-manager
 
 		# Managed Interface
-		sed -i -e 's@source-directory.*@source /etc/network/interfaces.d/\*@' "${WORKDIR}/etc/network/interfaces"
-		sed -i -e 's/managed=.*/managed=true/;' "${WORKDIR}/etc/NetworkManager/NetworkManager.conf"
+		# sed -i -e 's@source-directory.*@source /etc/network/interfaces.d/\*@' "${WORKDIR}/etc/network/interfaces"
+		# sed -i -e 's/managed=.*/managed=true/;' "${WORKDIR}/etc/NetworkManager/NetworkManager.conf"
 	fi
 fi
 
