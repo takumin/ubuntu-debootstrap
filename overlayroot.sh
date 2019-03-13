@@ -1090,15 +1090,18 @@ if [[ "${PROFILE}" =~ ^.*desktop.*$ ]]; then
 		rm "${WORKDIR}/home/${USER_NAME}/.config/user-dirs.locale"
 	fi
 
-	# Check Release Version
-	if [ "${RELEASE}" = 'bionic' ]; then
+	# Check Release & Profile
+	if [ "${RELEASE}" = 'bionic' ] && [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 		# Netplan Configuration
 		{
 			echo 'network:'
 			echo '  version: 2'
 			echo '  renderer: NetworkManager'
 		} > "${WORKDIR}/etc/netplan/01-network-manager-all.yaml"
+	fi
 
+	# Check Release Version
+	if [ "${RELEASE}" = 'bionic' ]; then
 		# Workaround: Fix System Log Error Message
 		chroot "${WORKDIR}" apt-get -y install gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0
 
