@@ -499,9 +499,6 @@ mount -t tmpfs -o 'size=6g,mode=0755' tmpfs "${WORKDIR}"
 # Debootstrap
 ################################################################################
 
-# Set Default Hostname
-declare -x HOSTNAME="localhost"
-
 # Install Base System
 ${DEBOOTSTRAP_COMMAND} ${DEBOOTSTRAP_VARIANT} ${DEBOOTSTRAP_COMPONENTS} ${DEBOOTSTRAP_INCLUDES} "${RELEASE}" "${WORKDIR}" "${MIRROR_UBUNTU}"
 
@@ -553,13 +550,6 @@ if [ "${RELEASE}" = 'trusty' ]; then
 	# Workaround utmp
 	chroot "${WORKDIR}" touch /var/run/utmp
 fi
-
-################################################################################
-# System
-################################################################################
-
-# Default Hostname
-echo 'localhost' > "${WORKDIR}/etc/hostname"
 
 ################################################################################
 # Repository
@@ -1010,8 +1000,12 @@ if [ "${RELEASE}" = 'bionic' ]; then
 	chroot "${WORKDIR}" apt-get -y install nplan
 fi
 
+# Default Hostname
+echo 'localhost.localdomain' > "${WORKDIR}/etc/hostname"
+
 # Resolv Local Hostname
-echo '127.0.1.1	localhost.localdomain localhost' >> "${WORKDIR}/etc/hosts"
+sed -i -e 's@^\(127.0.0.1\s\+\)\(.*\)$@\1localhost.localdomain \2@' "${WORKDIR}/etc/hosts"
+sed -i -e 's@^\(::1\s\+\)\(.*\)$@\1localhost.localdomain \2@' "${WORKDIR}/etc/hosts"
 
 ################################################################################
 # SSH
