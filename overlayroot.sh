@@ -942,6 +942,7 @@ if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	chroot "${WORKDIR}" addgroup --system lpadmin
 	chroot "${WORKDIR}" addgroup --system sambashare
 	chroot "${WORKDIR}" addgroup --system netdev
+	chroot "${WORKDIR}" addgroup --system lxd
 
 	# Add User
 	chroot "${WORKDIR}" adduser --disabled-password --gecos "${USER_FULL},,," "${USER_NAME}"
@@ -959,6 +960,7 @@ if [[ ! "${PROFILE}" =~ ^.*cloud.*$ ]]; then
 	chroot "${WORKDIR}" adduser "${USER_NAME}" users
 	chroot "${WORKDIR}" adduser "${USER_NAME}" video
 	chroot "${WORKDIR}" adduser "${USER_NAME}" netdev
+	chroot "${WORKDIR}" adduser "${USER_NAME}" lxd
 
 	# Change Password
 	chroot "${WORKDIR}" sh -c "echo ${USER_NAME}:${USER_PASS} | chpasswd"
