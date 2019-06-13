@@ -614,6 +614,11 @@ if [ "${RELEASE}" = 'trusty' ]; then
 	chroot "${WORKDIR}" apt-get -y install systemd
 fi
 
+# Remove Persistent Jounal Log
+if [ -d "${WORKDIR}/var/log/journal" ]; then
+	rmdir "${WORKDIR}/var/log/journal"
+fi
+
 # Keep Proxy Environment Variables
 cat > "${WORKDIR}/etc/sudoers.d/keep_proxy" << '__EOF__'
 Defaults env_keep+="no_proxy"
