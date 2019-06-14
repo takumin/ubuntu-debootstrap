@@ -619,6 +619,9 @@ if [ -d "${WORKDIR}/var/log/journal" ]; then
 	rmdir "${WORKDIR}/var/log/journal"
 fi
 
+# Remove Machine ID
+rm "${WORKDIR}/etc/machine-id"
+
 # Keep Proxy Environment Variables
 cat > "${WORKDIR}/etc/sudoers.d/keep_proxy" << '__EOF__'
 Defaults env_keep+="no_proxy"
