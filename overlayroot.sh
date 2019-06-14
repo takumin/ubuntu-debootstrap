@@ -614,14 +614,6 @@ if [ "${RELEASE}" = 'trusty' ]; then
 	chroot "${WORKDIR}" apt-get -y install systemd
 fi
 
-# Remove Persistent Jounal Log
-if [ -d "${WORKDIR}/var/log/journal" ]; then
-	rmdir "${WORKDIR}/var/log/journal"
-fi
-
-# Remove Machine ID
-rm "${WORKDIR}/etc/machine-id"
-
 # Keep Proxy Environment Variables
 cat > "${WORKDIR}/etc/sudoers.d/keep_proxy" << '__EOF__'
 Defaults env_keep+="no_proxy"
@@ -1263,6 +1255,13 @@ chroot "${WORKDIR}" apt-get -y autoremove --purge
 
 # Package Archive
 chroot "${WORKDIR}" apt-get -y clean
+
+# Refresh Persistent Machine ID
+echo -n '' > "${WORKDIR}/etc/machine-id"
+ln -fs "/etc/machine-id" "${WORKDIR}/var/lib/dbus/machine-id"
+
+# Remove Journal Log Directory
+rmdir "${WORKDIR}/var/log/journal"
 
 # Repository List
 find "${WORKDIR}/var/lib/apt/lists" -type f -print0 | xargs -0 rm -f
