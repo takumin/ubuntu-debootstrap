@@ -608,11 +608,8 @@ KERNEL_VERSION="$(chroot "${WORKDIR}" dpkg -l | awk '{print $2}' | grep -E 'linu
 # Minimal Package
 chroot "${WORKDIR}" apt-get -y install ubuntu-minimal
 
-# Check Release Version
-if [ "${RELEASE}" = 'trusty' ]; then
-	# Install Package
-	chroot "${WORKDIR}" apt-get -y install systemd
-fi
+# Systemd Packages
+chroot "${WORKDIR}" apt-get -y install systemd policykit-1
 
 # Keep Proxy Environment Variables
 cat > "${WORKDIR}/etc/sudoers.d/keep_proxy" << '__EOF__'
@@ -1256,12 +1253,14 @@ chroot "${WORKDIR}" apt-get -y autoremove --purge
 # Package Archive
 chroot "${WORKDIR}" apt-get -y clean
 
-# Refresh Persistent Machine ID
+# Persistent Machine ID
 echo -n '' > "${WORKDIR}/etc/machine-id"
 ln -fs "/etc/machine-id" "${WORKDIR}/var/lib/dbus/machine-id"
 
-# Remove Journal Log Directory
-rmdir "${WORKDIR}/var/log/journal"
+# Journal Log Directory
+if [ -d "${WORKDIR}/var/log/journal" ]; then
+	rmdir "${WORKDIR}/var/log/journal"
+fi
 
 # Repository List
 find "${WORKDIR}/var/lib/apt/lists" -type f -print0 | xargs -0 rm -f
