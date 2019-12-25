@@ -581,6 +581,13 @@ deb ${MIRROR_UBUNTU_JA} ${RELEASE} main
 deb ${MIRROR_UBUNTU_JA_NONFREE} ${RELEASE} multiverse
 __EOF__
 
+# Check APT Proxy
+if [ "x${APT_PROXY_HOST}" != "x" ] && [ "x${APT_PROXY_PORT}" != "x" ]; then
+	echo "Acquire::ftp::proxy \"http://${APT_PROXY_HOST}:${APT_PROXY_PORT}\";" >> "${WORKDIR}/etc/apt.conf"
+	echo "Acquire::http::proxy \"http://${APT_PROXY_HOST}:${APT_PROXY_PORT}\";" >> "${WORKDIR}/etc/apt.conf"
+	echo "Acquire::https::proxy \"http://${APT_PROXY_HOST}:${APT_PROXY_PORT}\";" >> "${WORKDIR}/etc/apt.conf"
+fi
+
 ################################################################################
 # Upgrade
 ################################################################################
@@ -1252,6 +1259,13 @@ chroot "${WORKDIR}" apt-get -y autoremove --purge
 
 # Package Archive
 chroot "${WORKDIR}" apt-get -y clean
+
+# Check APT Proxy
+if [ "x${APT_PROXY_HOST}" != "x" ] && [ "x${APT_PROXY_PORT}" != "x" ]; then
+	sed -i -e '/^Acquire::ftp::proxy.*/d' "${WORKDIR}/etc/apt.conf"
+	sed -i -e '/^Acquire::http::proxy.*/d' "${WORKDIR}/etc/apt.conf"
+	sed -i -e '/^Acquire::https::proxy.*/d' "${WORKDIR}/etc/apt.conf"
+fi
 
 # Persistent Machine ID
 echo -n '' > "${WORKDIR}/etc/machine-id"
