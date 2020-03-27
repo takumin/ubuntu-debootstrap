@@ -410,9 +410,9 @@ UBUNTU_JA_NONFREE_KEYRING_URL='https://www.ubuntulinux.jp/ubuntu-jp-ppa-keyring.
 NVIDIA_CUDA_KEYRING_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${RELEASE_MAJOR}${RELEASE_MINOR}/x86_64/7fa2af80.pub"
 
 # Intel LAN Driver URL
-INTEL_E1000E_URL='https://downloadmirror.intel.com/15817/eng/e1000e-3.4.2.4.tar.gz'
-INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.36.tar.gz'
-INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.6.3.tar.gz'
+INTEL_E1000E_URL='https://downloadmirror.intel.com/15817/eng/e1000e-3.6.0.tar.gz'
+INTEL_IGB_URL='https://downloadmirror.intel.com/13663/eng/igb-5.3.5.42.tar.gz'
+INTEL_IXGBE_URL='https://downloadmirror.intel.com/14687/eng/ixgbe-5.6.5.tar.gz'
 
 # Intel LAN Driver Version
 INTEL_E1000E_VERSION="$(basename "${INTEL_E1000E_URL}" | sed -e 's@^e1000e-@@; s@\.tar\.gz$@@;')"
